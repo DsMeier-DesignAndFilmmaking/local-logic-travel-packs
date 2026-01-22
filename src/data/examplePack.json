@@ -1,0 +1,6 @@
+{
+  "city": "Paris",
+  "activities": ["Eiffel Tower visit", "Louvre Museum tour", "Seine River cruise"],
+  "restaurants": ["Cafe de Flore", "Le Jules Verne"],
+  "tips": ["Carry water", "Book tickets in advance"]
+}
