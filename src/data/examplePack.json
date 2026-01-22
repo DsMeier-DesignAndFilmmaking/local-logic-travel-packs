@@ -1,6 +1,11 @@
 {
   "city": "Paris",
-  "activities": ["Eiffel Tower visit", "Louvre Museum tour", "Seine River cruise"],
-  "restaurants": ["Cafe de Flore", "Le Jules Verne"],
-  "tips": ["Carry water", "Book tickets in advance"]
+  "version": "1.0",
+  "lastUpdated": "2024-01-22T10:00:00Z",
+  "context": "A 3-5 day cultural immersion in Paris, focusing on authentic experiences beyond the tourist traps. Perfect for first-time visitors who want to feel like they're discovering the real city.",
+  "mustKnowFirst": [],
+  "neighborhoods": [],
+  "eatLikeALocal": [],
+  "avoidTheseMistakes": [],
+  "offlineTips": []
 }

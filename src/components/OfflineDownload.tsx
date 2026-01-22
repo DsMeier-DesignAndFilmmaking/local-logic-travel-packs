@@ -1,9 +1,9 @@
 'use client';
 
-import { SimplePack } from '@/types';
+import { OfflineTravelPack } from '@/types';
 
 interface OfflineDownloadProps {
-  pack: SimplePack;
+  pack: OfflineTravelPack;
 }
 
 export default function OfflineDownload({ pack }: OfflineDownloadProps) {
@@ -33,11 +33,27 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   };
 
   return (
-    <button
-      onClick={handleDownload}
-      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-    >
-      Download Travel Pack
-    </button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <button
+            onClick={handleDownload}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+          >
+            Download Travel Pack
+          </button>
+        </div>
+      </div>
+      
+      {/* Monetization placeholder - informational only, does not block downloads */}
+      <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+        <div className="flex items-start gap-2 text-sm">
+          <span className="text-green-600 dark:text-green-400 font-semibold shrink-0">Free</span>
+          <p className="text-gray-600 dark:text-gray-400">
+            Your first travel pack is free. Premium packs with AI-generated recommendations and exclusive city insights coming soon.
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }

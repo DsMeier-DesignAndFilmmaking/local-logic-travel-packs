@@ -3,9 +3,13 @@
  * 
  * Handles fetching travel pack data from APIs and generating packs
  * 
+ * TODO: AI Integration Points
+ * - generateTravelPack(): Core AI generation function (see detailed TODO above)
+ * - fetchTravelPack(): May call AI generation if pack doesn't exist in cache/DB
+ * - getFeaturedPacks(): May use AI to generate featured packs for homepage
+ * 
  * TODO: Integrate with Local Logic API for city data
- * TODO: Implement AI Spontaneity Engine for pack generation
- * TODO: Add caching strategies
+ * TODO: Add caching strategies (Redis/DB for generated packs)
  * TODO: Implement pack generation with AI suggestions
  */
 
@@ -30,9 +34,41 @@ export async function fetchTravelPack(city: string | City): Promise<Pack> {
 
 /**
  * Generate a travel pack using AI Spontaneity Engine
+ * 
+ * TODO: AI Integration - Generate Travel Pack Items
+ * 
+ * What AI will generate:
+ * - TravelPackItem[] array with pain-point-driven content for any city
+ * - Each item includes: title, category, priorityScore, reason, cityContext, content
+ * - AI will create items that solve universal travel pain points (arrival confusion,
+ *   tourist traps, decision fatigue, safety gaps, time waste, cultural missteps,
+ *   offline preparation) adapted to the specific city
+ * 
+ * Why it belongs here:
+ * - This is the core data fetching/generation module for travel packs
+ * - Centralizes AI generation logic separate from UI components
+ * - Can be called from both client-side (page.tsx) and server-side (API routes)
+ * 
+ * Inputs needed:
+ * - city: string | City - The target city (name or City object with coordinates)
+ * - preferences?: {
+ *     interests?: string[] - User interests (e.g., ['art', 'food', 'nightlife'])
+ *     budget?: 'low' | 'medium' | 'high' - Budget level for recommendations
+ *     duration?: number - Trip duration in days
+ *     travelStyle?: 'solo' | 'couple' | 'family' | 'business' - Travel context
+ *   }
+ * - cityData?: CityData - Optional Local Logic API city data (neighborhoods, POIs, etc.)
+ * 
+ * AI processing steps:
+ * 1. Fetch/enrich city data from Local Logic API (if not provided)
+ * 2. Generate TravelPackItems for each pain-point category
+ * 3. Calculate priorityScore based on: city context, user preferences, time of day/season
+ * 4. Adapt generic travel advice to city-specific context (cityContext field)
+ * 5. Return prioritized array of TravelPackItem objects
+ * 
  * @param city - The city to generate a pack for
  * @param preferences - User preferences for pack generation
- * @returns Generated travel pack
+ * @returns Generated travel pack items array
  */
 export async function generateTravelPack(
   city: string | City,

@@ -20,6 +20,25 @@ export interface SimplePack {
 }
 
 /**
+ * High-value offline-first travel pack structure
+ */
+export interface OfflineTravelPack {
+  city: string;
+  version: string;
+  lastUpdated: string;
+  context: string;
+  mustKnowFirst: string[];
+  neighborhoods: {
+    name: string;
+    whyItMatters: string;
+    bestFor: string;
+  }[];
+  eatLikeALocal: string[];
+  avoidTheseMistakes: string[];
+  offlineTips: string[];
+}
+
+/**
  * Travel Pack data type for city packs
  * Used for database/API integration with strong typing
  */

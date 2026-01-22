@@ -3,17 +3,37 @@
 /**
  * CLI script for generating travel packs
  * 
- * Placeholder for AI Spontaneity Engine integration
+ * TODO: AI Integration - CLI Pack Generation
+ * 
+ * What AI will generate:
+ * - Complete TravelPackItem[] array for any city via command line
+ * - Useful for batch generation, testing AI prompts, or pre-generating packs
+ * - Outputs JSON file that can be saved to database or file system
+ * 
+ * Why it belongs here:
+ * - CLI tool for developers/admins to generate packs without UI
+ * - Useful for testing AI generation logic and prompts
+ * - Can be run as a scheduled job to pre-generate popular city packs
+ * - Allows batch generation of multiple cities
+ * 
+ * Inputs needed:
+ * - cityName: string (from command line args)
+ * - Optional flags:
+ *   --preferences: JSON string with user preferences
+ *   --output: File path to save generated pack JSON
+ *   --format: 'json' | 'travelPackItem[]' | 'offlineTravelPack'
+ *   --batch: Comma-separated list of cities to generate
+ * 
+ * AI processing:
+ * 1. Call generateTravelPack() from travelPacks.ts (which uses AI)
+ * 2. Transform AI-generated TravelPackItem[] to desired output format
+ * 3. Save to file system or database
+ * 4. Log generation metrics (time taken, items generated, etc.)
  * 
  * Usage:
  *   npm run generate-pack <city-name>
- *   tsx scripts/generatePack.ts <city-name>
- * 
- * TODO: Integrate with AI Spontaneity Engine
- * TODO: Connect to Local Logic API for city data
- * TODO: Generate personalized pack content using AI
- * TODO: Save generated pack to database/storage
- * TODO: Add command-line options for preferences (budget, interests, etc.)
+ *   tsx scripts/generatePack.ts <city-name> --preferences '{"budget":"medium","interests":["food"]}'
+ *   tsx scripts/generatePack.ts --batch "Paris,London,Tokyo" --output ./generated-packs
  */
 
 import { Pack, City } from '../src/types';
@@ -28,18 +48,30 @@ if (!CITY_NAME) {
 
 /**
  * Generate a travel pack for the specified city
- * This is a placeholder - will be replaced with actual AI integration
+ * 
+ * TODO: AI Integration - Call AI Generation Function
+ * 
+ * This function should:
+ * 1. Import generateTravelPack from '@/lib/travelPacks'
+ * 2. Call it with cityName and any parsed preferences from CLI args
+ * 3. Receive TravelPackItem[] array from AI
+ * 4. Transform to Pack format (or keep as TravelPackItem[] for flexibility)
+ * 5. Return for saving/display
+ * 
+ * Example:
+ *   const packItems = await generateTravelPack(cityName, preferences);
+ *   // Transform packItems to desired output format
  */
 async function generatePack(cityName: string): Promise<Pack> {
   console.log(`Generating travel pack for: ${cityName}`);
   console.log('AI Spontaneity Engine integration pending...');
 
   // TODO: Implement AI Spontaneity Engine integration
-  // 1. Fetch city data from Local Logic API
-  // 2. Use AI to generate personalized recommendations
-  // 3. Create spontaneous activity suggestions
-  // 4. Generate itinerary based on user preferences
-  // 5. Include local tips and hidden gems
+  // 1. Parse CLI arguments for preferences (budget, interests, duration, etc.)
+  // 2. Call generateTravelPack() from travelPacks.ts (which handles AI generation)
+  // 3. Receive TravelPackItem[] array from AI
+  // 4. Optionally transform to Pack format or keep as TravelPackItem[]
+  // 5. Return generated pack
 
   // Placeholder pack structure
   const pack: Pack = {
