@@ -14,8 +14,9 @@ export default function Home() {
   const [city, setCity] = useState('');
   const [pack, setPack] = useState<OfflineTravelPack | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Initialize with Paris pack
+  // Initialize with Paris pack on mount
   useEffect(() => {
     const parisInsights = fetchTravelPackForCity('Paris');
     const sortedInsights = sortTravelInsights(parisInsights);
@@ -29,34 +30,69 @@ export default function Home() {
     setPack(uiPack);
   }, []);
 
+  // Auto-fetch Travel Pack whenever city changes from selection
+  useEffect(() => {
+    if (!city || !city.trim()) {
+      setPack(null);
+      setError(null);
+      return;
+    }
+
+    const fetchPack = async () => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Extract city name from full city string (e.g., "Paris, Île-de-France, France" -> "Paris")
+        const cityName = city.split(',')[0].trim() || city.trim();
+
+        // Fetch travel pack for selected city (falls back to Paris if unknown)
+        const insights = fetchTravelPackForCity(city);
+
+        if (!insights || insights.length === 0) {
+          setError('Travel Pack unavailable for this city.');
+          setPack(null);
+          return;
+        }
+
+        // Sort insights by priority score
+        const sortedInsights = sortTravelInsights(insights);
+
+        // Transform to UI format (includes all Tier 1-3 content)
+        const uiPack = transformInsightsToUIPack(
+          cityName,
+          '1.0',
+          new Date().toISOString(),
+          `A curated travel pack for ${cityName}, focusing on authentic experiences beyond the tourist traps.`,
+          sortedInsights
+        );
+
+        setPack(uiPack);
+        setError(null);
+      } catch (err) {
+        console.error('Error loading Travel Pack:', err);
+        setError('Error loading Travel Pack.');
+        setPack(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    // Small delay to ensure city selection is complete
+    const timeoutId = setTimeout(fetchPack, 100);
+    return () => clearTimeout(timeoutId);
+  }, [city]);
+
   const handlePackSelect = (insights: TravelInsight[]) => {
-    setIsLoading(true);
-    
-    // Extract city name from full city string
-    const cityName = city.split(',')[0].trim() || 'Paris';
-    
-    setTimeout(() => {
-      const sortedInsights = sortTravelInsights(insights);
-      const uiPack = transformInsightsToUIPack(
-        cityName,
-        '1.0',
-        new Date().toISOString(),
-        `A curated travel pack for ${cityName}, focusing on authentic experiences beyond the tourist traps.`,
-        sortedInsights
-      );
-      setPack(uiPack);
-      setIsLoading(false);
-    }, 300);
+    // This callback is triggered by CityInput when a suggestion is selected
+    // The useEffect above will handle the pack loading automatically
+    // This is kept for compatibility but the main logic is in useEffect
   };
 
   const handleGetTravelPack = () => {
+    // Manual trigger - same as auto-load, but allows user to refresh
     if (!city.trim()) return;
-    
-    setIsLoading(true);
-    
-    // Fetch travel pack for entered city (falls back to Paris if unknown)
-    const insights = fetchTravelPackForCity(city);
-    handlePackSelect(insights);
+    // The useEffect will handle this automatically
   };
 
   return (
@@ -96,16 +132,32 @@ export default function Home() {
             />
           </div>
           
+          {/* Loading state */}
+          {isLoading && (
+            <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
+              <p>Loading Travel Pack...</p>
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-red-600 dark:text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Optional: Keep button as manual refresh option */}
           <button
             onClick={handleGetTravelPack}
             disabled={isLoading || !city.trim()}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+            className="mt-4 w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
           >
-            {isLoading ? 'Loading...' : 'Get Travel Pack'}
+            {isLoading ? 'Loading...' : 'Refresh Travel Pack'}
           </button>
         </div>
 
-        {pack && (
+        {/* Travel Pack Display - Auto-loaded when city is selected */}
+        {pack && !isLoading && (
           <div className="space-y-6">
             <PackCard pack={pack} />
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
