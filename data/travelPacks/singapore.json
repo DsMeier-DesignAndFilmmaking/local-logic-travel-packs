@@ -1,28 +1,346 @@
 {
   "city": "Singapore",
   "country": "Singapore",
-  "tier1": {
-    "title": "Top Free Attractions",
-    "items": [
-      "Walk around Marina Bay",
-      "Visit Gardens by the Bay (outdoor areas)",
-      "Explore Chinatown and Little India"
-    ]
-  },
-  "tier2": {
-    "title": "Gold Premium Experiences",
-    "items": [
-      "Singapore Flyer capsule ride",
-      "Singapore River night cruise",
-      "Cooking class for local cuisine"
-    ]
-  },
-  "tier3": {
-    "title": "Platinum / Spontaneity Engine",
-    "items": [
-      "Private guided AI-designed city tour",
-      "Exclusive tasting at Michelin-starred restaurant",
-      "Luxury rooftop pool experience"
-    ]
+  "tiers": {
+    "tier1": {
+      "title": "Immediate Need",
+      "cards": [
+        {
+          "headline": "🧭 I'm Lost / Getting Around",
+          "microSituations": [
+            {
+              "title": "I'm Lost",
+              "actions": [
+                "Find nearest MRT station (look for red/green/blue/yellow line signs)",
+                "Use Citymapper or Google Maps (excellent in Singapore)",
+                "Ask at info desk or police station",
+                "Look for major landmarks (Marina Bay, Gardens by the Bay, Orchard Road)"
+              ],
+              "whatToDoInstead": "Don't panic - Singapore is small and well-marked. MRT is efficient."
+            },
+            {
+              "title": "Public Transport",
+              "actions": [
+                "Get EZ-Link card (S$5 deposit) - works on MRT/buses",
+                "S$0.83-2.50 per ride depending on distance",
+                "Tap card on reader before entering and exiting",
+                "MRT runs 5:30am-midnight, avoid rush hour 7-9am and 5-7pm"
+              ],
+              "whatToDoInstead": "Avoid taxis (expensive). MRT is faster and cheaper."
+            },
+            {
+              "title": "Taxi / Ride Share",
+              "actions": [
+                "Taxis: meter required, expensive (S$10-20 short trips)",
+                "Grab available but pricey",
+                "Walk between close MRT stations (save money)",
+                "Use buses for short distances"
+              ],
+              "whatToDoInstead": "Use MRT for most trips. Taxis only for late night or specific destinations."
+            }
+          ]
+        },
+        {
+          "headline": "🍽 I Need Food Nearby",
+          "microSituations": [
+            {
+              "title": "Quick Bite",
+              "actions": [
+                "Hawker centers: S$3-8 (same food as restaurants)",
+                "Food courts in malls: S$5-10",
+                "Kopitiams (coffee shops): S$4-8",
+                "Avoid expensive restaurants in Marina Bay"
+              ],
+              "whatToDoInstead": "Don't eat at tourist trap restaurants. Hawker centers are authentic and cheap."
+            },
+            {
+              "title": "Sit-Down Meal",
+              "actions": [
+                "Hawker centers: S$5-10, Restaurants: S$15-30",
+                "Tipping: Not expected (10% service charge included)",
+                "English widely spoken",
+                "Most restaurants accommodate dietary needs"
+              ],
+              "whatToDoInstead": "Eat lunch like locals (12-2pm) for best deals. Dinner after 7pm."
+            },
+            {
+              "title": "Dietary Restrictions",
+              "actions": [
+                "English widely spoken (easy to communicate)",
+                "Tap water safe to drink",
+                "Hawker centers (government-regulated) safest",
+                "Most restaurants accommodate dietary needs"
+              ],
+              "whatToDoInstead": "Don't assume - always ask. Singapore restaurants are very accommodating."
+            }
+          ]
+        },
+        {
+          "headline": "⏱ I Have Free Time",
+          "microSituations": [
+            {
+              "title": "15-30 Minutes",
+              "actions": [
+                "Walk around Marina Bay",
+                "Visit a hawker center for a snack",
+                "People-watch at a park",
+                "Quick photo at Gardens by the Bay"
+              ],
+              "whatToDoInstead": "Don't rush. Singapore is best experienced slowly."
+            },
+            {
+              "title": "1-2 Hours",
+              "actions": [
+                "Gardens by the Bay (outdoor areas free, visit 6am for cooler)",
+                "Chinatown, Little India (free, authentic)",
+                "Tiong Bahru (hipster, local)",
+                "Explore Joo Chiat (Peranakan, colorful)"
+              ],
+              "whatToDoInstead": "Avoid peak times (10am-2pm). Early morning or late afternoon is better."
+            },
+            {
+              "title": "Half Day",
+              "actions": [
+                "Local neighborhoods (Tiong Bahru, Joo Chiat)",
+                "Hawker centers (authentic, local)",
+                "Local markets (not tourist ones)",
+                "Explore residential areas"
+              ],
+              "whatToDoInstead": "Don't try to see everything. Pick one area and explore deeply."
+            }
+          ]
+        },
+        {
+          "headline": "😬 Something Feels Off",
+          "microSituations": [
+            {
+              "title": "Safety Concern",
+              "actions": [
+                "Emergency: 999 (all), 995 (ambulance)",
+                "US Embassy: +65 6476 9100",
+                "Singapore is very safe, but trust your instincts",
+                "Police are helpful and English-speaking"
+              ],
+              "whatToDoInstead": "Singapore is one of the safest cities in the world, but stay alert."
+            },
+            {
+              "title": "Scam / Suspicious",
+              "actions": [
+                "Very safe, but avoid fake electronics",
+                "Ignore overpriced tours",
+                "Negotiate at markets",
+                "Don't follow strangers"
+              ],
+              "whatToDoInstead": "Be polite but firm: 'No thanks' and keep walking."
+            },
+            {
+              "title": "Lost Item",
+              "actions": [
+                "Lost & Found: +65 1800 225 5663",
+                "Check with nearest police station",
+                "Report to embassy if passport stolen",
+                "Cancel cards immediately if wallet stolen"
+              ],
+              "whatToDoInstead": "Keep copies of passport/ID separate. Use hotel safe for valuables."
+            }
+          ]
+        },
+        {
+          "headline": "🗣 I Don't Know What to Say",
+          "microSituations": [
+            {
+              "title": "Essential Phrases",
+              "actions": [
+                "English widely spoken",
+                "'Excuse me', 'Thank you'",
+                "'Where is...?', 'How much?'",
+                "No language barrier!"
+              ],
+              "whatToDoInstead": "Don't worry - English is the main language. Communication is easy."
+            },
+            {
+              "title": "Ordering Food",
+              "actions": [
+                "English works everywhere",
+                "'Can cheaper?' (negotiate at markets)",
+                "'Same same but different' (local phrase)",
+                "'Lah' (particle, adds local flavor)"
+              ],
+              "whatToDoInstead": "Don't be embarrassed. English works everywhere."
+            },
+            {
+              "title": "Asking for Help",
+              "actions": [
+                "'Excuse me' (always start with this)",
+                "English widely spoken",
+                "Look for English signs (everywhere)",
+                "Ask at MRT info desks"
+              ],
+              "whatToDoInstead": "Singapore people are very helpful. English works everywhere."
+            }
+          ]
+        },
+        {
+          "headline": "💤 I'm Tired / Overwhelmed",
+          "microSituations": [
+            {
+              "title": "Need Rest",
+              "actions": [
+                "Find a mall (air-conditioned, free WiFi)",
+                "Café break (coffee S$3-5, sit as long as you want)",
+                "Public parks (early morning/evening)",
+                "Libraries: free WiFi, quiet, air-conditioned"
+              ],
+              "whatToDoInstead": "Don't push through exhaustion. Rest is part of travel."
+            },
+            {
+              "title": "Too Many Tourists",
+              "actions": [
+                "Leave main areas: walk 10min away from Orchard Road",
+                "Local neighborhoods (Tiong Bahru, Joo Chiat)",
+                "Hawker centers (locals, fewer tourists)",
+                "Explore residential areas"
+              ],
+              "whatToDoInstead": "Tourist areas are crowded for a reason, but real Singapore is 2 blocks away."
+            },
+            {
+              "title": "Overwhelmed by Choices",
+              "actions": [
+                "Pick one thing: food OR shopping OR nature",
+                "Walk aimlessly - Singapore rewards exploration",
+                "Ask locals: 'What do you recommend?'",
+                "Use spontaneity section for ideas"
+              ],
+              "whatToDoInstead": "Don't try to see everything. One great experience beats ten rushed ones."
+            }
+          ]
+        },
+        {
+          "headline": "🎲 Surprise Me",
+          "microSituations": [
+            {
+              "title": "If you have 15 minutes",
+              "actions": [
+                "Find a hidden hawker center",
+                "Try a random kopitiam",
+                "Watch people at a market",
+                "Discover a tiny street you've never heard of"
+              ]
+            },
+            {
+              "title": "If you want something social",
+              "actions": [
+                "Join locals at a hawker center",
+                "Visit a local market and chat with vendors",
+                "Find a free walking tour",
+                "Attend a local event (check local listings)"
+              ]
+            },
+            {
+              "title": "If it's raining",
+              "actions": [
+                "Explore covered malls",
+                "Visit indoor attractions",
+                "Café culture: sit inside with a book",
+                "Indoor markets browsing"
+              ]
+            },
+            {
+              "title": "If you want local flavor",
+              "actions": [
+                "Maxwell Food Centre (local favorite)",
+                "Old Airport Road (hawker center, authentic)",
+                "Local hawker centers (not tourist ones)",
+                "Kopitiams (coffee shops, local)"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier2": {
+      "title": "Situation",
+      "cards": [
+        {
+          "headline": "Just Arrived",
+          "microSituations": [
+            {
+              "title": "Airport to City",
+              "actions": [
+                "MRT: S$2-3, 30-45min to city center",
+                "Taxi: S$20-30, 20-30min",
+                "Grab: S$25-35, 20-30min",
+                "Book ahead for better prices"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier3": {
+      "title": "Action",
+      "cards": [
+        {
+          "headline": "Detailed Guides",
+          "microSituations": [
+            {
+              "title": "Advanced Navigation",
+              "actions": [
+                "Citymapper (transit)",
+                "Google Maps (excellent)",
+                "MRT map offline download",
+                "Real-time MRT delays"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier4": {
+      "title": "Optional Exploration",
+      "cards": [
+        {
+          "headline": "Moments",
+          "microSituations": [
+            {
+              "title": "First Night",
+              "actions": [
+                "Evening walk around Marina Bay",
+                "Dinner at hawker center",
+                "Night view from observation deck",
+                "Local bar experience"
+              ]
+            },
+            {
+              "title": "Lazy Morning",
+              "actions": [
+                "Hawker center breakfast (S$3-8)",
+                "Morning market visit",
+                "Park reading session",
+                "Slow exploration of one area"
+              ]
+            },
+            {
+              "title": "Rainy Afternoon",
+              "actions": [
+                "Mall visit (air-conditioned)",
+                "Indoor attractions",
+                "Café culture with book",
+                "Indoor markets browsing"
+              ]
+            },
+            {
+              "title": "Last Day",
+              "actions": [
+                "One last hawker center visit",
+                "Favorite spot revisit",
+                "Local souvenir (not tourist shop)",
+                "Reflection moment at favorite place"
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 }

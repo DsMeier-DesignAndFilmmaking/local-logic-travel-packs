@@ -1,28 +1,346 @@
 {
   "city": "London",
   "country": "United Kingdom",
-  "tier1": {
-    "title": "Top Free Attractions",
-    "items": [
-      "Walk along the South Bank",
-      "Visit the British Museum",
-      "Explore Covent Garden"
-    ]
-  },
-  "tier2": {
-    "title": "Gold Premium Experiences",
-    "items": [
-      "London Eye private capsule ride",
-      "Guided tour of Westminster Abbey",
-      "Afternoon tea at The Ritz"
-    ]
-  },
-  "tier3": {
-    "title": "Platinum / Spontaneity Engine",
-    "items": [
-      "AI-custom historic pub crawl",
-      "Private Thames River photography tour",
-      "Exclusive West End backstage theater tour"
-    ]
+  "tiers": {
+    "tier1": {
+      "title": "Immediate Need",
+      "cards": [
+        {
+          "headline": "🧭 I'm Lost / Getting Around",
+          "microSituations": [
+            {
+              "title": "I'm Lost",
+              "actions": [
+                "Find nearest Tube station (look for red circle with blue bar)",
+                "Use Citymapper app (best for London transport)",
+                "Ask at info desk or police station",
+                "Look for major landmarks (Big Ben, London Eye, Tower Bridge)"
+              ],
+              "whatToDoInstead": "Don't panic - London is walkable. Most central attractions are within 30min walk of each other."
+            },
+            {
+              "title": "Public Transport",
+              "actions": [
+                "Get Oyster card or use contactless card - £2.50-£3.20 per journey",
+                "Daily cap £7.70 (unlimited travel after that)",
+                "Validate card on yellow readers before boarding",
+                "Tube runs 5am-12:30am, buses 24hr on main routes"
+              ],
+              "whatToDoInstead": "Avoid taxis during rush hour (7-9am, 5-7pm). Tube is faster and cheaper."
+            },
+            {
+              "title": "Taxi / Ride Share",
+              "actions": [
+                "Black cabs: meter required, expensive (£15-30 short trips)",
+                "Uber/Bolt available but pricey",
+                "Walk between close stations (Covent Garden-Leicester Square = 2min walk vs £2.50 tube)",
+                "Avoid unlicensed minicabs"
+              ],
+              "whatToDoInstead": "Use Tube for most trips. Taxis only for late night or heavy luggage."
+            }
+          ]
+        },
+        {
+          "headline": "🍽 I Need Food Nearby",
+          "microSituations": [
+            {
+              "title": "Quick Bite",
+              "actions": [
+                "Meal deals at supermarkets: £5-8 (sandwich, snack, drink)",
+                "Food markets: Borough Market (lunch), Camden Market",
+                "Pret A Manger, Itsu: £6-10 quick meals",
+                "Avoid restaurants in Leicester Square (overpriced)"
+              ],
+              "whatToDoInstead": "Don't eat at tourist trap restaurants. Walk 2 blocks away for better prices."
+            },
+            {
+              "title": "Sit-Down Meal",
+              "actions": [
+                "Lunch: £10-15, Dinner: £20-35",
+                "Check if service charge included (10-12.5%)",
+                "Tipping: 10-12.5% if service good, round up taxis, no tip for pubs",
+                "Say 'I'm vegetarian/vegan' - works everywhere"
+              ],
+              "whatToDoInstead": "Eat lunch like locals (12-2pm) for best deals. Dinner after 7pm."
+            },
+            {
+              "title": "Dietary Restrictions",
+              "actions": [
+                "'I'm vegetarian/vegan' works everywhere",
+                "Ask about allergens (UK law requires disclosure)",
+                "Tap water safe to drink",
+                "Most restaurants accommodate dietary needs"
+              ],
+              "whatToDoInstead": "Don't assume - always ask. British restaurants are very accommodating."
+            }
+          ]
+        },
+        {
+          "headline": "⏱ I Have Free Time",
+          "microSituations": [
+            {
+              "title": "15-30 Minutes",
+              "actions": [
+                "Walk along South Bank (free, beautiful views)",
+                "Visit a local pub for a drink",
+                "People-watch at Covent Garden",
+                "Quick photo at Tower Bridge"
+              ],
+              "whatToDoInstead": "Don't rush. London is best experienced slowly."
+            },
+            {
+              "title": "1-2 Hours",
+              "actions": [
+                "British Museum (free, book online to skip queue)",
+                "Tower of London (book online, visit 9am to avoid crowds)",
+                "Walk through Hampstead Heath (locals' favorite)",
+                "Explore Borough Market (food, atmosphere)"
+              ],
+              "whatToDoInstead": "Avoid peak times (10am-2pm). Early morning or late afternoon is better."
+            },
+            {
+              "title": "Half Day",
+              "actions": [
+                "Columbia Road Flower Market (Sunday mornings)",
+                "Leadenhall Market (hidden gem, free)",
+                "Shoreditch neighborhood (trendy, local)",
+                "Notting Hill (Sunday market, charming)"
+              ],
+              "whatToDoInstead": "Don't try to see everything. Pick one area and explore deeply."
+            }
+          ]
+        },
+        {
+          "headline": "😬 Something Feels Off",
+          "microSituations": [
+            {
+              "title": "Safety Concern",
+              "actions": [
+                "Emergency: 999 (all), 101 (non-emergency)",
+                "US Embassy: +44 20 7499 9000",
+                "Avoid: Some areas of East London late at night",
+                "Trust your instincts - leave if uncomfortable"
+              ],
+              "whatToDoInstead": "London is generally safe, but stay alert in tourist areas (pickpockets)."
+            },
+            {
+              "title": "Scam / Suspicious",
+              "actions": [
+                "Ignore: Street 'charity' collectors (often fake)",
+                "Ignore: Fake ticket sellers near attractions",
+                "Ignore: Distraction techniques (watch your belongings)",
+                "Don't give money to aggressive beggars"
+              ],
+              "whatToDoInstead": "Be polite but firm: 'No thanks' and keep walking."
+            },
+            {
+              "title": "Lost Item",
+              "actions": [
+                "Lost property: +44 344 824 8555",
+                "Check with nearest police station",
+                "Report to embassy if passport stolen",
+                "Cancel cards immediately if wallet stolen"
+              ],
+              "whatToDoInstead": "Keep copies of passport/ID separate. Use hotel safe for valuables."
+            }
+          ]
+        },
+        {
+          "headline": "🗣 I Don't Know What to Say",
+          "microSituations": [
+            {
+              "title": "Essential Phrases",
+              "actions": [
+                "'Cheers' or 'Ta' (thanks)",
+                "'Excuse me' (polite, use often)",
+                "'Where's the loo?' (bathroom)",
+                "'Can I have the bill?' (check please)"
+              ],
+              "whatToDoInstead": "Don't worry - English is the language, but politeness matters."
+            },
+            {
+              "title": "Ordering Food",
+              "actions": [
+                "Point at menu if stuck",
+                "'What's good here?' (menu help)",
+                "'Can I get this to go?' (takeaway)",
+                "Menu items usually clear"
+              ],
+              "whatToDoInstead": "Don't be embarrassed. Locals appreciate politeness."
+            },
+            {
+              "title": "Asking for Help",
+              "actions": [
+                "'Excuse me' (always start with this)",
+                "'Sorry' (say often, it's polite)",
+                "'Mind the gap' (on Tube - watch your step)",
+                "Use Citymapper app for directions"
+              ],
+              "whatToDoInstead": "British people are helpful but appreciate politeness and queuing properly."
+            }
+          ]
+        },
+        {
+          "headline": "💤 I'm Tired / Overwhelmed",
+          "microSituations": [
+            {
+              "title": "Need Rest",
+              "actions": [
+                "Find a park: Hampstead Heath, Hyde Park (free)",
+                "Café break (coffee £2-4, sit as long as you want)",
+                "Public benches along Thames River",
+                "Libraries: free WiFi, quiet, air-conditioned"
+              ],
+              "whatToDoInstead": "Don't push through exhaustion. Rest is part of travel."
+            },
+            {
+              "title": "Too Many Tourists",
+              "actions": [
+                "Leave main areas: walk 10min away from Oxford Street",
+                "Hampstead Heath (locals, fewer tourists)",
+                "Local neighborhoods (Shoreditch, Notting Hill)",
+                "Explore residential areas"
+              ],
+              "whatToDoInstead": "Tourist areas are crowded for a reason, but real London is 2 blocks away."
+            },
+            {
+              "title": "Overwhelmed by Choices",
+              "actions": [
+                "Pick one thing: food OR museums OR shopping",
+                "Walk aimlessly - London rewards exploration",
+                "Ask locals: 'What do you recommend?'",
+                "Use spontaneity section for ideas"
+              ],
+              "whatToDoInstead": "Don't try to see everything. One great experience beats ten rushed ones."
+            }
+          ]
+        },
+        {
+          "headline": "🎲 Surprise Me",
+          "microSituations": [
+            {
+              "title": "If you have 15 minutes",
+              "actions": [
+                "Find a hidden mews (cobblestone alleys)",
+                "Try a random pub for a pint",
+                "Watch street performers at Covent Garden",
+                "Discover a tiny street you've never heard of"
+              ]
+            },
+            {
+              "title": "If you want something social",
+              "actions": [
+                "Join locals at a traditional pub",
+                "Visit a local market and chat with vendors",
+                "Find a free walking tour",
+                "Attend a free concert (check local listings)"
+              ]
+            },
+            {
+              "title": "If it's raining",
+              "actions": [
+                "Explore covered markets (Borough, Leadenhall)",
+                "Visit a museum (many free)",
+                "Pub culture: sit inside with a book",
+                "Underground shopping at Covent Garden"
+              ]
+            },
+            {
+              "title": "If you want local flavor",
+              "actions": [
+                "Borough Market (local market, not touristy)",
+                "Brick Lane (curry, local favorite)",
+                "Local pubs (Sunday roast £12-18)",
+                "Find a neighborhood bistro away from center"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier2": {
+      "title": "Situation",
+      "cards": [
+        {
+          "headline": "Just Arrived",
+          "microSituations": [
+            {
+              "title": "Airport to City",
+              "actions": [
+                "Heathrow Express: £25, 15min to Paddington",
+                "Tube: £6.70, 50-60min to central London",
+                "Gatwick Express: £20, 30min to Victoria",
+                "Book ahead for better prices"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier3": {
+      "title": "Action",
+      "cards": [
+        {
+          "headline": "Detailed Guides",
+          "microSituations": [
+            {
+              "title": "Advanced Navigation",
+              "actions": [
+                "Citymapper app (better than Google Maps for London)",
+                "Tube map offline download",
+                "Walking route optimization",
+                "Real-time transport delays"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier4": {
+      "title": "Optional Exploration",
+      "cards": [
+        {
+          "headline": "Moments",
+          "microSituations": [
+            {
+              "title": "First Night",
+              "actions": [
+                "Evening walk along Thames",
+                "Dinner in Borough Market area",
+                "Night view from Primrose Hill",
+                "Local pub experience"
+              ]
+            },
+            {
+              "title": "Lazy Morning",
+              "actions": [
+                "Café breakfast (full English £8-12)",
+                "Neighborhood market visit",
+                "Park reading session",
+                "Slow exploration of one area"
+              ]
+            },
+            {
+              "title": "Rainy Afternoon",
+              "actions": [
+                "Museum visit (many free)",
+                "Covered markets exploration",
+                "Pub culture with book",
+                "Indoor shopping browsing"
+              ]
+            },
+            {
+              "title": "Last Day",
+              "actions": [
+                "One last pub visit",
+                "Favorite spot revisit",
+                "Local souvenir (not tourist shop)",
+                "Reflection moment at favorite place"
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 }

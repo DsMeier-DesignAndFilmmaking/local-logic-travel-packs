@@ -1,28 +1,346 @@
 {
   "city": "Antalya",
   "country": "Turkey",
-  "tier1": {
-    "title": "Top Free Attractions",
-    "items": [
-      "Walk the old town (Kaleiçi)",
-      "Relax at Konyaaltı Beach",
-      "Explore Duden Waterfalls"
-    ]
-  },
-  "tier2": {
-    "title": "Gold Premium Experiences",
-    "items": [
-      "Guided historic city tour",
-      "Boat trip along the coast",
-      "Turkish cuisine tasting experience"
-    ]
-  },
-  "tier3": {
-    "title": "Platinum / Spontaneity Engine",
-    "items": [
-      "Private yacht tour",
-      "AI-personalized hidden beaches & experiences",
-      "Luxury spa & resort day"
-    ]
+  "tiers": {
+    "tier1": {
+      "title": "Immediate Need",
+      "cards": [
+        {
+          "headline": "🧭 I'm Lost / Getting Around",
+          "microSituations": [
+            {
+              "title": "I'm Lost",
+              "actions": [
+                "Find nearest tram/bus stop (look for AntalyaKart signs)",
+                "Use Moovit or Google Maps (works well)",
+                "Ask at info desk or police station",
+                "Look for major landmarks (Old Town Kaleiçi, Konyaaltı Beach, Duden Waterfalls)"
+              ],
+              "whatToDoInstead": "Don't panic - Antalya old town is walkable. Everything is close."
+            },
+            {
+              "title": "Public Transport",
+              "actions": [
+                "Use AntalyaKart or cash - buses/trams ₺9.90 per ride",
+                "Walking best in old town (everything close)",
+                "Taxis: negotiate BEFORE getting in (₺50-150)",
+                "Trams run 6am-midnight, avoid rush hour"
+              ],
+              "whatToDoInstead": "Walk in old town (everything close). Use trams for longer distances."
+            },
+            {
+              "title": "Taxi / Walking",
+              "actions": [
+                "Taxis: negotiate BEFORE getting in (₺50-150)",
+                "Walking best in old town (everything within 10min walk)",
+                "Use trams for longer distances",
+                "Avoid taxis during rush hour"
+              ],
+              "whatToDoInstead": "Walk in old town. Negotiate taxis before getting in."
+            }
+          ]
+        },
+        {
+          "headline": "🍽 I Need Food Nearby",
+          "microSituations": [
+            {
+              "title": "Quick Bite",
+              "actions": [
+                "Street food: simit (₺5-10), gözleme (₺20-40)",
+                "Local restaurants: ₺150-300",
+                "Food markets: ₺50-150",
+                "Avoid restaurants in Kaleiçi (overpriced)"
+              ],
+              "whatToDoInstead": "Don't eat at tourist trap restaurants. Walk 2 blocks away for better prices."
+            },
+            {
+              "title": "Sit-Down Meal",
+              "actions": [
+                "Lunch: ₺150-300, Dinner: ₺300-600",
+                "Tipping: 10% (round up), ₺5-10 taxis",
+                "Point at menu if language barrier",
+                "'Vejetaryen' = vegetarian"
+              ],
+              "whatToDoInstead": "Eat lunch like locals (12-2pm) for best deals. Dinner after 7pm."
+            },
+            {
+              "title": "Dietary Restrictions",
+              "actions": [
+                "Point at menu if stuck",
+                "'Vejetaryen' = vegetarian",
+                "Tap water generally safe but bottled preferred",
+                "Eat where locals eat"
+              ],
+              "whatToDoInstead": "Don't assume - always ask. Turkish restaurants are accommodating."
+            }
+          ]
+        },
+        {
+          "headline": "⏱ I Have Free Time",
+          "microSituations": [
+            {
+              "title": "15-30 Minutes",
+              "actions": [
+                "Walk through old town (Kaleiçi)",
+                "Visit a local café for Turkish tea",
+                "People-watch at a beach",
+                "Quick photo at Duden Waterfalls"
+              ],
+              "whatToDoInstead": "Don't rush. Antalya is best experienced slowly."
+            },
+            {
+              "title": "1-2 Hours",
+              "actions": [
+                "Kaleiçi (old town, walkable, free)",
+                "Konyaaltı Beach (locals, fewer tourists)",
+                "Duden Waterfalls (free, beautiful)",
+                "Explore local neighborhoods"
+              ],
+              "whatToDoInstead": "Avoid midday heat (11am-4pm). Early morning or evening is better."
+            },
+            {
+              "title": "Half Day",
+              "actions": [
+                "Local beaches (not tourist ones)",
+                "Local markets (authentic, local)",
+                "Hidden coves (local favorite)",
+                "Explore residential areas"
+              ],
+              "whatToDoInstead": "Don't try to see everything. Pick one area and explore deeply."
+            }
+          ]
+        },
+        {
+          "headline": "😬 Something Feels Off",
+          "microSituations": [
+            {
+              "title": "Safety Concern",
+              "actions": [
+                "Emergency: 112 (all), 155 (police)",
+                "US Consulate: +90 242 310 1200",
+                "Antalya is generally safe, but trust your instincts",
+                "Tourist Police: +90 242 310 1200 (English-speaking)"
+              ],
+              "whatToDoInstead": "Antalya is generally safe, but stay alert in tourist areas (scams)."
+            },
+            {
+              "title": "Scam / Suspicious",
+              "actions": [
+                "Ignore: Fake 'guides'",
+                "Ignore: 'Friendship' sellers",
+                "Ignore: Overpriced tours",
+                "Negotiate everything (markets, taxis)"
+              ],
+              "whatToDoInstead": "Be polite but firm: 'Hayır teşekkürler' (no thanks) and keep walking."
+            },
+            {
+              "title": "Lost Item",
+              "actions": [
+                "Tourist Police: +90 242 310 1200",
+                "Check with nearest police station",
+                "Report to consulate if passport stolen",
+                "Cancel cards immediately if wallet stolen"
+              ],
+              "whatToDoInstead": "Keep copies of passport/ID separate. Use hotel safe for valuables."
+            }
+          ]
+        },
+        {
+          "headline": "🗣 I Don't Know What to Say",
+          "microSituations": [
+            {
+              "title": "Essential Phrases",
+              "actions": [
+                "'Merhaba' (hello)",
+                "'Teşekkür ederim' (thanks)",
+                "'Nerede...?' (where is...?)",
+                "'Ne kadar?' (how much?)"
+              ],
+              "whatToDoInstead": "Don't worry - many Turks speak some English, but politeness matters."
+            },
+            {
+              "title": "Ordering Food",
+              "actions": [
+                "Point at menu if stuck",
+                "'Fiyat nedir?' (what's the price?)",
+                "'Pazarlık yapabilir miyim?' (can I negotiate?)",
+                "'Hesap lütfen' (check please)"
+              ],
+              "whatToDoInstead": "Don't be embarrassed. Pointing at menus is totally normal."
+            },
+            {
+              "title": "Asking for Help",
+              "actions": [
+                "'Merhaba' (hello - use this first)",
+                "Use Google Translate app",
+                "Look for English signs (common in tourist areas)",
+                "Ask at info desks"
+              ],
+              "whatToDoInstead": "Turkish people are very helpful. Use translation apps if needed."
+            }
+          ]
+        },
+        {
+          "headline": "💤 I'm Tired / Overwhelmed",
+          "microSituations": [
+            {
+              "title": "Need Rest",
+              "actions": [
+                "Find a beach (Konyaaltı, free, relaxing)",
+                "Local café (Turkish tea ₺5-10, sit as long as you want)",
+                "Public parks (early morning/evening)",
+                "Café break (coffee ₺20-30)"
+              ],
+              "whatToDoInstead": "Don't push through exhaustion. Rest is part of travel."
+            },
+            {
+              "title": "Too Many Tourists",
+              "actions": [
+                "Leave main areas: walk 10min away from Kaleiçi",
+                "Local beaches (not tourist ones)",
+                "Local neighborhoods (not tourist areas)",
+                "Explore residential areas"
+              ],
+              "whatToDoInstead": "Tourist areas are crowded for a reason, but real Antalya is 2 blocks away."
+            },
+            {
+              "title": "Overwhelmed by Choices",
+              "actions": [
+                "Pick one thing: beach OR old town OR nature",
+                "Walk aimlessly - Antalya rewards exploration",
+                "Ask locals: 'Ne önerirsiniz?' (what do you recommend?)",
+                "Use spontaneity section for ideas"
+              ],
+              "whatToDoInstead": "Don't try to see everything. One great experience beats ten rushed ones."
+            }
+          ]
+        },
+        {
+          "headline": "🎲 Surprise Me",
+          "microSituations": [
+            {
+              "title": "If you have 15 minutes",
+              "actions": [
+                "Find a hidden cove or beach",
+                "Try a random street food",
+                "Watch people at a market",
+                "Discover a tiny street you've never heard of"
+              ]
+            },
+            {
+              "title": "If you want something social",
+              "actions": [
+                "Join locals at a café",
+                "Visit a market and chat with vendors",
+                "Find a free walking tour",
+                "Attend a local event (check local listings)"
+              ]
+            },
+            {
+              "title": "If it's raining",
+              "actions": [
+                "Explore covered markets",
+                "Visit indoor attractions",
+                "Café culture: sit inside with a book",
+                "Indoor markets browsing"
+              ]
+            },
+            {
+              "title": "If you want local flavor",
+              "actions": [
+                "Local beaches (not tourist ones)",
+                "Local markets (authentic, local)",
+                "Street food (simit, gözleme, authentic)",
+                "Local cafés away from tourist areas"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier2": {
+      "title": "Situation",
+      "cards": [
+        {
+          "headline": "Just Arrived",
+          "microSituations": [
+            {
+              "title": "Airport to City",
+              "actions": [
+                "Havaş bus: ₺30-50, 30-45min to city center",
+                "Taxi: ₺150-200, 20-30min (negotiate first)",
+                "Tram: ₺10, 45-60min",
+                "Book ahead for better prices"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier3": {
+      "title": "Action",
+      "cards": [
+        {
+          "headline": "Detailed Guides",
+          "microSituations": [
+            {
+              "title": "Advanced Navigation",
+              "actions": [
+                "Moovit (transit)",
+                "Google Maps (works well)",
+                "Tram/bus map offline download",
+                "Real-time traffic avoidance"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tier4": {
+      "title": "Optional Exploration",
+      "cards": [
+        {
+          "headline": "Moments",
+          "microSituations": [
+            {
+              "title": "First Night",
+              "actions": [
+                "Evening walk through old town",
+                "Dinner at local restaurant",
+                "Night view from beach",
+                "Local café experience"
+              ]
+            },
+            {
+              "title": "Lazy Morning",
+              "actions": [
+                "Café breakfast (Turkish breakfast ₺100-200)",
+                "Morning beach visit",
+                "Park reading session",
+                "Slow exploration of one area"
+              ]
+            },
+            {
+              "title": "Rainy Afternoon",
+              "actions": [
+                "Covered markets exploration",
+                "Indoor attractions",
+                "Café culture with book",
+                "Indoor markets browsing"
+              ]
+            },
+            {
+              "title": "Last Day",
+              "actions": [
+                "One last beach visit",
+                "Favorite spot revisit",
+                "Local souvenir (not tourist shop)",
+                "Reflection moment at favorite place"
+              ]
+            }
+          ]
+        }
+      ]
+    }
   }
 }
