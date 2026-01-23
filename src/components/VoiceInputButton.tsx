@@ -88,7 +88,7 @@ export default function VoiceInputButton({
     }
   };
 
-  const getButtonIcon = (): JSX.Element => {
+  const getButtonIcon = (): React.ReactElement => {
     if (isListening) {
       // Pulsing microphone icon when listening
       return (

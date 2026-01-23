@@ -55,6 +55,7 @@ export default function TTSButton({
     if (autoPlay && isEnabled && (results || singleResult)) {
       handleSpeak();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results, singleResult, autoPlay, isEnabled]);
 
   const handleSpeak = () => {
@@ -103,7 +104,7 @@ export default function TTSButton({
     return null; // Don't show button if not supported
   }
 
-  const getButtonIcon = (): JSX.Element => {
+  const getButtonIcon = (): React.ReactElement => {
     if (isPaused) {
       return (
         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
