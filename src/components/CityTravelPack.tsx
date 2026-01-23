@@ -10,39 +10,47 @@ export default function CityTravelPack() {
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [travelPack, setTravelPack] = useState<TravelPack | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [userTyping, setUserTyping] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const isSelectingRef = useRef(false);
-  const selectedCityRef = useRef<string | null>(null);
+  const isSelecting = useRef(false); // Selection guard ref
+  const lastSelectedCityRef = useRef<string | null>(null); // Track last selected city
 
-  // Fetch autocomplete suggestions
+  // Fetch autocomplete suggestions only when user types
   useEffect(() => {
-    // Don't fetch suggestions if we're in the process of selecting a city
-    if (isSelectingRef.current) {
-      return;
-    }
-
-    // Don't show suggestions if query exactly matches selected city
-    if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
+    // Exit early if selection guard is active (prevent race condition)
+    if (isSelecting.current) {
       setSuggestions([]);
       setDropdownOpen(false);
       return;
     }
 
-    if (!query.trim()) {
+    // Exit early if no query or user is not typing
+    if (!query.trim() || !userTyping) {
+      setSuggestions([]);
+      setDropdownOpen(false);
+      return;
+    }
+
+    // Don't fetch if query exactly matches the last selected city (programmatic change)
+    if (lastSelectedCityRef.current && query.trim() === lastSelectedCityRef.current) {
       setSuggestions([]);
       setDropdownOpen(false);
       return;
     }
 
     let active = true;
+    
+    // Debounce the API call
     const timeoutId = setTimeout(async () => {
-      // Double-check flags after timeout
-      if (isSelectingRef.current) {
+      // Double-check selection guard and userTyping flag after timeout
+      if (isSelecting.current || !userTyping || !active) {
         return;
       }
-      if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
+
+      // Don't fetch if query exactly matches the last selected city
+      if (lastSelectedCityRef.current && query.trim() === lastSelectedCityRef.current) {
         setSuggestions([]);
         setDropdownOpen(false);
         return;
@@ -50,26 +58,32 @@ export default function CityTravelPack() {
 
       try {
         const res = await fetchCitySuggestions(query);
-        if (active && !isSelectingRef.current) {
-          // Don't show suggestions if query matches selected city
-          if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
-            setSuggestions([]);
-            setDropdownOpen(false);
-            return;
-          }
-          
-          // Deduplicate by fullName
-          const seen = new Set<string>();
-          const unique = res.filter(suggestion => {
-            if (seen.has(suggestion.fullName)) return false;
-            seen.add(suggestion.fullName);
-            return true;
-          });
-          setSuggestions(unique);
+        if (!active || !userTyping || isSelecting.current) {
+          return;
+        }
+
+        // Don't show suggestions if query matches last selected city
+        if (lastSelectedCityRef.current && query.trim() === lastSelectedCityRef.current) {
+          setSuggestions([]);
+          setDropdownOpen(false);
+          return;
+        }
+        
+        // Deduplicate by fullName
+        const seen = new Set<string>();
+        const unique = res.filter(suggestion => {
+          if (seen.has(suggestion.fullName)) return false;
+          seen.add(suggestion.fullName);
+          return true;
+        });
+        
+        setSuggestions(unique);
+        // Only open dropdown if user is actively typing and not selecting
+        if (userTyping && !isSelecting.current) {
           setDropdownOpen(unique.length > 0);
         }
       } catch (err) {
-        if (active && !isSelectingRef.current) {
+        if (active && userTyping && !isSelecting.current) {
           console.error('Error fetching suggestions:', err);
           setSuggestions([]);
         }
@@ -80,7 +94,7 @@ export default function CityTravelPack() {
       active = false;
       clearTimeout(timeoutId);
     };
-  }, [query]);
+  }, [query, userTyping]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -132,30 +146,57 @@ export default function CityTravelPack() {
       event.stopPropagation();
     }
 
-    // Set flag to prevent autocomplete from reopening dropdown
-    isSelectingRef.current = true;
-
-    // Store selected city to prevent dropdown from reopening
-    selectedCityRef.current = city.fullName;
-
-    // Close dropdown immediately
+    // Set selection guard BEFORE any state updates (prevents race condition)
+    isSelecting.current = true;
+    
+    // Store the selected city value to check for exact matches
+    lastSelectedCityRef.current = city.fullName;
+    
+    // Close dropdown immediately and keep it closed
     setDropdownOpen(false);
     
-    // Clear suggestions to prevent dropdown from showing
+    // Explicitly clear suggestions array to prevent dropdown from showing
     setSuggestions([]);
-
-    // Update state
+    
+    // Set userTyping to false to prevent dropdown reopening
+    setUserTyping(false);
+    
+    // Update state (this will trigger useEffect, but guard will prevent reopening)
     setSelectedCity(city.fullName);
     setQuery(city.fullName);
     
     // Fetch travel pack
     fetchTravelPack(city.name);
-
-    // Reset selection flag after a longer delay to ensure all async operations complete
-    // The selectedCityRef will keep the dropdown closed even after this resets
+    
+    // Reset selection guard after a short delay to allow normal typing behavior
+    // This ensures all state updates and useEffect runs complete first
     setTimeout(() => {
-      isSelectingRef.current = false;
-    }, 500);
+      isSelecting.current = false;
+    }, 100);
+  };
+
+  // Input change marks "user is typing"
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Guard: if we're in the middle of selecting, reset flag and exit early
+    if (isSelecting.current) {
+      isSelecting.current = false;
+      return;
+    }
+    
+    const newValue = e.target.value;
+    
+    // Clear selected city when user manually types something different
+    if (selectedCity && newValue !== selectedCity) {
+      setSelectedCity(null);
+    }
+    
+    // Clear last selected city ref when user manually types (allows autocomplete to work)
+    if (lastSelectedCityRef.current && newValue !== lastSelectedCityRef.current) {
+      lastSelectedCityRef.current = null;
+    }
+    
+    setQuery(newValue);
+    setUserTyping(true); // only user typing triggers dropdown
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -173,15 +214,23 @@ export default function CityTravelPack() {
         <input
           type="text"
           value={query}
-          onChange={e => {
-            // Clear selected city when user manually types
-            if (selectedCityRef.current && e.target.value !== selectedCityRef.current) {
-              selectedCityRef.current = null;
-              setSelectedCity(null);
-            }
-            setQuery(e.target.value);
-          }}
+          onChange={handleInputChange}
           onKeyDown={handleKeyDown}
+          onFocus={() => {
+            // Only open dropdown if:
+            // 1. User is actively typing (not programmatic change)
+            // 2. Selection guard is not active
+            // 3. Suggestions are available
+            // 4. Query doesn't match last selected city (exact match check)
+            if (
+              userTyping &&
+              !isSelecting.current &&
+              suggestions.length > 0 &&
+              (!lastSelectedCityRef.current || query.trim() !== lastSelectedCityRef.current)
+            ) {
+              setDropdownOpen(true);
+            }
+          }}
           placeholder="Enter city name..."
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
         />
@@ -192,8 +241,10 @@ export default function CityTravelPack() {
               <li
                 key={`${city.fullName}-${idx}`}
                 className="px-4 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors"
-                onClick={(e) => handleSelectCity(city, e)}
-                onMouseDown={(e) => e.preventDefault()}
+                onMouseDown={(e) => {
+                  e.preventDefault(); // Prevent input blur
+                  handleSelectCity(city, e);
+                }}
               >
                 {city.fullName}
               </li>
