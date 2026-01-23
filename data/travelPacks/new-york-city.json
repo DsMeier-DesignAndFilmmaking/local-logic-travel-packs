@@ -1,0 +1,28 @@
+{
+  "city": "New York City",
+  "country": "USA",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk the High Line",
+      "Explore Central Park",
+      "Visit Times Square and public art"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Statue of Liberty guided tour",
+      "Empire State Building observation deck",
+      "Broadway show tickets"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private helicopter tour over NYC",
+      "AI-personalized day itinerary with hidden gems",
+      "Luxury private museum after-hours experience"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "city": "London",
+  "country": "United Kingdom",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk along the South Bank",
+      "Visit the British Museum",
+      "Explore Covent Garden"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "London Eye private capsule ride",
+      "Guided tour of Westminster Abbey",
+      "Afternoon tea at The Ritz"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "AI-custom historic pub crawl",
+      "Private Thames River photography tour",
+      "Exclusive West End backstage theater tour"
+    ]
+  }
+}

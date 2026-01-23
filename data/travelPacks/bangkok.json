@@ -1,0 +1,28 @@
+{
+  "city": "Bangkok",
+  "country": "Thailand",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Visit the Grand Palace exterior",
+      "Walk through Khao San Road",
+      "Explore Chatuchak Weekend Market"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Guided boat tour of Chao Phraya River",
+      "Thai cooking class with local chef",
+      "Evening rooftop dinner at Sky Bar"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private Tuk Tuk night tour with AI-custom route",
+      "Luxury spa day with traditional Thai massage",
+      "Exclusive street food AI-curated tasting tour"
+    ]
+  }
+}

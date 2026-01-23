@@ -1,0 +1,28 @@
+{
+  "city": "Tokyo",
+  "country": "Japan",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk through Shinjuku Gyoen",
+      "Explore Asakusa and Senso-ji Temple",
+      "Visit Meiji Shrine"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Tokyo Skytree observation deck",
+      "Guided sushi-making class",
+      "Sumo stable visit"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private AI-personalized city tour",
+      "Luxury helicopter cityscape tour",
+      "Exclusive night photography tour"
+    ]
+  }
+}

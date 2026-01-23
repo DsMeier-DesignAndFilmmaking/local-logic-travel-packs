@@ -1,0 +1,28 @@
+{
+  "city": "Istanbul",
+  "country": "Turkey",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk the Sultanahmet district",
+      "Visit Hagia Sophia exterior",
+      "Explore the Grand Bazaar"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Topkapi Palace guided tour",
+      "Bosphorus cruise",
+      "Turkish cooking class"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private yacht on Bosphorus",
+      "AI-personalized hidden gems tour",
+      "VIP Hamam & luxury spa day"
+    ]
+  }
+}

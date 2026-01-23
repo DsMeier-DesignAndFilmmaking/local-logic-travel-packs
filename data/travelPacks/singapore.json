@@ -1,0 +1,28 @@
+{
+  "city": "Singapore",
+  "country": "Singapore",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk around Marina Bay",
+      "Visit Gardens by the Bay (outdoor areas)",
+      "Explore Chinatown and Little India"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Singapore Flyer capsule ride",
+      "Singapore River night cruise",
+      "Cooking class for local cuisine"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private guided AI-designed city tour",
+      "Exclusive tasting at Michelin-starred restaurant",
+      "Luxury rooftop pool experience"
+    ]
+  }
+}

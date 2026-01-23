@@ -1,0 +1,28 @@
+{
+  "city": "Antalya",
+  "country": "Turkey",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Walk the old town (Kaleiçi)",
+      "Relax at Konyaaltı Beach",
+      "Explore Duden Waterfalls"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Guided historic city tour",
+      "Boat trip along the coast",
+      "Turkish cuisine tasting experience"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private yacht tour",
+      "AI-personalized hidden beaches & experiences",
+      "Luxury spa & resort day"
+    ]
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "city": "Dubai",
+  "country": "UAE",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Explore Dubai Marina Walk",
+      "Visit Al Fahidi Historical District",
+      "Window-shop at Dubai Mall"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Burj Khalifa observation deck ticket",
+      "Desert safari with BBQ dinner",
+      "Dhow cruise dinner"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private helicopter tour over Dubai",
+      "Luxury yacht day trip",
+      "AI-generated personalized shopping & dining itinerary"
+    ]
+  }
+}

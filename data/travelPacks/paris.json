@@ -1,0 +1,28 @@
+{
+  "city": "Paris",
+  "country": "France",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Stroll along the Seine River",
+      "Visit Notre-Dame Cathedral exterior",
+      "Explore Montmartre and Sacré-Cœur Basilica"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Louvre Museum guided tour",
+      "Seine River dinner cruise",
+      "Cooking class at Le Foodist Paris"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private Eiffel Tower photography session",
+      "Secret wine & cheese tasting tour",
+      "AI-generated personalized 24-hour Paris itinerary"
+    ]
+  }
+}

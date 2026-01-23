@@ -1,0 +1,28 @@
+{
+  "city": "Kuala Lumpur",
+  "country": "Malaysia",
+  "tier1": {
+    "title": "Top Free Attractions",
+    "items": [
+      "Explore Batu Caves",
+      "Walk around Merdeka Square",
+      "Visit the Islamic Arts Museum exterior"
+    ]
+  },
+  "tier2": {
+    "title": "Gold Premium Experiences",
+    "items": [
+      "Petronas Towers Skybridge ticket",
+      "Guided street food tour",
+      "Cultural heritage walking tour"
+    ]
+  },
+  "tier3": {
+    "title": "Platinum / Spontaneity Engine",
+    "items": [
+      "Private AI-customized day itinerary",
+      "Luxury sunset helicopter ride",
+      "VIP access to KL Tower observation deck"
+    ]
+  }
+}
