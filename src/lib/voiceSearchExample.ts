@@ -32,7 +32,8 @@ const examplePack: OfflineFirstTravelPack = {
       urgency: "urgent",
       priority_score: 85,
       city: "Paris",
-      country: "France"
+      country: "France",
+      version: "1.0.0"
     }
     // ... more entries
   ]

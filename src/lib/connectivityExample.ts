@@ -67,7 +67,7 @@ export async function exampleSearchWithEnhancement() {
   
   console.log(`Immediate results (${immediateResults.length}):`);
   immediateResults.forEach((r, i) => {
-    console.log(`  ${i + 1}. ${r.entry.title} (${r.relevanceScore} points)`);
+    console.log(`  ${i + 1}. ${r.microSituationTitle} (${r.relevanceScore} points)`);
     console.log(`     Connectivity: ${r.connectivityState}`);
   });
   
@@ -76,7 +76,7 @@ export async function exampleSearchWithEnhancement() {
   console.log(`\nEnhanced results (${enhancedResults.length}):`);
   enhancedResults.forEach((r, i) => {
     if (r.enhanced) {
-      console.log(`  ${i + 1}. ${r.entry.title} ✨ ENHANCED`);
+      console.log(`  ${i + 1}. ${r.microSituationTitle} ✨ ENHANCED`);
     }
   });
 }
@@ -100,7 +100,7 @@ export function exampleImmediateSearch() {
   
   console.log(`Immediate results (${results.length}):`);
   results.forEach((r, i) => {
-    console.log(`  ${i + 1}. ${r.entry.title}`);
+    console.log(`  ${i + 1}. ${r.microSituationTitle}`);
   });
   
   // Enhancement happens in background, doesn't block
