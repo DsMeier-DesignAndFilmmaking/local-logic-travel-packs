@@ -1,8 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Config options here
-  // Note: This file exists alongside next.config.ts
-  // You may want to consolidate to a single config file
+  reactCompiler: true,
+  // Explicitly disable Turbopack since next-pwa requires webpack
+  turbopack: {},
 };
 
-module.exports = nextConfig;
+const withPWA = require("next-pwa")({
+  dest: "public",
+  disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+  // No runtimeCaching - only register the Service Worker for now
+});
+
+module.exports = withPWA(nextConfig);

@@ -2,7 +2,19 @@
 
 :root {
   --background: #ffffff;
-  --foreground: #1a1a1a;
+  --foreground: #171717;
+  /* ADA/WCAG AA compliant contrast (4.5:1+ normal, 3:1+ large) */
+  --text-primary: #171717;
+  --text-secondary: #374151;
+  --text-on-dark: #ffffff;
+  --text-on-dark-muted: #93c5fd;
+  --accent-blue: #1d4ed8;
+  --accent-green: #047857;
+  --accent-green-bg: #d1fae5;
+  --error-text: #b91c1c;
+  --error-bg: #fee2e2;
+  --border-light: #d1d5db;
+  --border-dark: #3b82f6;
 }
 
 @theme inline {
@@ -15,7 +27,7 @@
 /* Force white background and dark text - no dark mode */
 body {
   background: #ffffff !important;
-  color: #1a1a1a !important;
+  color: #171717 !important;
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

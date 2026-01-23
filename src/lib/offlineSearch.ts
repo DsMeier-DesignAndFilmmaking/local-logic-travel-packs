@@ -1,16 +1,30 @@
 /**
  * Offline Search Utilities
  * Local-only search for Tier 1 content (works offline)
+ * 
+ * Enhanced with ranked search engine (see offlineSearchEngine.ts)
  */
 
 import { getTier1Pack } from './offlineStorage';
 import { TravelPack } from './travelPacks';
+import { quickSearch, SearchOptions as EngineSearchOptions } from './offlineSearchEngine';
+import type { SearchResult as EngineSearchResult } from './offlineSearchEngine';
 
 export type SearchResult = {
   cardHeadline: string;
   microSituationTitle: string;
   action: string;
   city: string;
+};
+
+/**
+ * Enhanced search result with ranking information
+ */
+export type EnhancedSearchResult = SearchResult & {
+  relevanceScore: number;
+  matchTypes: string[];
+  matchedTerms: string[];
+  whatToDoInstead?: string;
 };
 
 /**
@@ -71,6 +85,35 @@ export function searchOffline(cityName: string, query: string): SearchResult[] {
   });
 
   return results;
+}
+
+/**
+ * Enhanced offline search with ranking
+ * Uses the new search engine for better results
+ * 
+ * @param cityName - City to search in
+ * @param query - Search query
+ * @param options - Search options (timeOfDay, neighborhood, tags, etc.)
+ * @returns Ranked search results
+ */
+export function searchOfflineEnhanced(
+  cityName: string,
+  query: string,
+  options?: EngineSearchOptions
+): EnhancedSearchResult[] {
+  const engineResults = quickSearch(cityName, query, options);
+  
+  // Convert engine results to enhanced search results
+  return engineResults.map(result => ({
+    cardHeadline: result.cardHeadline,
+    microSituationTitle: result.microSituationTitle,
+    action: result.action,
+    city: result.city,
+    relevanceScore: result.relevanceScore,
+    matchTypes: result.matchTypes,
+    matchedTerms: result.matchedTerms,
+    whatToDoInstead: result.whatToDoInstead,
+  }));
 }
 
 /**

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { fetchCitySuggestions, CitySuggestion } from '@/lib/citySearch';
 import { TravelPack } from '@/lib/travelPacks';
 import TravelPackDownload from '@/components/TravelPackDownload';
+import Tier1Download from '@/components/Tier1Download';
 import PremiumUnlock from '@/components/PremiumUnlock';
 import { storePackLocally, getTier1Pack } from '@/lib/offlineStorage';
 import ProblemFirstNavigation from '@/components/ProblemFirstNavigation';
@@ -215,32 +216,32 @@ export default function Home() {
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
       <main className="container mx-auto px-4 py-6 sm:py-12 max-w-4xl">
         <div className="text-center mb-8 sm:mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4" style={{ color: '#1A1A1A' }}>
+          <h1 className="text-3xl sm:text-4xl font-bold mb-3 sm:mb-4" style={{ color: 'var(--text-primary)' }}>
             Local Logic Travel Packs
           </h1>
-          <p className="text-base sm:text-lg max-w-2xl mx-auto mb-4 sm:mb-6 px-4" style={{ color: '#1A1A1A' }}>
+          <p className="text-base sm:text-lg max-w-2xl mx-auto mb-4 sm:mb-6 px-4" style={{ color: 'var(--text-primary)' }}>
             Curated, opinionated travel guides designed for offline use. Get the essential information you need without the tourist traps.
           </p>
           
-          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm px-4" style={{ color: '#1A1A1A' }}>
+          <div className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs sm:text-sm px-4" style={{ color: 'var(--text-primary)' }}>
             <div className="flex items-center gap-2">
-              <span className="text-blue-600 font-semibold">✓</span>
+              <span className="font-semibold" style={{ color: 'var(--accent-blue)' }}>✓</span>
               <span>Designed for offline use</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-blue-600 font-semibold">✓</span>
+              <span className="font-semibold" style={{ color: 'var(--accent-blue)' }}>✓</span>
               <span>Avoids tourist traps</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-blue-600 font-semibold">✓</span>
+              <span className="font-semibold" style={{ color: 'var(--accent-blue)' }}>✓</span>
               <span>Built for fast decisions while traveling</span>
             </div>
           </div>
         </div>
         
         {/* City Input - State Machine */}
-        <div className="rounded-lg shadow-md p-4 sm:p-8 mb-6 sm:mb-8" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}>
-          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4" style={{ color: '#1A1A1A' }}>
+        <div className="rounded-lg shadow-md p-4 sm:p-8 mb-6 sm:mb-8" style={{ backgroundColor: '#FFFFFF', border: '1px solid var(--border-light)' }}>
+          <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4" style={{ color: 'var(--text-primary)' }}>
             City Selection
           </h2>
           <div className="relative mb-4" ref={containerRef}>
@@ -254,8 +255,8 @@ export default function Home() {
               className="w-full px-4 py-3 text-base border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               style={{ 
                 backgroundColor: '#FFFFFF', 
-                color: '#1A1A1A', 
-                borderColor: '#D1D5DB',
+                color: 'var(--text-primary)', 
+                borderColor: 'var(--border-light)',
                 minHeight: '44px' // Touch-friendly
               }}
             />
@@ -266,7 +267,7 @@ export default function Home() {
                 className="absolute z-50 mt-1 w-full border rounded-lg shadow-lg max-h-60 overflow-y-auto text-sm"
                 style={{ 
                   backgroundColor: '#FFFFFF', 
-                  borderColor: '#D1D5DB',
+                  borderColor: 'var(--border-light)',
                   WebkitOverflowScrolling: 'touch' // Smooth scrolling on iOS
                 }}
               >
@@ -283,7 +284,7 @@ export default function Home() {
                     }}
                     className="px-4 py-3 cursor-pointer transition-colors touch-manipulation"
                     style={{ 
-                      color: '#1A1A1A',
+                      color: 'var(--text-primary)',
                       minHeight: '44px', // Touch-friendly
                       display: 'flex',
                       alignItems: 'center'
@@ -300,25 +301,25 @@ export default function Home() {
 
           {/* Loading state */}
           {isLoading && (
-            <div className="mt-4 text-center" style={{ color: '#1A1A1A' }}>
+            <div className="mt-4 text-center" style={{ color: 'var(--text-primary)' }}>
               <p>Loading Travel Pack...</p>
             </div>
           )}
 
           {/* Error state */}
           {error && (
-            <div className="mt-4 p-4 border rounded-lg" style={{ backgroundColor: '#FEF2F2', borderColor: '#FECACA' }}>
-              <p style={{ color: '#DC2626' }}>{error}</p>
+            <div className="mt-4 p-4 border rounded-lg" style={{ backgroundColor: 'var(--error-bg)', borderColor: '#fca5a5' }}>
+              <p style={{ color: 'var(--error-text)' }}>{error}</p>
             </div>
           )}
 
           {/* Coming soon message */}
           {packNotFound && !isLoading && (
-            <div className="mt-6 p-6 border rounded-lg text-center" style={{ backgroundColor: '#F0F9FF', borderColor: '#BAE6FD' }}>
-              <h3 className="text-xl font-semibold mb-2" style={{ color: '#1A1A1A' }}>
+            <div className="mt-6 p-6 border rounded-lg text-center" style={{ backgroundColor: '#E0F2FE', borderColor: '#93C5FD' }}>
+              <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                 Coming Soon
               </h3>
-              <p style={{ color: '#1A1A1A' }}>
+              <p style={{ color: 'var(--text-primary)' }}>
                 We're working on a travel pack for <strong>{city.split(',')[0].trim()}</strong>. Check back soon!
               </p>
             </div>
@@ -327,19 +328,24 @@ export default function Home() {
           {/* Travel Pack Display - Problem-First Navigation (Offline-First) */}
           {pack && !isLoading && (
             <div className="mt-6 space-y-6">
-              <div className="rounded-lg shadow-md p-4 sm:p-6" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5E7EB' }}>
+              <div className="rounded-lg shadow-md p-4 sm:p-6" style={{ backgroundColor: '#1e3a8a', border: '1px solid #1e40af' }}>
                 <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold" style={{ color: '#1A1A1A' }}>
+                    <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--text-on-dark)' }}>
                       {pack.city}, {pack.country}
                     </h2>
-                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                    <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--text-on-dark-muted)' }}>
                       Offline-ready • Problem-first navigation
                     </p>
                   </div>
-                  <span className="text-xs sm:text-sm px-2 py-1 rounded" style={{ backgroundColor: '#ECFDF5', color: '#10B981' }}>
-                    Tier 1 Available
-                  </span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs sm:text-sm px-2 py-1 rounded font-medium" style={{ backgroundColor: 'var(--accent-green-bg)', color: 'var(--accent-green)' }}>
+                      Tier 1 Available
+                    </span>
+                    {pack.tiers?.tier1 && (
+                      <Tier1Download pack={pack} />
+                    )}
+                  </div>
                 </div>
 
                 {/* Offline Search */}
@@ -351,29 +357,29 @@ export default function Home() {
                 {pack.tiers?.tier1 ? (
                   <ProblemFirstNavigation pack={pack} />
                 ) : (
-                  <div className="p-6 text-center" style={{ color: '#1A1A1A' }}>
+                  <div className="p-6 text-center" style={{ color: 'var(--text-on-dark)' }}>
                     <p>Problem-first content not available for this city yet.</p>
                   </div>
                 )}
 
                 {/* Premium Tiers (Optional) */}
                 {(pack.tiers?.tier2 || pack.tiers?.tier3) && (
-                  <div className="mt-8 pt-6 border-t" style={{ borderColor: '#E5E7EB' }}>
-                    <h3 className="text-lg font-semibold mb-4" style={{ color: '#1A1A1A' }}>
+                  <div className="mt-8 pt-6 border-t" style={{ borderColor: 'var(--border-dark)' }}>
+                    <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-on-dark)' }}>
                       Additional Content (Premium)
                     </h3>
                     <div className="space-y-4">
                       {pack.tiers.tier2 && (
-                        <div className="p-4 rounded-lg border" style={{ borderColor: '#F59E0B', backgroundColor: '#FFFBEB' }}>
-                          <h4 className="font-semibold mb-2" style={{ color: '#1A1A1A' }}>
+                        <div className="p-4 rounded-lg border" style={{ borderColor: '#B45309', backgroundColor: '#FFFBEB' }}>
+                          <h4 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                             {pack.tiers.tier2.title}
                           </h4>
                           <PremiumUnlock tier="tier2" city={pack.city} />
                         </div>
                       )}
                       {pack.tiers.tier3 && (
-                        <div className="p-4 rounded-lg border" style={{ borderColor: '#8B5CF6', backgroundColor: '#FAF5FF' }}>
-                          <h4 className="font-semibold mb-2" style={{ color: '#1A1A1A' }}>
+                        <div className="p-4 rounded-lg border" style={{ borderColor: '#6D28D9', backgroundColor: '#FAF5FF' }}>
+                          <h4 className="font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
                             {pack.tiers.tier3.title}
                           </h4>
                           <PremiumUnlock tier="tier3" city={pack.city} />
@@ -389,7 +395,7 @@ export default function Home() {
                 )}
 
                 {/* Download Button */}
-                <div className="mt-6 pt-6 border-t" style={{ borderColor: '#E5E7EB' }}>
+                <div className="mt-6 pt-6 border-t" style={{ borderColor: 'var(--border-dark)' }}>
                   <TravelPackDownload pack={pack} />
                 </div>
               </div>

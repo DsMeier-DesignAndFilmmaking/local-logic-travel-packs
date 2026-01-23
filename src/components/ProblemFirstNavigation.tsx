@@ -16,7 +16,7 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
 
   if (!tier1 || !tier1.cards || tier1.cards.length === 0) {
     return (
-      <div className="p-6 text-center" style={{ color: '#1A1A1A' }}>
+      <div className="p-6 text-center" style={{ color: 'var(--text-on-dark)' }}>
         <p>No problem-first content available for this city.</p>
       </div>
     );
@@ -51,7 +51,7 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
             setSelectedMicroSituationIndex(null);
           }}
           className="mb-4 flex items-center gap-2 text-sm sm:text-base font-medium hover:underline touch-manipulation"
-          style={{ color: '#1A1A1A' }}
+          style={{ color: 'var(--text-on-dark)' }}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -60,10 +60,10 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
         </button>
         
         <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#1A1A1A' }}>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-on-dark)' }}>
             {selectedCard.headline}
           </h2>
-          <p className="text-sm sm:text-base text-gray-600">
+          <p className="text-sm sm:text-base" style={{ color: 'var(--text-on-dark-muted)' }}>
             Choose a situation to get specific help
           </p>
         </div>
@@ -76,48 +76,49 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
               className="w-full text-left p-5 sm:p-6 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation"
               style={{
                 backgroundColor: '#FFFFFF',
-                borderColor: '#E5E7EB',
+                borderColor: 'var(--border-light)',
                 minHeight: '80px',
                 boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#F0FDF4';
-                e.currentTarget.style.borderColor = '#10B981';
+                e.currentTarget.style.borderColor = 'var(--accent-green)';
                 e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = '#E5E7EB';
+                e.currentTarget.style.borderColor = 'var(--border-light)';
                 e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
               }}
               onTouchStart={(e) => {
                 e.currentTarget.style.backgroundColor = '#F0FDF4';
-                e.currentTarget.style.borderColor = '#10B981';
+                e.currentTarget.style.borderColor = 'var(--accent-green)';
                 e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
               }}
               onTouchEnd={(e) => {
                 e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = '#E5E7EB';
+                e.currentTarget.style.borderColor = 'var(--border-light)';
                 e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
               }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg sm:text-xl mb-2" style={{ color: '#1A1A1A' }}>
+                  <h3 className="font-bold text-lg sm:text-xl mb-2" style={{ color: 'var(--text-primary)' }}>
                     {microSituation.title}
                   </h3>
                   {microSituation.actions.length > 0 && (
-                    <p className="text-sm sm:text-base text-gray-600">
+                    <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                       {microSituation.actions.length} action{microSituation.actions.length !== 1 ? 's' : ''} available
                     </p>
                   )}
                 </div>
                 <div className="flex-shrink-0">
                   <svg 
-                    className="w-6 h-6 text-gray-400" 
+                    className="w-6 h-6" 
                     fill="none" 
                     stroke="currentColor" 
                     viewBox="0 0 24 24"
+                    style={{ color: '#6b7280' }}
                   >
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
@@ -134,10 +135,10 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
   return (
     <div className="space-y-6">
       <div className="mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: '#1A1A1A' }}>
+        <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: 'var(--text-on-dark)' }}>
           What do you need right now?
         </h2>
-        <p className="text-sm sm:text-base text-gray-600">
+        <p className="text-sm sm:text-base" style={{ color: 'var(--text-on-dark-muted)' }}>
           Tap a card to get immediate help. All content works offline.
         </p>
       </div>
@@ -150,46 +151,47 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
             className="w-full text-left p-6 sm:p-8 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation"
             style={{
               backgroundColor: '#FFFFFF',
-              borderColor: '#E5E7EB',
+              borderColor: 'var(--border-light)',
               minHeight: '140px',
               boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = '#10B981';
+              e.currentTarget.style.borderColor = 'var(--accent-green)';
               e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
               e.currentTarget.style.backgroundColor = '#F0FDF4';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = '#E5E7EB';
+              e.currentTarget.style.borderColor = 'var(--border-light)';
               e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
               e.currentTarget.style.backgroundColor = '#FFFFFF';
             }}
             onTouchStart={(e) => {
-              e.currentTarget.style.borderColor = '#10B981';
+              e.currentTarget.style.borderColor = 'var(--accent-green)';
               e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
               e.currentTarget.style.backgroundColor = '#F0FDF4';
             }}
             onTouchEnd={(e) => {
-              e.currentTarget.style.borderColor = '#E5E7EB';
+              e.currentTarget.style.borderColor = 'var(--border-light)';
               e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
               e.currentTarget.style.backgroundColor = '#FFFFFF';
             }}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
-                <h3 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: '#1A1A1A' }}>
+                <h3 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
                   {card.headline}
                 </h3>
-                <p className="text-sm sm:text-base text-gray-600">
+                <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                   {card.microSituations.length} situation{card.microSituations.length !== 1 ? 's' : ''} available
                 </p>
               </div>
               <div className="flex-shrink-0">
                 <svg 
-                  className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" 
+                  className="w-6 h-6 sm:w-8 sm:h-8" 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
+                  style={{ color: '#6b7280' }}
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>

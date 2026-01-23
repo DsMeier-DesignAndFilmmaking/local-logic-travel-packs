@@ -1,0 +1,218 @@
+{
+  "city": "Paris",
+  "country": "France",
+  "version": "1.0.0",
+  "last_updated": "2026-01-23T00:00:00Z",
+  "entries": [
+    {
+      "id": "paris-late-night-food-001",
+      "title": "Late Night Food Options After 10pm",
+      "content": "Most Parisian restaurants close by 10pm, but you have options. Look for brasseries (open until midnight or later) in tourist areas like Champs-Élysées or near major train stations. Many kebab shops and pizza places stay open until 2am, especially in areas like Le Marais, Bastille, and around Gare du Nord. For 24-hour options, check out train stations - Gare du Nord and Gare de Lyon have food options. Supermarkets like Carrefour Express are open until midnight in some locations. Avoid tourist trap restaurants on main streets - walk 2-3 blocks away for better prices and quality.",
+      "problem_it_solves": "Finding food when restaurants are closed late at night",
+      "tags": ["food", "late-night", "restaurants", "budget", "emergency"],
+      "time_of_day": ["late_night", "night"],
+      "neighborhood": "City-wide",
+      "area": "Multiple areas",
+      "spoken_phrases": [
+        "I'm hungry late at night",
+        "Where can I eat after midnight",
+        "Restaurants open late",
+        "Food after 10pm",
+        "I need food now it's late",
+        "What's open for food right now",
+        "Late night dining options",
+        "Where to eat at night",
+        "Food places open late",
+        "I'm starving and it's late"
+      ],
+      "keywords": [
+        "late night",
+        "midnight",
+        "after hours",
+        "24 hour",
+        "open late",
+        "late dining",
+        "night food",
+        "brasserie",
+        "kebab",
+        "pizza",
+        "train station",
+        "gare du nord",
+        "gare de lyon",
+        "supermarket",
+        "carrefour",
+        "food emergency",
+        "hungry late"
+      ],
+      "urgency": "urgent",
+      "priority_score": 85,
+      "alternatives": [
+        "Order delivery via Uber Eats or Deliveroo (works until 2am)",
+        "Hotel room service if staying at a hotel",
+        "Vending machines at train stations",
+        "Fast food chains (McDonald's, Burger King) open until 1am"
+      ],
+      "warnings": [
+        "Avoid tourist trap restaurants on main streets - prices are 2-3x higher",
+        "Some areas like Gare du Nord can feel unsafe late at night - stay alert",
+        "Tipping is not required but appreciated (10% if service is good)"
+      ],
+      "cost_range": "budget",
+      "city": "Paris",
+      "country": "France"
+    },
+    {
+      "id": "paris-avoid-tourist-traps-001",
+      "title": "Avoiding Tourist Traps and Overpriced Places",
+      "content": "Tourist traps in Paris are concentrated in areas with heavy foot traffic: Champs-Élysées, around the Eiffel Tower, Montmartre near Sacré-Cœur, and the Latin Quarter near Notre-Dame. Key red flags: menus in multiple languages with photos, aggressive touts outside, 'tourist menu' signs, and prices 30-50% higher than nearby streets. The solution: walk 2-3 blocks away from major attractions. In Le Marais, avoid Rue de Rivoli - go to Rue des Rosiers instead. Near the Eiffel Tower, skip the immediate area and walk toward Rue Cler or Invalides. Look for restaurants filled with locals (French conversations, no English menus), lunch 'formule' specials (€12-18 vs dinner €30-50), and places that don't have someone outside trying to get you in.",
+      "problem_it_solves": "Avoiding overpriced tourist restaurants and finding authentic local experiences",
+      "tags": ["food", "restaurants", "budget", "local", "tips"],
+      "time_of_day": ["anytime"],
+      "neighborhood": "City-wide",
+      "area": "Multiple areas",
+      "spoken_phrases": [
+        "How to avoid tourist traps",
+        "Where locals actually eat",
+        "Avoid overpriced restaurants",
+        "Find authentic places",
+        "Not touristy restaurants",
+        "Where do locals go",
+        "Avoid tourist areas",
+        "Real Parisian food",
+        "Skip tourist traps",
+        "Authentic local spots",
+        "Where not to eat",
+        "Overpriced places to avoid"
+      ],
+      "keywords": [
+        "tourist trap",
+        "overpriced",
+        "touristy",
+        "authentic",
+        "local",
+        "where locals eat",
+        "avoid",
+        "skip",
+        "red flags",
+        "champs-elysees",
+        "eiffel tower",
+        "montmartre",
+        "latin quarter",
+        "rue de rivoli",
+        "rue cler",
+        "formule",
+        "lunch special",
+        "menu du jour"
+      ],
+      "urgency": "important",
+      "priority_score": 75,
+      "alternatives": [
+        "Use apps like TheFork or LaFourchette to find well-rated local restaurants",
+        "Ask hotel staff for neighborhood recommendations (not tourist areas)",
+        "Look for restaurants with 'bistrot' or 'brasserie' in the name (usually more authentic)",
+        "Visit local markets and ask vendors for recommendations"
+      ],
+      "warnings": [
+        "Restaurants with menus in 5+ languages are usually tourist traps",
+        "If someone is aggressively trying to get you inside, walk away",
+        "Prices on main tourist streets are often 2-3x higher than 2 blocks away",
+        "Tourist menus often have lower quality food"
+      ],
+      "cost_range": "budget",
+      "city": "Paris",
+      "country": "France"
+    },
+    {
+      "id": "paris-feel-unsafe-night-001",
+      "title": "Feeling Unsafe at Night - What to Do",
+      "content": "Paris is generally safe, but some areas can feel uncomfortable at night, especially for solo travelers. Areas to be extra cautious: Gare du Nord and Gare de l'Est (especially late at night), certain parts of the 18th and 19th arrondissements, and isolated metro stations after midnight. If you feel unsafe: trust your instincts and leave immediately. Walk toward well-lit, busy areas with people around. Use main streets rather than shortcuts through parks or alleys. If you're lost or need help, look for a police station (marked 'Police' or 'Commissariat'), go into a hotel lobby, or find a busy café or restaurant. Keep emergency numbers handy: 112 (EU emergency), 17 (police), 15 (ambulance). US Embassy: +33 1 43 12 22 22. Stay in well-lit areas, avoid showing expensive items, and keep your phone charged. If using public transport late, sit near the driver or in carriages with other people.",
+      "problem_it_solves": "Feeling unsafe or uncomfortable at night in an unfamiliar city",
+      "tags": ["safety", "emergency", "night", "security", "help"],
+      "time_of_day": ["late_night", "night"],
+      "neighborhood": "City-wide",
+      "area": "Multiple areas",
+      "spoken_phrases": [
+        "I feel unsafe",
+        "This area feels dangerous",
+        "I'm scared",
+        "Where is safe right now",
+        "I need to get somewhere safe",
+        "Help I feel uncomfortable",
+        "Is this area safe",
+        "Where should I go",
+        "I'm lost and it's dark",
+        "Emergency help",
+        "I don't feel safe here",
+        "Where are the police",
+        "Safe place nearby"
+      ],
+      "keywords": [
+        "unsafe",
+        "dangerous",
+        "scared",
+        "uncomfortable",
+        "safety",
+        "emergency",
+        "police",
+        "help",
+        "safe place",
+        "well lit",
+        "busy area",
+        "gare du nord",
+        "gare de l'est",
+        "metro",
+        "night",
+        "dark",
+        "solo",
+        "alone",
+        "threat",
+        "danger"
+      ],
+      "urgency": "emergency",
+      "priority_score": 95,
+      "alternatives": [
+        "Call a taxi or Uber to get to a safe location immediately",
+        "Use Google Maps to navigate to nearest police station or hotel",
+        "Enter any open business (café, restaurant, hotel) and ask for help",
+        "If in metro, get off at next stop and find station staff"
+      ],
+      "warnings": [
+        "Trust your instincts - if something feels wrong, leave immediately",
+        "Don't take shortcuts through parks or alleys at night",
+        "Avoid showing expensive items (phones, cameras, jewelry)",
+        "Keep your phone charged and have emergency numbers saved",
+        "Gare du Nord area can be particularly uncomfortable late at night"
+      ],
+      "cost_range": "free",
+      "city": "Paris",
+      "country": "France"
+    }
+  ],
+  "search_index": {
+    "by_time_of_day": {
+      "late_night": ["paris-late-night-food-001", "paris-feel-unsafe-night-001"],
+      "night": ["paris-late-night-food-001", "paris-feel-unsafe-night-001"],
+      "anytime": ["paris-avoid-tourist-traps-001"]
+    },
+    "by_tag": {
+      "food": ["paris-late-night-food-001", "paris-avoid-tourist-traps-001"],
+      "late-night": ["paris-late-night-food-001", "paris-feel-unsafe-night-001"],
+      "safety": ["paris-feel-unsafe-night-001"],
+      "emergency": ["paris-late-night-food-001", "paris-feel-unsafe-night-001"],
+      "restaurants": ["paris-late-night-food-001", "paris-avoid-tourist-traps-001"],
+      "budget": ["paris-late-night-food-001", "paris-avoid-tourist-traps-001"],
+      "local": ["paris-avoid-tourist-traps-001"],
+      "tips": ["paris-avoid-tourist-traps-001"],
+      "security": ["paris-feel-unsafe-night-001"],
+      "help": ["paris-feel-unsafe-night-001"]
+    },
+    "by_urgency": {
+      "emergency": ["paris-feel-unsafe-night-001"],
+      "urgent": ["paris-late-night-food-001"],
+      "important": ["paris-avoid-tourist-traps-001"]
+    },
+    "by_neighborhood": {
+      "City-wide": ["paris-late-night-food-001", "paris-avoid-tourist-traps-001", "paris-feel-unsafe-night-001"]
+    }
+  }
+}

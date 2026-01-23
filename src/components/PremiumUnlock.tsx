@@ -8,7 +8,7 @@ interface PremiumUnlockProps {
 export default function PremiumUnlock({ tier, city }: PremiumUnlockProps) {
   const isTier2 = tier === 'tier2';
   const tierName = isTier2 ? 'Gold Premium' : 'Platinum';
-  const tierColor = isTier2 ? '#F59E0B' : '#8B5CF6';
+  const tierColor = isTier2 ? '#B45309' : '#6D28D9';
   const tierBg = isTier2 ? '#FEF3C7' : '#F3E8FF';
 
   return (
@@ -27,7 +27,7 @@ export default function PremiumUnlock({ tier, city }: PremiumUnlockProps) {
           {tierName} Content
         </h4>
       </div>
-      <p className="text-sm mb-3" style={{ color: '#1A1A1A' }}>
+      <p className="text-sm mb-3" style={{ color: 'var(--text-primary)' }}>
         {isTier2 
           ? 'Unlock premium experiences and exclusive recommendations for this city.'
           : 'Access AI-generated personalized itineraries and exclusive experiences.'}

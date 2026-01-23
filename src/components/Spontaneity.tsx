@@ -86,25 +86,25 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
   };
 
   return (
-    <div className="mt-8 pt-6 border-t" style={{ borderColor: '#E5E7EB' }}>
+    <div className="mt-8 pt-6 border-t" style={{ borderColor: 'var(--border-dark)' }}>
       <div className="mb-6">
-        <h3 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: '#1A1A1A' }}>
+        <h3 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: 'var(--text-on-dark)' }}>
           🎲 Spontaneity & Moments
         </h3>
-        <p className="text-sm text-gray-600 mb-4">
+        <p className="text-sm mb-4" style={{ color: 'var(--text-on-dark-muted)' }}>
           Optional exploration ideas for when you have free time. All content works offline.
         </p>
       </div>
 
-      {/* Surprise Me Button */}
+      {/* Surprise Me Button - amber bg, dark text for 4.5:1+ */}
       <div className="flex flex-wrap gap-3 mb-6">
         <button
           onClick={handleSurpriseMe}
           className="flex-1 sm:flex-none px-6 py-4 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation font-semibold text-lg"
           style={{
             backgroundColor: '#FEF3C7',
-            borderColor: '#F59E0B',
-            color: '#92400E',
+            borderColor: '#B45309',
+            color: '#78350F',
             boxShadow: '0 4px 6px rgba(245, 158, 11, 0.2)',
           }}
           onMouseEnter={(e) => {
@@ -124,16 +124,16 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
             className="px-4 py-4 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation text-sm font-medium"
             style={{
               backgroundColor: '#FFFFFF',
-              borderColor: '#E5E7EB',
-              color: '#1A1A1A',
+              borderColor: 'var(--border-light)',
+              color: 'var(--text-primary)',
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#F9FAFB';
-              e.currentTarget.style.borderColor = '#10B981';
+              e.currentTarget.style.borderColor = 'var(--accent-green)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = '#FFFFFF';
-              e.currentTarget.style.borderColor = '#E5E7EB';
+              e.currentTarget.style.borderColor = 'var(--border-light)';
             }}
           >
             🔄 Re-randomize
@@ -147,13 +147,13 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
           className="mb-6 p-5 rounded-xl border-2 animate-pulse"
           style={{
             backgroundColor: '#FFFBEB',
-            borderColor: '#F59E0B',
+            borderColor: '#B45309',
           }}
         >
-          <div className="text-sm font-semibold mb-2" style={{ color: '#92400E' }}>
+          <div className="text-sm font-semibold mb-2" style={{ color: '#78350F' }}>
             {surpriseAction.card} • {surpriseAction.micro}
           </div>
-          <div className="text-lg font-bold" style={{ color: '#1A1A1A' }}>
+          <div className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
             {surpriseAction.action}
           </div>
         </div>
@@ -165,13 +165,13 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
         className="w-full flex items-center justify-between p-4 rounded-lg border-2 transition-colors mb-4"
         style={{
           backgroundColor: isExpanded ? '#F0FDF4' : '#FFFFFF',
-          borderColor: isExpanded ? '#10B981' : '#E5E7EB',
+          borderColor: isExpanded ? 'var(--accent-green)' : 'var(--border-light)',
         }}
       >
-        <span className="font-semibold text-base sm:text-lg" style={{ color: '#1A1A1A' }}>
+        <span className="font-semibold text-base sm:text-lg" style={{ color: 'var(--text-primary)' }}>
           {isExpanded ? '▼' : '▶'} {tier4.title}
         </span>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           {tier4.cards.length} card{tier4.cards.length !== 1 ? 's' : ''}
         </span>
       </button>
@@ -184,10 +184,10 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
               className="p-5 sm:p-6 rounded-xl border-2"
               style={{
                 backgroundColor: '#FFFBEB',
-                borderColor: '#FCD34D',
+                borderColor: '#B45309',
               }}
             >
-              <h4 className="text-lg sm:text-xl font-bold mb-4" style={{ color: '#92400E' }}>
+              <h4 className="text-lg sm:text-xl font-bold mb-4" style={{ color: '#78350F' }}>
                 {card.headline}
               </h4>
               
@@ -202,10 +202,10 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
                       className="p-4 rounded-lg"
                       style={{
                         backgroundColor: '#FFFFFF',
-                        borderLeft: '4px solid #F59E0B',
+                        borderLeft: '4px solid #B45309',
                       }}
                     >
-                      <h5 className="font-semibold text-base mb-3" style={{ color: '#1A1A1A' }}>
+                      <h5 className="font-semibold text-base mb-3" style={{ color: 'var(--text-primary)' }}>
                         {micro.title}
                       </h5>
                       <ul className="space-y-2">
@@ -213,9 +213,9 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
                           <li
                             key={actionIndex}
                             className="flex items-start gap-3 text-sm sm:text-base"
-                            style={{ color: '#1A1A1A' }}
+                            style={{ color: 'var(--text-primary)' }}
                           >
-                            <span className="text-yellow-600 font-bold mt-0.5 flex-shrink-0">
+                            <span className="font-bold mt-0.5 flex-shrink-0" style={{ color: '#B45309' }}>
                               •
                             </span>
                             <span className="leading-relaxed">{action}</span>
