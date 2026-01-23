@@ -14,11 +14,19 @@ export default function CityTravelPack() {
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const isSelectingRef = useRef(false);
+  const selectedCityRef = useRef<string | null>(null);
 
   // Fetch autocomplete suggestions
   useEffect(() => {
     // Don't fetch suggestions if we're in the process of selecting a city
     if (isSelectingRef.current) {
+      return;
+    }
+
+    // Don't show suggestions if query exactly matches selected city
+    if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
+      setSuggestions([]);
+      setDropdownOpen(false);
       return;
     }
 
@@ -30,9 +38,26 @@ export default function CityTravelPack() {
 
     let active = true;
     const timeoutId = setTimeout(async () => {
+      // Double-check flags after timeout
+      if (isSelectingRef.current) {
+        return;
+      }
+      if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
+        setSuggestions([]);
+        setDropdownOpen(false);
+        return;
+      }
+
       try {
         const res = await fetchCitySuggestions(query);
         if (active && !isSelectingRef.current) {
+          // Don't show suggestions if query matches selected city
+          if (selectedCityRef.current && query.trim() === selectedCityRef.current) {
+            setSuggestions([]);
+            setDropdownOpen(false);
+            return;
+          }
+          
           // Deduplicate by fullName
           const seen = new Set<string>();
           const unique = res.filter(suggestion => {
@@ -110,6 +135,9 @@ export default function CityTravelPack() {
     // Set flag to prevent autocomplete from reopening dropdown
     isSelectingRef.current = true;
 
+    // Store selected city to prevent dropdown from reopening
+    selectedCityRef.current = city.fullName;
+
     // Close dropdown immediately
     setDropdownOpen(false);
     
@@ -123,10 +151,11 @@ export default function CityTravelPack() {
     // Fetch travel pack
     fetchTravelPack(city.name);
 
-    // Reset flag after a short delay to allow state updates to complete
+    // Reset selection flag after a longer delay to ensure all async operations complete
+    // The selectedCityRef will keep the dropdown closed even after this resets
     setTimeout(() => {
       isSelectingRef.current = false;
-    }, 100);
+    }, 500);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -144,7 +173,14 @@ export default function CityTravelPack() {
         <input
           type="text"
           value={query}
-          onChange={e => setQuery(e.target.value)}
+          onChange={e => {
+            // Clear selected city when user manually types
+            if (selectedCityRef.current && e.target.value !== selectedCityRef.current) {
+              selectedCityRef.current = null;
+              setSelectedCity(null);
+            }
+            setQuery(e.target.value);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Enter city name..."
           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
