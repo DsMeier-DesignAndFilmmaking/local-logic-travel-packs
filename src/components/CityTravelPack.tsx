@@ -13,9 +13,15 @@ export default function CityTravelPack() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const isSelectingRef = useRef(false);
 
   // Fetch autocomplete suggestions
   useEffect(() => {
+    // Don't fetch suggestions if we're in the process of selecting a city
+    if (isSelectingRef.current) {
+      return;
+    }
+
     if (!query.trim()) {
       setSuggestions([]);
       setDropdownOpen(false);
@@ -26,7 +32,7 @@ export default function CityTravelPack() {
     const timeoutId = setTimeout(async () => {
       try {
         const res = await fetchCitySuggestions(query);
-        if (active) {
+        if (active && !isSelectingRef.current) {
           // Deduplicate by fullName
           const seen = new Set<string>();
           const unique = res.filter(suggestion => {
@@ -38,7 +44,7 @@ export default function CityTravelPack() {
           setDropdownOpen(unique.length > 0);
         }
       } catch (err) {
-        if (active) {
+        if (active && !isSelectingRef.current) {
           console.error('Error fetching suggestions:', err);
           setSuggestions([]);
         }
@@ -94,11 +100,33 @@ export default function CityTravelPack() {
   };
 
   // Handle city selection
-  const handleSelectCity = (city: CitySuggestion) => {
+  const handleSelectCity = (city: CitySuggestion, event?: React.MouseEvent) => {
+    // Prevent event propagation to avoid triggering outside click handler
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    // Set flag to prevent autocomplete from reopening dropdown
+    isSelectingRef.current = true;
+
+    // Close dropdown immediately
+    setDropdownOpen(false);
+    
+    // Clear suggestions to prevent dropdown from showing
+    setSuggestions([]);
+
+    // Update state
     setSelectedCity(city.fullName);
     setQuery(city.fullName);
-    setDropdownOpen(false);
+    
+    // Fetch travel pack
     fetchTravelPack(city.name);
+
+    // Reset flag after a short delay to allow state updates to complete
+    setTimeout(() => {
+      isSelectingRef.current = false;
+    }, 100);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -128,7 +156,8 @@ export default function CityTravelPack() {
               <li
                 key={`${city.fullName}-${idx}`}
                 className="px-4 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors"
-                onClick={() => handleSelectCity(city)}
+                onClick={(e) => handleSelectCity(city, e)}
+                onMouseDown={(e) => e.preventDefault()}
               >
                 {city.fullName}
               </li>
