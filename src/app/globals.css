@@ -70,3 +70,95 @@ button {
 .animate-fadeIn {
   animation: fadeIn 0.3s ease-out;
 }
+
+/* ---- Offline-safe view transitions ---- */
+@keyframes viewSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.view-enter {
+  animation: viewSlideIn 220ms ease-out;
+}
+
+/* ---- Loading skeletons (CSS-only, no API) ---- */
+@keyframes skeleton-shimmer {
+  0%,
+  100% {
+    opacity: 0.65;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.skeleton-card {
+  min-height: 140px;
+  border-radius: 12px;
+  background-color: #e5e7eb;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-line {
+  height: 1em;
+  border-radius: 4px;
+  background-color: #e5e7eb;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+}
+
+.skeleton-header {
+  height: 1.5em;
+  border-radius: 4px;
+  background-color: #d1d5db;
+  animation: skeleton-shimmer 1.2s ease-in-out infinite;
+  max-width: 70%;
+}
+
+/* ---- Microinteractions ---- */
+.btn-press {
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.btn-press:active {
+  transform: scale(0.98);
+}
+
+/* ---- Focus (keyboard nav, no API) ---- */
+:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--accent-green);
+  outline-offset: 2px;
+}
+
+/* ---- prefers-reduced-motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  .view-enter,
+  .animate-fadeIn,
+  .skeleton-card,
+  .skeleton-line,
+  .skeleton-header {
+    animation: none;
+  }
+
+  .skeleton-card,
+  .skeleton-line,
+  .skeleton-header {
+    opacity: 0.75;
+  }
+
+  .btn-press:active {
+    transform: none;
+  }
+}

@@ -15,6 +15,8 @@
 
 import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
 import { getTier1Pack } from './offlineStorage';
+import { checkTravelSignalFromTokens } from './travelSignalGuard';
+import { extractQueryTokens } from './transcriptNormalizer';
 
 export type TimeOfDay = 
   | 'early_morning'    // 5am - 9am
@@ -161,17 +163,6 @@ function extractNeighborhood(content: string): string | undefined {
   }
   
   return undefined;
-}
-
-/**
- * Tokenize query into searchable terms
- */
-function tokenizeQuery(query: string): string[] {
-  return query
-    .toLowerCase()
-    .split(/\s+/)
-    .filter(term => term.length > 1)
-    .filter(term => !['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'from'].includes(term));
 }
 
 /**
@@ -341,15 +332,22 @@ export class OfflineSearchEngine {
       return [];
     }
     
-    // Use city from options or default to initialized city
-    const searchCity = options.city || this.city;
-    if (searchCity.toLowerCase() !== this.pack.city.toLowerCase()) {
+    // Stop-word removal first; guard runs on the resulting tokens.
+    const queryTerms = extractQueryTokens(queryTrimmed);
+    if (queryTerms.length === 0) {
       return [];
     }
     
-    // Tokenize query
-    const queryTerms = tokenizeQuery(queryTrimmed);
-    if (queryTerms.length === 0) {
+    // Travel-signal guard: short-circuit if no token matches TRAVEL_KEYWORDS.
+    // Why: avoid "no results found" for non-travel queries. Does not throw; does not block offline.
+    const guard = checkTravelSignalFromTokens(queryTerms);
+    if (guard.type === 'no_signal') {
+      return [];
+    }
+    
+    // Use city from options or default to initialized city
+    const searchCity = options.city || this.city;
+    if (searchCity.toLowerCase() !== this.pack.city.toLowerCase()) {
       return [];
     }
     

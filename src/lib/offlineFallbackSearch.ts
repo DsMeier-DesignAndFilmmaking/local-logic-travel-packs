@@ -20,6 +20,8 @@
 import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
 import { getTier1Pack } from './offlineStorage';
 import { ConnectivityState } from './connectivity';
+import { checkTravelSignal, TravelSignalGuardResult } from './travelSignalGuard';
+import { extractSearchIntent, normalizeTranscript, extractQueryTokens } from './transcriptNormalizer';
 
 export type SearchState = 
   | 'local_results'        // Showing results from local pack
@@ -329,10 +331,40 @@ export function fallbackSearch(
   state: SearchState;
   message: string;
 } {
+  // SANITY CHECK: Verify function is being called
+  console.log("fallbackSearch called with:", { cityName, query });
+  
+  // SANITY CHECK: Verify transcript is a real string
+  console.log("Voice transcript:", query);
+  console.log("Transcript type:", typeof query);
+  console.log("Transcript length:", query?.length);
+  
+  // Normalize transcript: remove filler words and clean
+  const normalizedQuery = extractSearchIntent(query);
+  console.log("Normalized query:", normalizedQuery);
+  
   const { minRelevanceScore = 5, limit = 20, connectivityState } = options;
   
   // Get offline pack
   const tier1Pack = getTier1Pack(cityName);
+  
+  // SANITY CHECK: Verify JSON is actually loaded offline
+  if (tier1Pack && tier1Pack.tier1) {
+    const totalCards = tier1Pack.tier1.cards.length;
+    const totalMicroSituations = tier1Pack.tier1.cards.reduce((sum, card) => sum + card.microSituations.length, 0);
+    const totalActions = tier1Pack.tier1.cards.reduce((sum, card) => 
+      sum + card.microSituations.reduce((msSum, ms) => msSum + ms.actions.length, 0), 0
+    );
+    console.log("Pack entries:", {
+      cards: totalCards,
+      microSituations: totalMicroSituations,
+      actions: totalActions,
+      totalSearchable: totalActions
+    });
+  } else {
+    console.log("Pack entries: 0 (pack not loaded)");
+  }
+  
   if (!tier1Pack || !tier1Pack.tier1) {
     return {
       results: [],
@@ -341,7 +373,23 @@ export function fallbackSearch(
     };
   }
   
-  const queryTrimmed = query.trim().toLowerCase();
+  // Step 2: Only search if tokens remain after normalization
+  const tokens = extractQueryTokens(query);
+  console.log("Query tokens:", tokens);
+  
+  if (tokens.length === 0) {
+    console.log("No tokens remaining after normalization, showing voice hint");
+    return {
+      results: [],
+      state: 'no_results',
+      message: 'Try asking about food, places, or things to do nearby.',
+    };
+  }
+  
+  // Use normalized query, fallback to original
+  const queryToUse = normalizedQuery || query;
+  const queryTrimmed = queryToUse.trim().toLowerCase();
+  
   if (!queryTrimmed) {
     return {
       results: [],
@@ -350,7 +398,28 @@ export function fallbackSearch(
     };
   }
   
-  // Tokenize query
+  // Step C: Check travel signal before searching (use normalized query)
+  const signalCheck = checkTravelSignal(queryTrimmed);
+  if (signalCheck.type === 'fallback') {
+    console.log("No travel signal detected, returning fallback suggestions");
+    return {
+      results: (signalCheck.results || []).map((suggestion, index) => ({
+        cardHeadline: suggestion.cardHeadline,
+        microSituationTitle: suggestion.microSituationTitle,
+        action: suggestion.action,
+        city: cityName,
+        tier: 1,
+        relevanceScore: 0,
+        matchTypes: ['fallback-suggestion'],
+        matchedTerms: [],
+        matchPriority: 999,
+      })),
+      state: 'local_results',
+      message: signalCheck.message || 'Try asking about food, places, or things to do nearby.',
+    };
+  }
+  
+  // Tokenize query (already normalized, but filter again for safety)
   const queryTerms = queryTrimmed
     .split(/\s+/)
     .filter(term => term.length > 1)

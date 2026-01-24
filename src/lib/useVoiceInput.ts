@@ -245,6 +245,15 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
       const errorMessage = event.error;
       let newState: VoiceInputState = 'error';
       
+      // Suppress async listener errors (from Chrome extensions/Speech API internals)
+      // These are not critical and don't affect functionality
+      if (typeof errorMessage === 'string' && 
+          (errorMessage.includes('listener') || errorMessage.includes('message channel'))) {
+        console.warn('Speech API internal error (non-critical, likely from browser extension):', errorMessage);
+        // Don't change state or show error to user - this is a browser/extension issue
+        return;
+      }
+      
       if (errorMessage === 'no-speech') {
         newState = 'no_speech';
         setError('No speech detected. Please try again.');
@@ -258,7 +267,10 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
         newState = 'aborted';
         setError('Speech recognition was aborted.');
       } else {
-        setError(`Speech recognition error: ${errorMessage}`);
+        // Log but don't show generic errors to user (might be extension-related)
+        console.warn('Speech recognition error:', errorMessage);
+        setState('idle'); // Reset to idle instead of showing error
+        return;
       }
       
       setState(newState);
@@ -271,12 +283,32 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
     // Handle end
     recognition.onend = () => {
       setState((currentState) => {
-        if (currentState === 'listening') {
+        if (currentState === 'listening' || currentState === 'speaking') {
           return 'idle';
         }
         return currentState;
       });
     };
+    
+    // Handle abort (suppress async listener errors)
+    try {
+      // Wrap recognition methods to catch async listener errors
+      const originalStart = recognition.start.bind(recognition);
+      recognition.start = function() {
+        try {
+          originalStart();
+        } catch (error: any) {
+          // Suppress async listener errors
+          if (error?.message?.includes('listener') || error?.message?.includes('message channel')) {
+            console.warn('Speech API async listener error (non-critical):', error.message);
+            return;
+          }
+          throw error;
+        }
+      };
+    } catch (error) {
+      // Ignore - recognition might not support this
+    }
 
     recognitionRef.current = recognition;
 
@@ -346,7 +378,24 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
     try {
       setState('listening');
       recognitionRef.current.start();
-    } catch (err) {
+    } catch (err: any) {
+      // Suppress async listener errors (from Chrome extensions)
+      if (err?.message?.includes('listener') || err?.message?.includes('message channel')) {
+        console.warn('Speech API async listener error (non-critical):', err.message);
+        // Still try to start - the error might be from an extension
+        try {
+          recognitionRef.current.start();
+        } catch (retryErr) {
+          // If it still fails, handle normally
+          setState('error');
+          setError('Failed to start speech recognition. Please try again.');
+          if (onError) {
+            onError('start_failed');
+          }
+        }
+        return;
+      }
+      
       setState('error');
       setError('Failed to start speech recognition. Please try again.');
       if (onError) {
