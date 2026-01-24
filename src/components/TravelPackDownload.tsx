@@ -1,14 +1,15 @@
 'use client';
 
 import { TravelPack } from '@/lib/travelPacks';
-import { storePackLocally } from '@/lib/offlineStorage';
+import { savePack } from '../../scripts/offlineDB';
+
 
 interface TravelPackDownloadProps {
   pack: TravelPack;
 }
 
 export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     // Create download object with all tier content
     const downloadData = {
       city: pack.city,
@@ -38,9 +39,15 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     
-    // Store in localStorage for offline access
-    storePackLocally(pack);
+    // Save pack to IndexedDB for offline use
+    try {
+      await savePack(downloadData);
+      console.log(`Offline pack for ${pack.city} saved to IndexedDB`);
+    } catch (err) {
+      console.error('Failed to save offline pack:', err);
+    }
   };
+  
 
   return (
     <button

@@ -1,17 +1,70 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { searchOffline, EMERGENCY_TERMS, type MicroSituationMatch } from '@/lib/offlineSearch';
-import { getTier1Pack } from '@/lib/offlineStorage';
+import { getPack } from '../../scripts/offlineDB';
 import VoiceInputButton from './VoiceInputButton';
 import { NO_SIGNAL_MESSAGE } from '@/lib/travelSignalGuard';
 import { extractSearchIntent, hasMeaningfulContent, extractQueryTokens } from '@/lib/transcriptNormalizer';
+import { EMERGENCY_TERMS } from '@/lib/offlineSearch';
+
+export interface MicroSituationMatch {
+  cardHeadline: string;
+  microTitle: string;
+  actions: string[];
+}
 
 interface OfflineSearchProps {
   cityName: string;
   onResultClick?: (result: MicroSituationMatch) => void;
 }
 
+// ---- Top-level async search function (must be outside component) ----
+export async function searchOffline(cityName: string, query: string) {
+  if (!query) return [];
+
+  try {
+    const pack = await getPack(cityName);
+    if (!pack) {
+      return { type: 'no_signal', message: 'No offline pack downloaded for this city.', results: [] };
+    }
+
+    const lowerQuery = query.toLowerCase();
+    const matches: any[] = [];
+  
+    Object.values(pack.tiers || {}).forEach((tier: any) => {
+      tier.cards.forEach((card: any) => {
+        (card.microSituations || []).forEach((ms: any) => {
+          if (
+            ms.title.toLowerCase().includes(lowerQuery) ||
+            ms.actions.some((a: string) => a.toLowerCase().includes(lowerQuery))
+          ) {
+            matches.push({ card: card.headline, micro: ms.title, actions: ms.actions });
+          }
+        });
+      });
+    });
+
+    if (matches.length === 0) {
+      const fallbackResults: any[] = [];
+      Object.values(pack.tiers || {}).forEach((tier: any) => {
+        tier.cards.forEach((card: any) => {
+          (card.microSituations || []).forEach((ms: any) => {
+            fallbackResults.push({ card: card.headline, micro: ms.title, actions: ms.actions });
+          });
+        });
+      });
+      return { type: 'fallback', message: 'No strong matches, showing all offline content', results: fallbackResults };
+    }
+  
+    return matches;
+
+  } catch (err) {
+    console.error('Offline search failed:', err);
+    return { type: 'no_signal', message: 'Offline search error', results: [] };
+  }
+}
+
+// ---- Component ----
 export default function OfflineSearch({ cityName, onResultClick }: OfflineSearchProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MicroSituationMatch[]>([]);
@@ -20,40 +73,39 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
   const [showVoiceHint, setShowVoiceHint] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Instant search - no network calls, filters preloaded JSON data
+  // ---- Instant offline search ----
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setFallbackMessage(null);
-      setShowVoiceHint(false);
-      return;
-    }
-
-    // If no tokens remain after stop-word removal, show voice hint and skip search.
     const tokens = extractQueryTokens(query);
     if (tokens.length === 0) {
       setResults([]);
       setFallbackMessage(null);
-      setShowVoiceHint(true);
+      setShowVoiceHint(query.length > 0); // show voice hint only if user typed something
       return;
     }
     setShowVoiceHint(false);
 
-    // Offline search: guard, then search. May return results, no_signal, or fallback (0 matches).
-    const out = searchOffline(cityName, query);
+    let cancelled = false;
 
-    if (!Array.isArray(out)) {
-      // no_signal: results []; fallback: results from pack when no strong match
-      setResults(out.type === 'fallback' ? out.results : []);
-      setFallbackMessage(out.message);
-      return;
+    async function runSearch() {
+      console.log('🔍 Offline search for:', cityName, query);
+
+      const out = await searchOffline(cityName, query);
+      if (cancelled) return;
+
+      if (Array.isArray(out)) {
+        setResults(out);
+        setFallbackMessage(out.length === 0 ? NO_SIGNAL_MESSAGE : null);
+      } else {
+        setResults(out.results);
+        setFallbackMessage(out.message);
+      }
     }
 
-    setResults(out);
-    setFallbackMessage(out.length === 0 ? NO_SIGNAL_MESSAGE : null);
+    runSearch();
+    return () => { cancelled = true; };
   }, [query, cityName]);
 
-  // Close search when clicking outside
+  // ---- Close search on outside click ----
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -68,20 +120,10 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
   }, [isOpen]);
 
   const handleResultClick = (result: MicroSituationMatch) => {
-    if (onResultClick) {
-      onResultClick(result);
-    }
+    if (onResultClick) onResultClick(result);
     setIsOpen(false);
     setQuery('');
   };
-
-  // Check if Tier 1 pack is available offline
-  const tier1Pack = getTier1Pack(cityName);
-  const isOfflineAvailable = !!tier1Pack;
-
-  if (!isOfflineAvailable) {
-    return null; // Don't show search if no offline content
-  }
 
   return (
     <div className="relative" ref={searchRef}>
@@ -90,7 +132,7 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
           🔍 Offline Search
         </label>
         <p className="text-xs mb-3" style={{ color: 'var(--text-on-dark-muted)' }}>
-          Search through all Tier 1 content instantly - no network required
+          Search all offline content instantly
         </p>
       </div>
 
@@ -113,49 +155,16 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
           }}
         />
         <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-          {/* Voice input button */}
           <VoiceInputButton
             onTranscript={(transcript) => {
-              // SANITY CHECK: Verify transcript is a real string
-              console.log("Voice transcript:", transcript);
-              console.log("Transcript type:", typeof transcript);
-              console.log("Transcript length:", transcript?.length);
-              
-              // Normalize transcript: remove filler words and clean
               const normalizedQuery = extractSearchIntent(transcript);
-              console.log("Normalized query:", normalizedQuery);
-              
-              // Only set query if it has meaningful content
-              if (hasMeaningfulContent(transcript)) {
-                setQuery(normalizedQuery);
-                setIsOpen(true);
-              } else {
-                console.log("Transcript has no meaningful content after normalization");
-                // Still show the original transcript so user can see what was heard
-                setQuery(transcript);
-                setIsOpen(true);
-              }
+              if (hasMeaningfulContent(transcript)) setQuery(normalizedQuery);
+              else setQuery(transcript);
+              setIsOpen(true);
             }}
-            disabled={!isOfflineAvailable}
-            className="flex-shrink-0"
-            showHelper={true}
+            disabled={false}
+            showHelper
           />
-          
-          {/* Search icon */}
-          <svg
-            className="w-5 h-5 pointer-events-none flex-shrink-0"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: query ? 'var(--accent-green)' : '#6b7280' }}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
         </div>
       </div>
 
@@ -167,24 +176,9 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
             {EMERGENCY_TERMS.slice(0, 8).map((term) => (
               <button
                 key={term}
-                onClick={() => {
-                  setQuery(term);
-                  setIsOpen(true);
-                }}
+                onClick={() => { setQuery(term); setIsOpen(true); }}
                 className="px-3 py-1.5 text-xs rounded-lg border transition-colors touch-manipulation"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.95)',
-                  borderColor: 'var(--border-light)',
-                  color: 'var(--text-primary)',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = 'var(--accent-green-bg)';
-                  e.currentTarget.style.borderColor = 'var(--accent-green)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.95)';
-                  e.currentTarget.style.borderColor = 'var(--border-light)';
-                }}
+                style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
               >
                 {term}
               </button>
@@ -193,168 +187,48 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
         </div>
       )}
 
-      {/* Search results - Instant display, no network calls */}
-      {isOpen && query && results.length > 0 && (
-        <div
-          className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-xl max-h-96 overflow-y-auto"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderColor: 'var(--accent-green)',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)',
-          }}
-        >
+      {/* Results */}
+      {isOpen && query && (
+        <div className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-xl max-h-96 overflow-y-auto" style={{ backgroundColor: '#FFFFFF', borderColor: 'var(--accent-green)' }}>
           <div className="sticky top-0 p-3 text-xs font-semibold border-b" style={{ borderColor: 'var(--accent-green)', backgroundColor: 'var(--accent-green-bg)', color: 'var(--accent-green)' }}>
-            {fallbackMessage ? (
-              <div>
-                <div className="mb-1">{fallbackMessage}</div>
-                <div className="text-xs opacity-75">{results.length} suggestion{results.length !== 1 ? 's' : ''}</div>
-              </div>
-            ) : (
-              `${results.length} result${results.length !== 1 ? 's' : ''} found (offline)`
-            )}
+            {fallbackMessage ? `${fallbackMessage} (${results.length} items)` : `${results.length} result(s) found (offline)`}
           </div>
           <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
             {results.map((result, index) => {
-              const preview = result.matchedActions[0] || result.microSituation.actions[0] || '';
+              const preview = result.actions[0] || '';
               return (
-              <button
-                key={`${result.cardHeadline}-${result.microSituation.title}-${index}`}
-                onClick={() => handleResultClick(result)}
-                className="w-full text-left p-4 transition-colors touch-manipulation"
-                style={{
-                  color: 'var(--text-primary)',
-                  minHeight: '60px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F0FDF4';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                }}
-                onTouchStart={(e) => {
-                  e.currentTarget.style.backgroundColor = '#F0FDF4';
-                }}
-                onTouchEnd={(e) => {
-                  e.currentTarget.style.backgroundColor = '#FFFFFF';
-                }}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    <div className="text-sm font-bold mb-1" style={{ color: 'var(--accent-green)' }}>
-                      {result.cardHeadline}
-                    </div>
-                    <div className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
-                      {result.microSituation.title}
-                    </div>
-                    <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                      {preview}
+                <button
+                  key={`${result.cardHeadline}-${result.microTitle}-${index}`}
+                  onClick={() => handleResultClick(result)}
+                  className="w-full text-left p-4 transition-colors touch-manipulation"
+                  style={{ color: 'var(--text-primary)', minHeight: '60px' }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <div className="text-sm font-bold mb-1" style={{ color: 'var(--accent-green)' }}>
+                        {result.cardHeadline}
+                      </div>
+                      <div className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
+                        {result.microTitle}
+                      </div>
+                      <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
+                        {preview}
+                      </div>
                     </div>
                   </div>
-                  <svg
-                    className="w-5 h-5 flex-shrink-0 mt-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    style={{ color: '#6b7280' }}
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </button>
-            );
+                </button>
+              );
             })}
           </div>
         </div>
       )}
 
-      {/* Voice hint UI - when no tokens remain after normalization */}
+      {/* Voice hint */}
       {isOpen && query && showVoiceHint && (
-        <div
-          className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-lg p-6 text-center"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderColor: 'var(--accent-green)',
-          }}
-        >
-          <svg
-            className="w-12 h-12 mx-auto mb-3"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            style={{ color: 'var(--accent-green)' }}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-            />
-          </svg>
+        <div className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-lg p-6 text-center" style={{ backgroundColor: '#FFFFFF', borderColor: 'var(--accent-green)' }}>
           <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
             Try asking about food, places, or things to do nearby.
           </p>
-          <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-            Examples: "late night food", "I'm lost", "toilet nearby", "quiet coffee"
-          </p>
-        </div>
-      )}
-
-      {/* No results or fallback message */}
-      {isOpen && query && results.length === 0 && !showVoiceHint && (
-        <div
-          className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-lg p-6 text-center"
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderColor: fallbackMessage ? 'var(--accent-green)' : 'var(--border-light)',
-          }}
-        >
-          {fallbackMessage ? (
-            <>
-              <svg
-                className="w-12 h-12 mx-auto mb-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                style={{ color: 'var(--accent-green)' }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                {fallbackMessage}
-              </p>
-              <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-                Examples: "late night food", "I'm lost", "toilet nearby"
-              </p>
-            </>
-          ) : (
-            <>
-              <svg
-                className="w-12 h-12 mx-auto mb-3"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                style={{ color: '#6b7280' }}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-              <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-                Try asking about food, places, or things to do nearby.
-              </p>
-              <p className="text-xs mt-2" style={{ color: 'var(--text-secondary)' }}>
-                Examples: "late night food", "quiet coffee", "is this area safe at night"
-              </p>
-            </>
-          )}
         </div>
       )}
     </div>

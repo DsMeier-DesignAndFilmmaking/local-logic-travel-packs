@@ -18,15 +18,20 @@ export type CitySuggestion = {
  * @param query - User input string
  * @returns Array of city suggestions
  */
-export async function fetchCitySuggestions(query: string): Promise<CitySuggestion[]> {
-  if (!query) return [];
+export async function fetchCitySuggestions(query: string) {
+  // ✅ HARD STOP if offline
+  if (!navigator.onLine) {
+    console.log('📴 Offline — skipping city API search');
+    return [];
+  }
 
   try {
     const res = await fetch(`/api/cities?q=${encodeURIComponent(query)}`);
     if (!res.ok) return [];
-    return res.json();
-  } catch (error) {
-    console.error('Error fetching city suggestions:', error);
+    return await res.json();
+  } catch (err) {
+    console.warn('City search failed:', err);
     return [];
   }
 }
+

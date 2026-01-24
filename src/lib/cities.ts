@@ -6,16 +6,16 @@
  */
 
 export const SUPPORTED_CITIES = [
+  'Bangkok',
   'Paris',
   'London',
-  'Rome',
-  'Barcelona',
-  'Amsterdam',
-  'Lisbon',
-  'Berlin',
-  'Prague',
-  'Vienna',
-  'Budapest',
+  'Dubai',
+  'Singapore',
+  'New York City',
+  'Kuala Lumpur',
+  'Istanbul',
+  'Tokyo',
+  'Antalya',
 ] as const;
 
 export type SupportedCity = typeof SUPPORTED_CITIES[number];
