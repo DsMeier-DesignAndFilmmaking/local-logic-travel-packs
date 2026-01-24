@@ -7,6 +7,17 @@
  * See offlineSituationalSearch.ts for matching order, scoring, and fallback.
  */
 
+/**
+ * Offline-first search.
+ * 
+ * Architectural principle:
+ * - UI must function without network
+ * - JSON is decision fuel, not presentation
+ * 
+ * See: /ARCHITECTURE.md
+ */
+
+
 import { getTier1Pack } from './offlineStorage';
 import type { TravelPack } from './travelPacks';
 import { quickSearch, SearchOptions as EngineSearchOptions } from './offlineSearchEngine';

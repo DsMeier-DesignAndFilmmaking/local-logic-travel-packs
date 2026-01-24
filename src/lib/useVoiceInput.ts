@@ -283,7 +283,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
     // Handle end
     recognition.onend = () => {
       setState((currentState) => {
-        if (currentState === 'listening' || currentState === 'speaking') {
+        if (currentState === 'requesting' || currentState === 'processing') {
           return 'idle';
         }
         return currentState;
