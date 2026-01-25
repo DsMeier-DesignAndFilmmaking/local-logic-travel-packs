@@ -1,13 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    // This is the "secret sauce" for Next.js 15/16 Webpack compatibility
-    webpackBuildWorker: true, 
+  // Force Webpack by providing a custom (even if empty) webpack config
+  webpack: (config) => {
+    return config;
   },
 };
 
-// Ensure you are using the maintained fork we swapped to
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
