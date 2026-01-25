@@ -43,7 +43,7 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 mb-10">
       {/* 1. Header Section - Always Visible */}
-      <div className="px-6 sm:px-0 mb-8">
+      <div className="sm:px-0 mb-8">
         <h3 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
           Spontaneity & Moments
         </h3>
@@ -53,7 +53,7 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
       </div>
 
       {/* 2. AI SPONTANEITY ENGINE PROMO - Always Visible */}
-      <div className="px-6 sm:px-0 mb-8">
+      <div className="sm:px-0 mb-8">
         <div className="relative overflow-hidden rounded-3xl bg-slate-900 p-6 sm:p-8 text-white shadow-2xl">
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-3xl" />
           <div className="absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
@@ -98,10 +98,12 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
         </div>
       ) : (
         /* 4. Placeholder when no city is selected */
-        <div className="px-6 sm:px-10 pb-20">
+        <div className="sm:px-10 pb-20">
           <div className="p-10 rounded-3xl border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
             <p className="text-slate-400 font-medium max-w-xs">
-              Select a city above to unlock curated offline moments for your destination.
+            Select a destination to activate your offline support system.
+            <br></br><br></br>
+            Access real-time tactical info designed to resolve travel friction the moment it arises—no signal required.
             </p>
           </div>
         </div>

@@ -170,7 +170,7 @@ export default function CityInput({
           <button
             key={city}
             type="button"
-            className="px-3 py-1 bg-blue-100 text-slate-800 rounded hover:bg-blue-200 dark:bg-white dark:text-dark dark:hover:bg-gray-100"
+            className="px-3 py-1 bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors font-semibold dark:bg-slate-100 dark:text-slate-800 dark:hover:bg-slate-200"
             onClick={() => handleSelect(city)}
           >
             {city}
