@@ -72,6 +72,21 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
+  const handleLaunchApp = () => {
+    setShowSuccessModal(false);
+  
+    // 1. Check if the user is already in 'standalone' mode (the app is already open)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+                         || (window.navigator as any).standalone;
+  
+    if (!isStandalone) {
+      // 2. If not in the app, redirect them to the start_url.
+      // Browsers that have the app installed will often intercept 
+      // this URL and offer to open it in the App window.
+      window.location.href = '/?mode=standalone'; 
+    }
+  };
+
   if (!pack.tiers?.tier1) return null;
 
   const config = {
@@ -147,11 +162,11 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
             </p>
 
             <button 
-              onClick={() => setShowSuccessModal(false)}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
-            >
-              Ready for Departure
-            </button>
+            onClick={handleLaunchApp} // Change this from just setting state to false
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
+          >
+            Confirm & Launch App
+          </button>
           </div>
         </div>
       )}
