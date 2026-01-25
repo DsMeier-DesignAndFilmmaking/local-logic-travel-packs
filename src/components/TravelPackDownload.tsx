@@ -64,6 +64,21 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     }
   };
 
+  const handleLaunchApp = () => {
+    setShowSuccessModal(false);
+  
+    // 1. Check if the user is already in 'standalone' mode (the app is already open)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+                         || (window.navigator as any).standalone;
+  
+    if (!isStandalone) {
+      // 2. If not in the app, redirect them to the start_url.
+      // Browsers that have the app installed will often intercept 
+      // this URL and offer to open it in the App window.
+      window.location.href = '/?mode=standalone'; 
+    }
+  };
+  
   const config = {
     idle: {
       text: "Download for Offline Use",
@@ -133,11 +148,11 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
             </p>
 
             <button 
-              onClick={() => setShowSuccessModal(false)}
-              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
-            >
-              Got it, let's go
-            </button>
+            onClick={handleLaunchApp} // Change this from just setting state to false
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
+          >
+            Confirm & Launch App
+          </button>
           </div>
         </div>
       )}
