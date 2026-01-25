@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
 // Fixed import path: Avoid importing from .next folder
-import { usePWAInstall } from '../../.next/hooks/usePWAInstall'; 
+import { usePWAInstall } from '../hooks/usePWAInstall'; 
 
 interface TravelPackDownloadProps {
   pack: TravelPack;

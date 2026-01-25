@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
 // Fixed: Using the standard alias path for your hook
-import { usePWAInstall } from '../../.next/hooks/usePWAInstall'; 
+import { usePWAInstall } from '../hooks/usePWAInstall'; 
 
 interface Tier1DownloadProps {
   pack: TravelPack;
