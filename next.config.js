@@ -1,17 +1,21 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // DO NOT add turbopack here; it's handled by the environment variable
 };
 
-const defaultCache = require("next-pwa/cache");
-
-const withPWA = require("next-pwa")({
+const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
-  clientsClaim: true,
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+  // We manually define your travel pack caching here
   runtimeCaching: [
     {
       urlPattern: /\/api\/travel-packs\/?(\?.*)?$/,
@@ -21,7 +25,6 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 32, maxAgeSeconds: 7 * 24 * 60 * 60 },
       },
     },
-    ...defaultCache,
   ],
 });
 
