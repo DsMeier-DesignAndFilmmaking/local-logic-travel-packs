@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true, // Recommended for identifying potential issues
-  // Note: reactCompiler is an experimental/Next 15 feature. 
-  // If you are on Next 15, ensure your dependencies are compatible.
+  reactStrictMode: true,
+  // We do not define turbopack: {} here to avoid conflicts with the PWA plugin
 };
 
 // Default runtime cache rules from next-pwa
@@ -10,10 +9,9 @@ const defaultCache = require("next-pwa/cache");
 
 const withPWA = require("next-pwa")({
   dest: "public",
-  // CHANGED: disable is now false so you can test the "Install" button in dev mode.
-  // Tip: If caching makes development difficult later, change this back to:
-  // disable: process.env.NODE_ENV === "development",
-  disable: false, 
+  // FIX: Disable PWA in development to allow Turbopack to work.
+  // PWA features will be enabled during 'next build'.
+  disable: process.env.NODE_ENV === "development", 
   register: true,
   skipWaiting: true,
   clientsClaim: true,
@@ -55,7 +53,7 @@ const withPWA = require("next-pwa")({
         expiration: { maxEntries: 16, maxAgeSeconds: 60 * 60 },
       },
     },
-    // 4. Spread default Next-PWA cache rules for assets, fonts, and images
+    // 4. Spread default Next-PWA cache rules
     ...defaultCache,
   ],
 });
