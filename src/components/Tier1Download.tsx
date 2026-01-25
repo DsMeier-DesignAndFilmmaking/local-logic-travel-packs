@@ -22,6 +22,9 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   // Initialize the PWA install logic
   const { triggerInstall, canInstall } = usePWAInstall();
 
+  // Add 'instructions' to the possible steps
+  const [step, setStep] = useState<'success' | 'instructions'>('success');
+
   useEffect(() => {
     // Detect device for the modal message
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -73,17 +76,21 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   };
 
   const handleLaunchApp = () => {
-    setShowSuccessModal(false);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
+                         (window.navigator as any).standalone === true;
   
-    // 1. Check if the user is already in 'standalone' mode (the app is already open)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
-                         || (window.navigator as any).standalone;
-  
-    if (!isStandalone) {
-      // 2. If not in the app, redirect them to the start_url.
-      // Browsers that have the app installed will often intercept 
-      // this URL and offer to open it in the App window.
-      window.location.href = '/?mode=standalone'; 
+    if (isStandalone) {
+      // If they are already in the app, just close and refresh
+      setShowSuccessModal(false);
+      window.location.reload();
+    } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+      // If on iPhone but NOT in the app yet, we cannot "launch."
+      // We must stay on the modal and show the "How to Save" instructions.
+      setStep('instructions'); 
+    } else {
+      // Android/Desktop behavior
+      setShowSuccessModal(false);
+      window.location.href = '/?mode=standalone';
     }
   };
 
@@ -145,30 +152,55 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
 
       {/* SUCCESS CONFIRMATION MODAL */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="bg-white rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl transform transition-all animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            
-            <h2 className="text-2xl font-black text-slate-900 mb-3">Local Vault Synced</h2>
-            
-            <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-              {isMobile 
-                ? "The Travel Pack icon has been added to your Home Screen for instant offline access." 
-                : "The Offline App is now available in your Applications folder or Launchpad."}
-            </p>
-
-            <button 
-            onClick={handleLaunchApp} // Change this from just setting state to false
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+    <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+      
+      {step === 'success' ? (
+        <div className="text-center">
+          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 mb-3">Sync Complete</h2>
+          <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+            Tactical data is now locked in your local vault.
+          </p>
+          <button 
+            onClick={handleLaunchApp}
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
           >
             Confirm & Launch App
           </button>
-          </div>
         </div>
+      ) : (
+        <div className="text-left">
+          <h2 className="text-xl font-black text-slate-900 mb-4">Install to Home Screen</h2>
+          <p className="text-slate-600 mb-6 text-sm">
+            To access this pack offline anytime, you must add it to your Home Screen:
+          </p>
+          
+          <div className="space-y-4 mb-8">
+            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">1</span>
+              <span>Tap the <strong className="text-blue-600">Share</strong> icon (the square with an arrow)</span>
+            </div>
+            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">2</span>
+              <span>Scroll down and tap <strong className="text-slate-900">Add to Home Screen</strong></span>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => setShowSuccessModal(false)}
+            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold active:scale-[0.98]"
+          >
+            Got it, I'll do that
+          </button>
+        </div>
+      )}
+    </div>
+  </div>
       )}
     </>
   );
