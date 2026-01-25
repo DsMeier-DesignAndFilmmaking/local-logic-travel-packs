@@ -330,6 +330,13 @@ useEffect(() => {
     >
       Data Sources
     </Link>
+
+    <Link 
+      href="/support" 
+      className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+    >
+      Contact Support
+    </Link>
   </div>
   
   <p className="text-[12px] text-slate-400 font-medium">

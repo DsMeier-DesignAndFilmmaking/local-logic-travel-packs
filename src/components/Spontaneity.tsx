@@ -68,7 +68,7 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
               </div>
               <h4 className="text-2xl font-bold mb-3 tracking-tight">The Spontaneity Engine™</h4>
               <p className="text-slate-400 text-base leading-relaxed">
-                I am in the process of building an AI system that generates hyper-local, real-time exploration paths based on your specific location and vibe.
+                I am in the process of building an AI system that generates hyper-local, real-time exploration based on your specific location and vibe.
               </p>
             </div>
 
@@ -98,7 +98,7 @@ export default function Spontaneity({ pack }: SpontaneityProps) {
         </div>
       ) : (
         /* 4. Placeholder when no city is selected */
-        <div className="sm:px-10 pb-20">
+        <div className="sm:px-0 pb-20">
           <div className="p-10 rounded-3xl border-2 border-dashed border-slate-100 flex flex-col items-center text-center">
             <p className="text-slate-400 font-medium max-w-xs">
             Select a destination to activate your offline support system.

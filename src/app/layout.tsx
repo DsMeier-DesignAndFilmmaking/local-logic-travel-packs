@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "default", // or "black-translucent" if you want the app content to flow under the status bar
     title: "Travel Packs",
   },
   icons: {
@@ -31,7 +31,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 5,
+  maximumScale: 1,      // Prevents UI "jitter" on mobile
+  userScalable: false,  // Forces the "Native App" feel
   themeColor: "#000000",
 };
 
