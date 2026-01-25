@@ -127,110 +127,102 @@ export default function OfflineSearch({ cityName, onResultClick }: OfflineSearch
 
   return (
     <div className="relative" ref={searchRef}>
-      <div className="mb-4">
-        <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-on-dark)' }}>
-          🔍 Offline Search
-        </label>
-        <p className="text-xs mb-3" style={{ color: 'var(--text-on-dark-muted)' }}>
-          Search all offline content instantly
-        </p>
-      </div>
+  {/* Label and Subtext Area - Matched to Card Gutters */}
+  <div className="mb-6 px-6 sm:px-10"> 
+    <p className="text-sm opacity-90" style={{ color: 'var(--text-on-dark)' }}>
+      Instant results from your local travel pack
+    </p>
+  </div>
 
-      <div className="relative">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
+  {/* Input Field Area - Matched to Card Gutters */}
+  <div className="relative px-6 sm:px-10">
+    <div className="relative group">
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={() => setIsOpen(true)}
+        placeholder="What do you need at the moment..."
+        className="w-full px-5 py-4 pr-14 text-base border-0 rounded-2xl shadow-lg focus:outline-none focus:ring-4 focus:ring-blue-500/40 transition-all placeholder:text-slate-400"
+        style={{
+          backgroundColor: '#FFFFFF',
+          color: 'var(--text-primary)',
+          minHeight: '60px',
+        }}
+      />
+      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+        <VoiceInputButton
+          onTranscript={(transcript) => {
+            const normalizedQuery = extractSearchIntent(transcript);
+            if (hasMeaningfulContent(transcript)) setQuery(normalizedQuery);
+            else setQuery(transcript);
             setIsOpen(true);
           }}
-          onFocus={() => setIsOpen(true)}
-          placeholder="Search: toilet, ATM, pharmacy, metro, food..."
-          className="w-full px-4 py-3 pr-20 text-base border-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-          style={{
-            backgroundColor: '#FFFFFF',
-            color: 'var(--text-primary)',
-            borderColor: query ? 'var(--accent-green)' : 'var(--border-light)',
-            minHeight: '48px',
-          }}
+          disabled={false}
+          className="p-2 rounded-xl hover:bg-slate-100 transition-colors"
         />
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-          <VoiceInputButton
-            onTranscript={(transcript) => {
-              const normalizedQuery = extractSearchIntent(transcript);
-              if (hasMeaningfulContent(transcript)) setQuery(normalizedQuery);
-              else setQuery(transcript);
-              setIsOpen(true);
-            }}
-            disabled={false}
-            showHelper
-          />
+      </div>
+    </div>
+
+    {/* Quick suggestions - Aligned with Input edge 
+    {!query && (
+      <div className="mt-4">
+        <p className="text-[11px] font-bold uppercase tracking-wider mb-3 opacity-70" style={{ color: 'var(--text-on-dark-muted)' }}>
+          Quick search:
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {EMERGENCY_TERMS.slice(0, 8).map((term) => (
+            <button
+              key={term}
+              onClick={() => { setQuery(term); setIsOpen(true); }}
+              className="px-4 py-2 text-xs font-semibold rounded-full border transition-all hover:bg-white hover:text-blue-700 active:scale-95 touch-manipulation"
+              style={{ 
+                backgroundColor: 'rgba(255,255,255,0.1)', 
+                borderColor: 'rgba(255,255,255,0.2)', 
+                color: 'var(--text-on-light)' 
+              }}
+            >
+              {term}
+            </button>
+          ))}
         </div>
       </div>
+    )}  */}
 
-      {/* Quick suggestions */}
-      {!query && (
-        <div className="mt-3">
-          <p className="text-xs mb-2" style={{ color: 'var(--text-on-dark-muted)' }}>Quick search:</p>
-          <div className="flex flex-wrap gap-2">
-            {EMERGENCY_TERMS.slice(0, 8).map((term) => (
-              <button
-                key={term}
-                onClick={() => { setQuery(term); setIsOpen(true); }}
-                className="px-3 py-1.5 text-xs rounded-lg border transition-colors touch-manipulation"
-                style={{ backgroundColor: 'rgba(255,255,255,0.95)', borderColor: 'var(--border-light)', color: 'var(--text-primary)' }}
-              >
-                {term}
-              </button>
-            ))}
-          </div>
+    {/* Results Dropdown - Width matched to Input field width */}
+    {isOpen && query && (
+      <div className="absolute left-6 right-6 sm:left-10 sm:right-10 z-50 mt-2 rounded-2xl shadow-2xl overflow-hidden border border-slate-200 animate-fadeIn bg-white">
+        <div className="px-5 py-3 text-[10px] font-bold uppercase tracking-widest border-b border-slate-100 flex justify-between items-center bg-slate-50 text-slate-500">
+          <span>{fallbackMessage ? fallbackMessage : 'Offline Results'}</span>
+          <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{results.length} found</span>
         </div>
-      )}
-
-      {/* Results */}
-      {isOpen && query && (
-        <div className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-xl max-h-96 overflow-y-auto" style={{ backgroundColor: '#FFFFFF', borderColor: 'var(--accent-green)' }}>
-          <div className="sticky top-0 p-3 text-xs font-semibold border-b" style={{ borderColor: 'var(--accent-green)', backgroundColor: 'var(--accent-green-bg)', color: 'var(--accent-green)' }}>
-            {fallbackMessage ? `${fallbackMessage} (${results.length} items)` : `${results.length} result(s) found (offline)`}
-          </div>
-          <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-            {results.map((result, index) => {
-              const preview = result.actions[0] || '';
-              return (
-                <button
-                  key={`${result.cardHeadline}-${result.microTitle}-${index}`}
-                  onClick={() => handleResultClick(result)}
-                  className="w-full text-left p-4 transition-colors touch-manipulation"
-                  style={{ color: 'var(--text-primary)', minHeight: '60px' }}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="flex-1">
-                      <div className="text-sm font-bold mb-1" style={{ color: 'var(--accent-green)' }}>
-                        {result.cardHeadline}
-                      </div>
-                      <div className="text-xs mb-2 font-medium" style={{ color: 'var(--text-secondary)' }}>
-                        {result.microTitle}
-                      </div>
-                      <div className="text-sm leading-relaxed" style={{ color: 'var(--text-primary)' }}>
-                        {preview}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+        <div className="max-h-80 overflow-y-auto divide-y divide-slate-50">
+          {results.map((result, index) => (
+            <button
+              key={index}
+              onClick={() => handleResultClick(result)}
+              className="w-full text-left p-5 hover:bg-blue-50/50 transition-colors group flex items-center justify-between"
+            >
+              <div>
+                <div className="text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                  {result.cardHeadline}
+                </div>
+                <div className="text-xs text-slate-500 mt-0.5 italic">
+                  {result.actions[0]}
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-slate-300 group-hover:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          ))}
         </div>
-      )}
-
-      {/* Voice hint */}
-      {isOpen && query && showVoiceHint && (
-        <div className="absolute z-50 mt-2 w-full border-2 rounded-lg shadow-lg p-6 text-center" style={{ backgroundColor: '#FFFFFF', borderColor: 'var(--accent-green)' }}>
-          <p className="text-sm font-medium mb-1" style={{ color: 'var(--text-primary)' }}>
-            Try asking about food, places, or things to do nearby.
-          </p>
-        </div>
-      )}
-    </div>
+      </div>
+    )}
+  </div>
+</div>
   );
 }

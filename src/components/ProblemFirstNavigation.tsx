@@ -46,21 +46,25 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
     return (
       <div className="space-y-6">
         <button
-          onClick={() => {
-            setSelectedCardIndex(null);
-            setSelectedMicroSituationIndex(null);
-          }}
-          className="mb-4 flex items-center gap-2 text-sm sm:text-base font-medium hover:underline touch-manipulation"
-          style={{ color: 'var(--text-on-dark)' }}
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        onClick={() => {
+          setSelectedCardIndex(null);
+          setSelectedMicroSituationIndex(null);
+        }}
+        /* pt-4: Added top padding for better vertical spacing
+          px-6 sm:px-10: Standardized horizontal alignment
+          mb-6: Bottom margin to separate from the content below
+        */
+        className="pt-4 px-6 sm:px-10 mb-6 flex items-center gap-3 text-sm sm:text-base font-bold transition-all hover:opacity-80 group touch-manipulation" style={{ color: 'var(--text-on-light)' }}>
+        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-slate-100 group-hover:bg-blue-50 transition-colors">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Problems
-        </button>
+        </div>
+        <span>Back to Categories</span>
+      </button>
         
-        <div className="mb-6">
-          <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-on-dark)' }}>
+        <div className="mb-6 px-6 sm:px-10">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: 'var(--text-on-light)' }}>
             {selectedCard.headline}
           </h2>
           <p className="text-sm sm:text-base" style={{ color: 'var(--text-on-dark-muted)' }}>
@@ -68,38 +72,18 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 gap-5 px-6 sm:px-10 pb-10">
           {selectedCard.microSituations.map((microSituation, index) => (
             <button
-              key={index}
-              onClick={() => setSelectedMicroSituationIndex(index)}
-              className="w-full text-left p-5 sm:p-6 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation"
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderColor: 'var(--border-light)',
-                minHeight: '80px',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#F0FDF4';
-                e.currentTarget.style.borderColor = 'var(--accent-green)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = 'var(--border-light)';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-              }}
-              onTouchStart={(e) => {
-                e.currentTarget.style.backgroundColor = '#F0FDF4';
-                e.currentTarget.style.borderColor = 'var(--accent-green)';
-                e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
-              }}
-              onTouchEnd={(e) => {
-                e.currentTarget.style.backgroundColor = '#FFFFFF';
-                e.currentTarget.style.borderColor = 'var(--border-light)';
-                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-              }}
+            key={index}
+            onClick={() => setSelectedMicroSituationIndex(index)}
+            /* MATCHING TIER 1 STYLES: 
+               - border-slate-200/60 hairline
+               - group hover with blue text shift
+               - rounded-3xl and hover:translate-y
+            */
+            className="group w-full text-left p-6 sm:p-8 rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-900/5 hover:-translate-y-1 active:scale-[0.98] touch-manipulation"
+            style={{ minHeight: '100px' }}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
@@ -131,70 +115,41 @@ export default function ProblemFirstNavigation({ pack }: ProblemFirstNavigationP
     );
   }
 
-  // Show main problem cards - Large, tappable cards for offline-first UX
+  // Show main problem cards - Streamlined, typography-focused UI
   return (
-    <div className="space-y-6">
-      <div className="mb-8">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-3" style={{ color: 'var(--text-on-dark)' }}>
-          What do you need right now?
-        </h2>
-        <p className="text-sm sm:text-base" style={{ color: 'var(--text-on-dark-muted)' }}>
-          Tap a card to get immediate help. All content works offline.
+    <div className="space-y-8 py-10">
+      <div className="px-6 sm:px-10">
+        
+        <p className="text-slate-500 text-sm sm:text-base font-medium">
+          Tap a category for immediate assistance. All guides work 100% offline.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 gap-4 px-6 sm:px-10">
         {tier1.cards.map((card, index) => (
           <button
             key={index}
             onClick={() => setSelectedCardIndex(index)}
-            className="w-full text-left p-6 sm:p-8 rounded-xl border-2 transition-all transform active:scale-[0.98] touch-manipulation"
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderColor: 'var(--border-light)',
-              minHeight: '140px',
-              boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent-green)';
-              e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
-              e.currentTarget.style.backgroundColor = '#F0FDF4';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-light)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-              e.currentTarget.style.backgroundColor = '#FFFFFF';
-            }}
-            onTouchStart={(e) => {
-              e.currentTarget.style.borderColor = 'var(--accent-green)';
-              e.currentTarget.style.boxShadow = '0 8px 16px rgba(16, 185, 129, 0.15)';
-              e.currentTarget.style.backgroundColor = '#F0FDF4';
-            }}
-            onTouchEnd={(e) => {
-              e.currentTarget.style.borderColor = 'var(--border-light)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.05)';
-              e.currentTarget.style.backgroundColor = '#FFFFFF';
-            }}
+            className="group w-full text-left p-6 sm:p-8 rounded-3xl border border-slate-200/60 bg-white shadow-sm transition-all duration-300 hover:border-blue-500/40 hover:shadow-lg hover:shadow-blue-900/5 hover:-translate-y-1 active:scale-[0.98] touch-manipulation"
+            style={{ minHeight: '120px' }}
           >
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <h3 className="text-xl sm:text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+            <div className="flex flex-col justify-center h-full">
+              <div className="flex items-center gap-3 mb-2">
+                {/* Status indicator remains as a subtle functional cue */}
+                <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-800 transition-colors group-hover:text-blue-600">
                   {card.headline}
                 </h3>
-                <p className="text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
-                  {card.microSituations.length} situation{card.microSituations.length !== 1 ? 's' : ''} available
-                </p>
               </div>
-              <div className="flex-shrink-0">
-                <svg 
-                  className="w-6 h-6 sm:w-8 sm:h-8" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                  style={{ color: '#6b7280' }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+              
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold uppercase tracking-widest text-slate-400 group-hover:text-blue-500 transition-colors">
+                  {card.microSituations.length} Scenarios
+                </span>
+                <div className="h-1 w-1 rounded-full bg-slate-300" />
+                <p className="text-sm sm:text-base font-medium text-slate-500">
+                  Ready for offline use
+                </p>
               </div>
             </div>
           </button>
