@@ -2,18 +2,25 @@
 
 import { useState, useEffect } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
-import { savePack, getPack } from '../../scripts/offlineDB'; // Ensure getPack exists to check status
+import { savePack, getPack } from '../../scripts/offlineDB';
+// Fixed import path: Avoid importing from .next folder
+import { usePWAInstall } from '../../.next/hooks/usePWAInstall'; 
 
 interface TravelPackDownloadProps {
   pack: TravelPack;
 }
 
 export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
-  // States: idle (not saved), syncing (processing), saved (exists in DB)
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  
+  const { triggerInstall, canInstall } = usePWAInstall();
 
-  // On mount, check if this specific city is already saved in IndexedDB
+  // Detect device type for custom modal messaging
   useEffect(() => {
+    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
+    
     async function checkExisting() {
       try {
         const existing = await getPack(pack.city);
@@ -26,9 +33,10 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   }, [pack.city]);
 
   const handleSync = async () => {
+    if (status !== 'idle') return;
+    
     setStatus('syncing');
 
-    // Create the structured data object
     const downloadData = {
       city: pack.city,
       country: pack.country,
@@ -37,23 +45,25 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     };
 
     try {
-      // 1. Save to IndexedDB (The "Native" Storage)
+      // 1. Lock data into IndexedDB
       await savePack(downloadData);
       
-      // 2. Artificial delay (optional): Research shows a 500ms-800ms "sync" animation 
-      // makes the user feel like the data is "heavier" and more reliable.
+      // 2. Tactical delay for UX weight
       await new Promise((resolve) => setTimeout(resolve, 800));
 
+      // 3. Trigger Native App Install (Address Bar behavior)
+      if (canInstall) {
+        await triggerInstall();
+      }
+
       setStatus('saved');
-      console.log(`Offline pack for ${pack.city} locked into local storage.`);
+      setShowSuccessModal(true);
     } catch (err) {
       console.error('Failed to save offline pack:', err);
       setStatus('idle');
-      alert('Local storage full or restricted. Please check browser settings.');
     }
   };
 
-  // UI Configuration based on status
   const config = {
     idle: {
       text: "Download for Offline Use",
@@ -102,6 +112,34 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
         <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest animate-fadeIn">
           Saved to local vault • No signal required
         </p>
+      )}
+
+      {/* SUCCESS MODAL */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] p-8 max-w-sm w-full text-center shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            
+            <h2 className="text-2xl font-black text-slate-900 mb-2">Sync Complete</h2>
+            
+            <p className="text-slate-600 mb-8 leading-relaxed text-sm">
+              {isMobile 
+                ? "The Travel Pack icon has been added to your Home Screen for instant offline access." 
+                : "The Offline App is now available in your Applications folder or Launchpad."}
+            </p>
+
+            <button 
+              onClick={() => setShowSuccessModal(false)}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-slate-800 transition-colors active:scale-[0.98]"
+            >
+              Got it, let's go
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
