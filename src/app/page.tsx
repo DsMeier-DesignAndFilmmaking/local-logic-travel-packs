@@ -14,6 +14,8 @@ import ProblemFirstNavigation from '@/components/ProblemFirstNavigation';
 import OfflineSearch from '@/components/OfflineSearch';
 import Spontaneity from '@/components/Spontaneity';
 
+import Link from 'next/link';
+
 
 function SWRegister() {
   useEffect(() => {
@@ -280,6 +282,62 @@ useEffect(() => {
         </div>
   
       </main>
+      <footer className="mt-20 border-t border-slate-100 bg-slate-50/50 py-16">
+  <div className="container mx-auto max-w-4xl px-6 sm:px-10">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
+      {/* Brand Column */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold text-slate-900 tracking-tight">
+          Local Logic <span className="text-blue-600">Travel Packs</span>
+        </h3>
+        <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
+          High-fidelity, offline-first tactical intelligence for global travelers. Built to manage friction and navigate the unexpected.
+        </p>
+      </div>
+
+      {/* Trust/Legal Column */}
+      <div className="space-y-4">
+        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">
+          Reliability & Accuracy
+        </h4>
+        <p className="text-[13px] text-slate-500 leading-relaxed">
+          While the logic is sourced from experienced travelers and real-time data, travel conditions change rapidly. Use this information as a supporting resource, not as a replacement for official local guidance or professional emergency services.
+        </p>
+      </div>
+    </div>
+
+    {/* Bottom Legal Bar */}    
+<div className="pt-8 border-t border-slate-200/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+  <div className="flex flex-wrap gap-x-8 gap-y-2">
+    {/* Update: Changed button to Link and added href */}
+    <Link 
+      href="/privacy" 
+      className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+    >
+      Privacy Policy
+    </Link>
+
+    <Link 
+      href="/terms" 
+      className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+    >
+      Terms of Service
+    </Link>
+
+    <Link 
+      href="/sources" 
+      className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest"
+    >
+      Data Sources
+    </Link>
+  </div>
+  
+  <p className="text-[12px] text-slate-400 font-medium">
+    © {new Date().getFullYear()} Dan Meier. All rights reserved.
+  </p>
+</div>
+  </div>
+</footer>
     </div>
   );
 }
