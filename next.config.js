@@ -1,17 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // This helps "silence" the Turbopack warning as requested by the error log
-  experimental: {
-    turbopack: {} 
-  }
+  // DO NOT add turbopack here; it's handled by the environment variable
 };
 
 const defaultCache = require("next-pwa/cache");
 
 const withPWA = require("next-pwa")({
   dest: "public",
-  // Ensure this is only disabled in dev so Webpack is free to run in Prod
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
