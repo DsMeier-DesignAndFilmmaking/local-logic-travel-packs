@@ -81,58 +81,50 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  // 2. Updated useEffect
-useEffect(() => {
-  let lastHeight = window.innerHeight;
-
-  const advance = () => {
-    const now = Date.now();
-    // OPTIMAL UX: The Ref persists even when the component re-renders
-    if (now - lastJumpRef.current < 900) return;
-
-    setIosStep((prev) => {
-      if (prev < 4) {
-        lastJumpRef.current = now; // Update the Ref
-        return (prev + 1) as 1 | 2 | 3 | 4;
+  useEffect(() => {
+    let lastHeight = window.innerHeight;
+  
+    const advance = () => {
+      const now = Date.now();
+      if (now - lastJumpRef.current < 1000) return;
+  
+      setIosStep((prev) => {
+        // Logic for 3-step sequence
+        if (prev < 3) {
+          lastJumpRef.current = now;
+          return (prev + 1) as 1 | 2 | 3;
+        }
+        return prev;
+      });
+    };
+  
+    const handleInteraction = () => {
+      if (!showInstructions) return;
+      
+      // Step 1 -> 2: Triggered by address bar resize
+      if (iosStep === 1 && window.innerHeight !== lastHeight) {
+        advance();
+        lastHeight = window.innerHeight;
       }
-      return prev;
-    });
-  };
-
-  const handleResize = () => {
-    if (!showInstructions) return;
-    const currentHeight = window.innerHeight;
-    if (currentHeight !== lastHeight) {
-      advance();
-      lastHeight = currentHeight;
-    }
-  };
-
-  const handleTouch = (e: TouchEvent) => {
-    if (!showInstructions) return;
-    const target = e.target as HTMLElement;
-    if (target.closest('button')) return;
-    setTimeout(advance, 150);
-  };
-
-  const handleVisibility = () => {
-    if (document.hidden && showInstructions) {
-      advance();
-    }
-  };
-
-  window.addEventListener('resize', handleResize);
-  window.addEventListener('touchstart', handleTouch, { passive: true });
-  window.addEventListener('blur', advance);
-  document.addEventListener('visibilitychange', handleVisibility);
-
-  return () => {
-    window.removeEventListener('resize', handleResize);
-    window.removeEventListener('touchstart', handleTouch);
-    window.removeEventListener('blur', advance);
-    document.removeEventListener('visibilitychange', handleVisibility);
-  };
-}, [showInstructions]); // iosStep is removed from dependencies so it doesn't re-run on every step
+    };
+  
+    const handleVisibility = () => {
+      // Step 2 -> 3: Triggered when the native Share Sheet covers the app
+      if (document.hidden && showInstructions && iosStep === 2) {
+        advance();
+      }
+    };
+  
+    window.addEventListener('resize', handleInteraction);
+    window.addEventListener('blur', advance); // Backup for menu focus loss
+    document.addEventListener('visibilitychange', handleVisibility);
+  
+    return () => {
+      window.removeEventListener('resize', handleInteraction);
+      window.removeEventListener('blur', advance);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [showInstructions, iosStep]); // Added iosStep to dependencies for specific step-checks 
 
   if (!pack.tiers?.tier1) return null;
 
@@ -243,14 +235,13 @@ useEffect(() => {
 {/* FLOATING INSTRUCTIONS - Moved outside of the modal block */}
 {showInstructions && (
   <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-12 pointer-events-none">
-    {/* Deep Backdrop Blur */}
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md -z-10 animate-in fade-in duration-500" />
 
     <div className="bg-slate-900 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto">
       
-      {/* Tactical Progress segments */}
+      {/* 3-Step Tracker */}
       <div className="flex h-1.5 w-full bg-white/10 gap-1 p-1">
-        {[1, 2, 3, 4].map((s) => (
+        {[1, 2, 3].map((s) => (
           <div 
             key={s}
             className={`h-full flex-1 rounded-full transition-all duration-500 ${
@@ -261,44 +252,30 @@ useEffect(() => {
       </div>
 
       <div className="p-5 flex items-center gap-4">
-        {/* Step Indicator with Glow */}
-        <div className="shrink-0 relative">
-        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center relative z-10">
+        <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
           <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
         </div>
-        {/* The Pulse Ring - helps the user see that the app "felt" their tap */}
-        <div className="absolute inset-0 rounded-2xl bg-emerald-400 animate-ping opacity-20" key={iosStep} />
-       </div>
         
         <div className="flex-grow">
           <p className="text-emerald-500/50 text-[10px] font-black uppercase tracking-widest mb-1">
-            {iosStep < 4 ? "Awaiting Interaction..." : "Final Action Required"}
+            {iosStep === 3 ? "Final Destination" : "Tactical Guide"}
           </p>
-          <h3 className="text-white font-bold text-[15px] leading-tight transition-all duration-300">
+          <h3 className="text-white font-bold text-[15px] leading-tight">
             {iosStep === 1 && "Tap the browser bar below"}
-            {iosStep === 2 && "Tap 'AA' or '...' then 'Share'"}
-            {iosStep === 3 && "Tap '... More' (end of icon row)"}
-            {iosStep === 4 && "Select 'Add to Home Screen'"}
+            {iosStep === 2 && (
+              <span>
+                Tap <span className="text-emerald-400">'AA'</span> or <span className="text-emerald-400">'...'</span> <br/>
+                <span className="text-white/60 text-xs font-normal">then select the 'Share' icon</span>
+              </span>
+            )}
+            {iosStep === 3 && (
+              <span>
+                Find <span className="text-emerald-400">'Add to Home Screen'</span> <br/>
+                <span className="text-white/60 text-xs font-normal">You may need to tap '... More' first</span>
+              </span>
+            )}
           </h3>
         </div>
-
-        {/* Dismiss Button */}
-        <button 
-          onClick={() => setShowInstructions(false)}
-          className="p-2 text-white/20 hover:text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12" strokeWidth={3} strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    {/* The Tactical Pointer (Points to the Bottom Bar) */}
-    <div className="flex flex-col items-center mt-6">
-      <div className="w-px h-12 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
-      <div className="bg-emerald-500 text-slate-900 px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-tighter shadow-lg -mt-1">
-        Interact at bottom of device
       </div>
     </div>
   </div>
