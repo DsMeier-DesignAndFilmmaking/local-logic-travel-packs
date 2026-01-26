@@ -7,6 +7,8 @@ import { storePackLocally, getTier1Pack } from '@/lib/offlineStorage';
 import { preloadAllPacksBackground } from '@/lib/preloadPacks';
 import { SUPPORTED_CITIES, SupportedCity } from '@/lib/cities';
 
+
+
 import TravelPackDownload from '@/components/TravelPackDownload';
 import Tier1Download from '@/components/Tier1Download';
 import PremiumUnlock from '@/components/PremiumUnlock';
@@ -15,6 +17,7 @@ import OfflineSearch from '@/components/OfflineSearch';
 import Spontaneity from '@/components/Spontaneity';
 
 import Link from 'next/link';
+import { getPack, savePack } from '../../scripts/offlineDB';
 
 
 function SWRegister() {
@@ -124,80 +127,71 @@ useEffect(() => {
 }, [selectedCity]);
 
 
-  // Click outside listener to close any dropdowns / focus states (if needed)
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        // No explicit dropdown state here since CityInput handles its own
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  // Step 3 & 5 — Refactored Offline-first loading
+useEffect(() => {
+  if (!selectedCity) return;
 
-  // Handle city selection from CityInput
-  const handleCitySelect = (city: SupportedCity) => {
-    setSelectedCity(city);
+  const loadPack = async () => {
+    setIsLoading(true);
+    setError(null);
+    setPackNotFound(false);
 
-    // Offline-first: try to load cached Tier1 pack
-    const offlinePack = getTier1Pack(city);
-    if (offlinePack) {
-      setPack({
-        city: offlinePack.city,
-        country: offlinePack.country,
-        tiers: { tier1: offlinePack.tier1 },
-      });
-      setIsLoading(false);
-      setError(null);
-      setPackNotFound(false);
+    try {
+      // 1. ASYNC DB CHECK (Critical Fix)
+      const offlinePack = await getPack(selectedCity);
 
-      // Optionally fetch latest in background without blocking UI
-      fetch(`/api/travel-packs?city=${encodeURIComponent(city)}`)
-        .then((res) => res.ok ? res.json() : null)
-        .then((latest: TravelPack | null) => {
-          if (latest) {
-            setPack(latest);
-            storePackLocally(latest);
-          }
-        })
-        .catch(() => { /* silently fail */ });
-
-      return;
-    }
-
-    // If no offline pack, fetch from API
-    const fetchPack = async () => {
-      setIsLoading(true);
-      setError(null);
-      setPackNotFound(false);
-
-      try {
-        const response = await fetch(`/api/travel-packs?city=${encodeURIComponent(city)}`);
-        if (!response.ok) {
-          if (response.status === 404) {
-            setPack(null);
-            setPackNotFound(true);
-            return;
-          } else {
-            throw new Error('Failed to load travel pack');
-          }
-        }
-        const travelPack: TravelPack = await response.json();
-        setPack(travelPack);
-        setPackNotFound(false);
-        storePackLocally(travelPack);
-      } catch (err) {
-        console.error('Error loading Travel Pack:', err);
-        setError('Error loading Travel Pack.');
-        setPack(null);
-        setPackNotFound(false);
-      } finally {
+      if (offlinePack) {
+        // Map the stored data to your state structure
+        setPack({
+          city: offlinePack.city,
+          country: offlinePack.country,
+          // Use the deep tiers from your Bangkok JSON
+          tiers: offlinePack.tiers, 
+        });
         setIsLoading(false);
+        console.log(`📦 Tactical Vault: Offline data retrieved for ${selectedCity}`);
+        
+        // If we are online, we can silently re-fetch in the background to update, 
+        // but for now, we return to satisfy the "Offline-First" requirement.
+        return; 
       }
-    };
 
-    fetchPack();
+      // 2. NETWORK FALLBACK
+      if (!navigator.onLine) {
+        setPackNotFound(true);
+        setIsLoading(false);
+        return;
+      }
+
+      const response = await fetch(`/api/travel-packs?city=${encodeURIComponent(selectedCity)}`);
+      
+      if (!response.ok) {
+        if (response.status === 404) setPackNotFound(true);
+        else setError('Failed to load travel pack');
+        setPack(null);
+        return;
+      }
+
+      const travelPack = await response.json();
+      setPack(travelPack);
+
+      // 3. PERSIST FOR FUTURE OFFLINE USE
+      try {
+        await savePack(travelPack);
+      } catch (err) {
+        console.warn('Failed to sync to local vault:', err);
+      }
+
+    } catch (err) {
+      console.error('Vault Access Error:', err);
+      setError('Error loading tactical data');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  loadPack();
+}, [selectedCity]);
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
@@ -221,8 +215,8 @@ useEffect(() => {
   
           <CityInput
             value={selectedCity ?? ''}
-            onChange={() => {}}
-            onPackSelect={handleCitySelect}
+            onChange={(value) => setSelectedCity(value as SupportedCity)}
+            onPackSelect={setSelectedCity}
           />
   
           {isLoading && <p className="mt-4 text-center text-slate-500">Loading Travel Pack...</p>}
