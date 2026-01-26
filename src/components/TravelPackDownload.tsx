@@ -156,7 +156,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
             onClick={handleLaunchApp}
             className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
           >
-            Confirm & Launch App
+            Confirm & Save App to Home Screen
           </button>
         </div>
       ) : (
@@ -188,7 +188,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     </div>
   </div>
       )}
-      
+
       {showInstructions && (
   <div className="fixed bottom-0 left-0 right-0 z-[110] p-4 pb-12 animate-in slide-in-from-bottom duration-500">
     {/* The Instructional Bubble */}
