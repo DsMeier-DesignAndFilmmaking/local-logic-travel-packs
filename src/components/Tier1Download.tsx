@@ -182,7 +182,7 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
           <div className="bg-white rounded-t-[40px] p-8 pb-10 max-w-xl mx-auto w-full animate-in slide-in-from-bottom-full duration-500">
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8" />
             
-            <h2 className="text-3xl font-black text-slate-900 mb-2">Vault Synced</h2>
+            <h2 className="text-3xl font-black text-slate-900 mb-2">Pack Synced</h2>
             <p className="text-slate-500 mb-8 font-medium">To access this {pack.city} pack offline:</p>
             
             <div className="space-y-4 mb-8">
