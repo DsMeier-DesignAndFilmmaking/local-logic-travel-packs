@@ -16,7 +16,7 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   const [step, setStep] = useState<'success' | 'instructions'>('success');
   const [showInstructions, setShowInstructions] = useState(false);
   // Add this state to track which step of the iOS menu they are in
-const [iosStep, setIosStep] = useState(1);
+  const [iosStep, setIosStep] = useState(1);
   
   const { triggerInstall, canInstall } = usePWAInstall();
 
@@ -186,54 +186,55 @@ const [iosStep, setIosStep] = useState(1);
 
       {/* FLOATING INSTRUCTIONS - Moved outside of the modal block */}
       {showInstructions && (
-  <div className="fixed inset-0 z-[120] pointer-events-none">
-    {/* 1. The Ghost Overlay: Dims the page content but lets the user see the browser bars */}
-    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] pointer-events-none" />
+  <div className="fixed inset-x-0 top-0 z-[120] p-4 animate-in slide-in-from-top duration-500 pointer-events-none">
+    {/* Background Blur for the rest of the screen to focus eyes upward */}
+    <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] -z-10" />
 
-    {/* 2. The Dynamic Guide Box */}
-    <div className="absolute bottom-20 left-4 right-4 pointer-events-auto">
-      <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden border border-slate-200 animate-in slide-in-from-bottom-8 duration-500">
-        
-        {/* Progress Bar */}
-        <div className="h-1.5 w-full bg-slate-100 flex">
-          <div className={`h-full bg-blue-600 transition-all duration-500 ${iosStep === 1 ? 'w-1/3' : iosStep === 2 ? 'w-2/3' : 'w-full'}`} />
-        </div>
+    <div className="bg-slate-900 text-white rounded-[24px] shadow-2xl overflow-hidden border border-white/10 pointer-events-auto max-w-sm mx-auto">
+      {/* Progress Line */}
+      <div className="h-1 w-full bg-white/10 flex">
+        <div 
+          className="h-full bg-blue-500 transition-all duration-500" 
+          style={{ width: `${(iosStep / 3) * 100}%` }}
+        />
+      </div>
 
-        <div className="p-5 flex items-center gap-4">
-          <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl">
+      <div className="p-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-sm">
             {iosStep}
           </div>
-          
-          <div className="flex-grow">
-            <h3 className="text-slate-900 font-bold text-base leading-tight">
-              {iosStep === 1 && "Tap the Menu icon"}
-              {iosStep === 2 && "Find the Share button"}
-              {iosStep === 3 && "Add to Home Screen"}
+          <div>
+            <h3 className="font-bold text-sm leading-tight">
+              {iosStep === 1 && "Tap the '...' or 'AA'"}
+              {iosStep === 2 && "Select the 'Share' icon"}
+              {iosStep === 3 && "Tap 'Add to Home Screen'"}
             </h3>
-            <p className="text-slate-500 text-xs mt-0.5">
-              {iosStep === 1 && "Look for the ( ... ) or ( AA ) in the address bar."}
-              {iosStep === 2 && "Tap the 'Share' icon in the list."}
-              {iosStep === 3 && "Scroll down to finalize the install."}
+            <p className="text-white/60 text-[11px] font-medium">
+              {iosStep === 1 && "Located in your address bar"}
+              {iosStep === 2 && "Inside the menu that opened"}
+              {iosStep === 3 && "Scroll down to find it"}
             </p>
           </div>
-
-          <button 
-            onClick={() => {
-              if (iosStep < 3) setIosStep(iosStep + 1);
-              else setShowInstructions(false);
-            }}
-            className="flex-shrink-0 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
-          >
-            {iosStep < 3 ? "Next" : "Done"}
-          </button>
         </div>
-      </div>
 
-      {/* 3. The Pulsing Directional Arrow */}
-      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-        <div className="w-1 h-8 bg-gradient-to-t from-blue-600 to-transparent animate-pulse rounded-full" />
-        <div className="w-4 h-4 bg-blue-600 rotate-45 rounded-sm" />
+        <button 
+          onClick={() => {
+            if (iosStep < 3) setIosStep(iosStep + 1);
+            else setShowInstructions(false);
+          }}
+          className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
+        >
+          {iosStep < 3 ? "Next" : "Done"}
+        </button>
       </div>
+    </div>
+
+    {/* Subtle indicator pointing UP (reminding them the browser controls are at the ends) */}
+    <div className="flex justify-center mt-2">
+      <svg className="w-5 h-5 text-blue-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
     </div>
   </div>
 )}
