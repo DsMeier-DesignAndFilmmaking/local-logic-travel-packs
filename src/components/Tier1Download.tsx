@@ -20,18 +20,21 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     
-    // Check if app is running as a standalone PWA
+    // 1. Detect if running as a standalone PWA
     const checkStandalone = () => {
       const isSA = window.matchMedia('(display-mode: standalone)').matches || 
                    (window.navigator as any).standalone === true;
       setIsStandalone(isSA);
     };
 
+    // 2. Check if this specific city is already in IndexedDB
     async function checkExisting() {
       try {
         const existing = await getPack(pack.city);
         if (existing) setStatus('saved');
-      } catch (err) { console.error('DB Check Error:', err); }
+      } catch (err) { 
+        console.error('DB Check Error:', err); 
+      }
     }
     
     checkStandalone();
@@ -113,22 +116,23 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
       if (status === 'saved') {
         if (!isStandalone) {
           setShowSuccessModal(true);
-        } else {
-          window.location.href = `/packs/${pack.city.toLowerCase().replace(/\s+/g, '-')}`;
         }
         return;
       }
   
       setStatus('syncing');
       try {
-        // Step A: IndexedDB Save
-        await savePack({ 
-          ...pack, 
+        // CRITICAL FIX: Save with timestamp so page.tsx recovery logic can find the LATEST pack
+        const packToPersist = {
+          ...pack,
           downloadedAt: new Date().toISOString(),
-          offlineReady: true 
-        });
+          offlineReady: true
+        };
+
+        // Step A: IndexedDB Save
+        await savePack(packToPersist);
   
-        // Step B: Cache Priming for iPhone SE
+        // Step B: Cache Priming for iOS PWA environment
         if ('caches' in window) {
           try {
             const cache = await caches.open('pages-cache');
@@ -137,9 +141,12 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
               cache.add(window.location.pathname),
               cache.add('/?source=pwa')
             ]);
-          } catch (e) { console.warn('Cache priming failed'); }
+          } catch (e) { 
+            console.warn('Cache priming failed, but DB save succeeded'); 
+          }
         }
   
+        // Step C: PWA Prompt if available
         if (canInstall) await triggerInstall();
   
         setStatus('saved');
@@ -153,15 +160,15 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  // If already installed and running, we can simplify this button
+  // If already in the Home Screen App, show a "Active" indicator instead of a download button
   if (isStandalone) {
     return (
-      <button
-        onClick={() => window.location.href = `/packs/${pack.city.toLowerCase().replace(/\s+/g, '-')}`}
-        className="px-6 py-3 bg-emerald-500 text-white rounded-xl font-black uppercase text-xs tracking-widest shadow-lg shadow-emerald-500/20"
-      >
-        Verified Vault Active
-      </button>
+      <div className="flex items-center gap-3 px-5 py-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl">
+        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+        <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600">
+          Vault Verified
+        </span>
+      </div>
     );
   }
 
@@ -182,26 +189,27 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
           <div className="bg-white rounded-t-[40px] p-8 pb-10 max-w-xl mx-auto w-full animate-in slide-in-from-bottom-full duration-500">
             <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-8" />
             
-            <h2 className="text-3xl font-black text-slate-900 mb-2">Pack Synced</h2>
-            <p className="text-slate-500 mb-8 font-medium">To access this {pack.city} pack offline:</p>
+            <h2 className="text-3xl font-black text-slate-900 mb-2">Vault Synced</h2>
+            <p className="text-slate-500 mb-8 font-medium">Follow these steps to access {pack.city} tactical data offline:</p>
             
             <div className="space-y-4 mb-8">
               {[
-                { step: 1, text: 'Tap the "Share" icon in Safari', color: 'blue' },
-                { step: 2, text: 'Select "Add to Home Screen"', color: 'slate' },
-                { step: 3, text: 'Launch from your home screen', color: 'emerald' }
+                { step: 1, text: 'Tap the "Share" icon in Safari', icon: '📤' },
+                { step: 2, text: 'Select "Add to Home Screen"', icon: '➕' },
+                { step: 3, text: 'Launch the icon from your device', icon: '📱' }
               ].map((item) => (
                 <div key={item.step} className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-white ${item.step === 3 ? 'bg-emerald-500' : 'bg-slate-900'}`}>
                     {item.step}
                   </div>
-                  <p className="text-sm font-bold text-slate-800">{item.text}</p>
+                  <p className="text-sm font-bold text-slate-800 flex-1">{item.text}</p>
+                  <span className="text-xl">{item.icon}</span>
                 </div>
               ))}
             </div>
 
-            <button onClick={() => setShowSuccessModal(false)} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest">
-              Dismiss
+            <button onClick={() => setShowSuccessModal(false)} className="w-full py-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-slate-200 active:scale-[0.98] transition-transform">
+              Complete Deployment
             </button>
           </div>
         </div>

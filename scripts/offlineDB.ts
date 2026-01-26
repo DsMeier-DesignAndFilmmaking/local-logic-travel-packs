@@ -3,8 +3,8 @@ import { openDB, DBSchema } from 'idb';
 
 interface TravelPackDB extends DBSchema {
   packs: {
-    key: string; 
-    value: any;   
+    key: string; // city name (lowercase)
+    value: any;   // The pack object including downloadedAt
   };
 }
 
@@ -22,21 +22,51 @@ export async function getDB() {
   });
 }
 
+/**
+ * Saves a pack.
+ * We ensure a lowercase key and verify the downloadedAt timestamp exists.
+ */
 export async function savePack(pack: any) {
   const db = await getDB();
-  // Ensure we are saving with a consistent key (lowercase trimmed)
   const key = pack.city.toLowerCase().trim();
-  await db.put(STORE_NAME, pack, key);
+  
+  // Ensure we have a timestamp for sorting later
+  const packWithMeta = {
+    ...pack,
+    downloadedAt: pack.downloadedAt || new Date().toISOString()
+  };
+  
+  await db.put(STORE_NAME, packWithMeta, key);
 }
 
+/**
+ * Retrieves a specific pack by city name.
+ */
 export async function getPack(city: string) {
   const db = await getDB();
   return db.get(STORE_NAME, city.toLowerCase().trim());
 }
 
+/**
+ * Retrieves all packs and sorts them by most recent download.
+ * This is used by page.tsx to auto-load the vault on the Home Screen.
+ */
 export async function getAllPacks() {
   const db = await getDB();
   const all = await db.getAll(STORE_NAME);
-  // Return most recently saved (assuming you add a timestamp or use array order)
-  return all;
+  
+  // Sort by downloadedAt descending (Newest first)
+  return all.sort((a, b) => {
+    const dateA = new Date(a.downloadedAt || 0).getTime();
+    const dateB = new Date(b.downloadedAt || 0).getTime();
+    return dateB - dateA;
+  });
+}
+
+/**
+ * Deletes a pack (useful for clearing the vault).
+ */
+export async function deletePack(city: string) {
+  const db = await getDB();
+  await db.delete(STORE_NAME, city.toLowerCase().trim());
 }
