@@ -82,27 +82,31 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   useEffect(() => {
     let lastHeight = window.innerHeight;
   
-    const handleUIChange = () => {
+    const handleInteraction = () => {
       const currentHeight = window.innerHeight;
       
-      // If the height changes (menu opens or address bar expands)
+      // If the height changes (bar activates or menu slides up)
       if (currentHeight !== lastHeight && showInstructions) {
         setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
         lastHeight = currentHeight;
       }
     };
   
-    // 1. Detect when the menu slides up (Resize)
-    window.addEventListener('resize', handleUIChange);
+    // Listen for the layout shifts caused by Safari UI
+    window.addEventListener('resize', handleInteraction);
     
-    // 2. Detect when the user interacts with browser chrome (Blur)
-    window.addEventListener('blur', () => {
-      if (showInstructions) setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
-    });
+    // Also advance if the window loses focus (menu opens)
+    const handleBlur = () => {
+      if (showInstructions) {
+        setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+      }
+    };
+  
+    window.addEventListener('blur', handleBlur);
   
     return () => {
-      window.removeEventListener('resize', handleUIChange);
-      window.removeEventListener('blur', handleUIChange);
+      window.removeEventListener('resize', handleInteraction);
+      window.removeEventListener('blur', handleBlur);
     };
   }, [showInstructions]);
 
@@ -215,60 +219,58 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
 {/* FLOATING INSTRUCTIONS - Moved outside of the modal block */}
 {showInstructions && (
   <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-12 pointer-events-none">
-    {/* Deepened Tactical Blur */}
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md -z-10" />
+    {/* Deep Backdrop Blur */}
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md -z-10 animate-in fade-in duration-500" />
 
-    <div className="bg-slate-900/95 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto ring-1 ring-white/10">
+    <div className="bg-slate-900 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto">
       
-      {/* Animated Step Tracker */}
-      <div className="flex h-1.5 w-full bg-white/5">
+      {/* Tactical Progress segments */}
+      <div className="flex h-1.5 w-full bg-white/10 gap-1 p-1">
         {[1, 2, 3, 4].map((s) => (
           <div 
             key={s}
-            className={`h-full flex-1 transition-all duration-500 ${
-              s <= iosStep ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-transparent'
+            className={`h-full flex-1 rounded-full transition-all duration-500 ${
+              s <= iosStep ? 'bg-emerald-400 shadow-[0_0_8px_#34d399]' : 'bg-white/5'
             }`}
           />
         ))}
       </div>
 
-      <div className="p-5 flex items-center gap-5">
-        {/* Visual Pulse Indicator */}
-        <div className="relative">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
-             <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
-          </div>
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]" />
+      <div className="p-5 flex items-center gap-4">
+        {/* Step Indicator with Glow */}
+        <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
+          <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
         </div>
         
         <div className="flex-grow">
-          <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
-            Live Logic Update
+          <p className="text-emerald-500/50 text-[10px] font-black uppercase tracking-widest mb-1">
+            {iosStep < 4 ? "Awaiting Interaction..." : "Final Action Required"}
           </p>
-          <h3 className="text-white font-bold text-base leading-tight">
-            {iosStep === 1 && "Tap 'AA' or '...' below"}
-            {iosStep === 2 && "Tap the Share Icon"}
-            {iosStep === 3 && "Find & Tap '... More'"}
-            {iosStep === 4 && "Tap 'Add to Home Screen'"}
+          <h3 className="text-white font-bold text-[15px] leading-tight transition-all duration-300">
+            {iosStep === 1 && "Tap the browser bar below"}
+            {iosStep === 2 && "Tap 'AA' or '...' then 'Share'"}
+            {iosStep === 3 && "Tap '... More' or scroll down"}
+            {iosStep === 4 && "Select 'Add to Home Screen'"}
           </h3>
         </div>
 
-        {/* Minimal Close */}
-        <button onClick={() => setShowInstructions(false)} className="text-white/20 p-1">
+        {/* Dismiss Button */}
+        <button 
+          onClick={() => setShowInstructions(false)}
+          className="p-2 text-white/20 hover:text-white transition-colors"
+        >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" />
+            <path d="M6 18L18 6M6 6l12 12" strokeWidth={3} strokeLinecap="round" />
           </svg>
         </button>
       </div>
     </div>
 
-    {/* The Dynamic Pointer */}
-    <div className="flex justify-center mt-6">
-      <div className="flex flex-col items-center">
-        <div className="w-px h-10 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
-        <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">
-          Interact Below
-        </div>
+    {/* The Tactical Pointer (Points to the Bottom Bar) */}
+    <div className="flex flex-col items-center mt-6">
+      <div className="w-px h-12 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
+      <div className="bg-emerald-500 text-slate-900 px-5 py-2 rounded-full text-[11px] font-black uppercase tracking-tighter shadow-lg -mt-1">
+        Interact at bottom of device
       </div>
     </div>
   </div>
