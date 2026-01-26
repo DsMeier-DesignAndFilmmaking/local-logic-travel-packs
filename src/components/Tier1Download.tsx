@@ -138,14 +138,35 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  const handleMainAction = () => {
+  const handleMainAction = async () => { // Added async
     if (isMobile) {
       if (status === 'saved') {
+        // Direct navigation to the offline-enabled route
         window.location.href = `/packs/${pack.city.toLowerCase().replace(/\s+/g, '-')}`;
       } else {
-        handleMobileSync();
+        // We don't just call handleMobileSync; we await it to ensure DB write
+        setStatus('syncing');
+        try {
+          // 1. Physical Save to IndexedDB
+          await savePack({ 
+            ...pack, 
+            downloadedAt: new Date().toISOString(),
+            offlineReady: true 
+          });
+  
+          // 2. Trigger PWA Install (if available)
+          if (canInstall) await triggerInstall();
+  
+          // 3. Success State
+          setStatus('saved');
+          setShowSuccessModal(true);
+        } catch (err) {
+          console.error("Sync failed:", err);
+          setStatus('idle');
+        }
       }
     } else {
+      // Desktop still triggers the high-fidelity HTML export
       handleDesktopExport();
     }
   };

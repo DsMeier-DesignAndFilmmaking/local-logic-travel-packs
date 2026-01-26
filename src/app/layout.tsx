@@ -16,13 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Local Logic Travel Packs | Offline Travel Guides",
-  description: "Curated, opinionated travel guides designed for offline use. Get essential information without tourist traps.",
-  manifest: "/manifest.json",
+  title: 'Tactical Vault',
+  manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default", // or "black-translucent" if you want the app content to flow under the status bar
-    title: "Travel Packs",
+    statusBarStyle: 'black-translucent',
+    title: 'Tactical Vault',
   },
   icons: {
     apple: [
@@ -39,16 +38,16 @@ export const viewport: Viewport = {
   themeColor: "#000000",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Register Service Worker globally */}
-        <SWRegister /> 
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+      </head>
+      <body className="antialiased">
+        <SWRegister />
         {children}
       </body>
     </html>

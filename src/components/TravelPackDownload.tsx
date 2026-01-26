@@ -116,32 +116,64 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
 </html>`;
   };
 
-  const handleAction = async () => {
-    setStatus('syncing');
-    try {
-      // 1. Always Sync to Local Database first (Mobile & Desktop)
-      await savePack({ ...pack, downloadedAt: new Date().toISOString() });
-      
-      if (isMobile) {
-        // Mobile UX: Add to home screen and redirect
-        if (canInstall) await triggerInstall();
+  const handleMainAction = async () => {
+    if (status === 'syncing') return;
+  
+    // 1. MOBILE LOGIC (iOS / Android PWA)
+    if (isMobile) {
+      if (status === 'saved') {
+        // If already saved, navigate to the vault view
+        window.location.href = `/packs/${pack.city.toLowerCase().replace(/\s+/g, '-')}`;
+        return;
+      }
+  
+      setStatus('syncing');
+      try {
+        // CRITICAL: Await the database save before doing anything else
+        // This ensures the JSON is physically on the iPhone's storage
+        await savePack({ 
+          ...pack, 
+          downloadedAt: new Date().toISOString(),
+          offlineReady: true 
+        });
+  
+        // Trigger the PWA installation if the browser allows it
+        if (canInstall) {
+          await triggerInstall();
+        }
+  
         setStatus('saved');
         setShowSuccessModal(true);
-      } else {
-        // Desktop UX: High-Fidelity File Export
-        const html = generateHighFidelityHTML();
+      } catch (err) {
+        console.error("Mobile Sync Error:", err);
+        setStatus('idle');
+      }
+  
+    // 2. DESKTOP LOGIC (HTML Export)
+    } else {
+      setStatus('syncing');
+      try {
+        // Even on desktop, we save to IndexedDB for local persistence
+        await savePack({ ...pack, downloadedAt: new Date().toISOString() });
+        
+        // Generate and trigger the high-fidelity HTML download
+        const html = generateHighFidelityHTML(); // Use the high-fidelity template we built
         const blob = new Blob([html], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${pack.city}_Vault_Offline.html`;
+        a.download = `${pack.city.replace(/\s+/g, '_')}_Tactical_Vault.html`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+  
         setStatus('saved');
         setShowSuccessModal(true);
+      } catch (err) {
+        console.error("Desktop Export Error:", err);
+        setStatus('idle');
       }
-    } catch (err) {
-      console.error(err);
-      setStatus('idle');
     }
   };
 
