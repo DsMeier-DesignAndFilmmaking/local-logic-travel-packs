@@ -58,30 +58,33 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; margin: 0; overflow-x: hidden; }
-        .app-shell { max-width: 450px; margin: 0 auto; min-height: 100vh; background: #0f172a; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); }
-        .glass-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); border-radius: 28px; }
+        .app-shell { max-width: 450px; margin: 0 auto; min-height: 100vh; background: #0f172a; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); box-shadow: 0 0 100px rgba(0,0,0,0.5); }
+        .glass-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(16px); border-radius: 28px; }
         .emerald-glow { box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
         ::-webkit-scrollbar { display: none; }
     </style>
 </head>
 <body>
-    <div class="app-shell pb-24">
-        <header class="p-8 pt-12">
-            <div class="flex items-center gap-2 mb-6">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                <span class="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-400/80">Offline Tactical Vault</span>
+    <div class="app-shell pb-32">
+        <header class="p-8 pt-16">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></div>
+                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400/90">Tactical Offline Vault</span>
             </div>
-            <h1 class="text-5xl font-black tracking-tighter mb-2 leading-none">${pack.city.toUpperCase()}</h1>
-            <p class="text-slate-400 font-medium text-lg">${pack.country}</p>
+            <h1 class="text-6xl font-black tracking-tighter mb-2 leading-[0.9]">${pack.city.toUpperCase()}</h1>
+            <p class="text-slate-400 font-bold text-xl tracking-tight">${pack.country}</p>
         </header>
 
         <main id="content-mount" class="px-6 space-y-6">
             </main>
 
         <footer class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto p-6 bg-gradient-to-t from-[#0f172a] via-[#0f172a] to-transparent">
-            <div class="glass-card py-4 px-8 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-                <span>Ref: ${pack.city.substring(0,3).toUpperCase()}-99X</span>
-                <span class="text-emerald-500">Encrypted Asset</span>
+            <div class="glass-card py-5 px-8 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-1 rounded-full bg-slate-600"></span>
+                    <span>Ref: ${pack.city.substring(0,3).toUpperCase()}-OFL</span>
+                </div>
+                <span class="text-emerald-500">Asset Encrypted</span>
             </div>
         </footer>
     </div>
@@ -91,20 +94,26 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
         const mount = document.getElementById('content-mount');
         
         if (data.tier && data.tier.sections) {
-            data.tier.sections.forEach(section => {
+            data.tier.sections.forEach((section, idx) => {
                 const card = document.createElement('div');
-                card.className = 'glass-card p-7 transition-transform active:scale-[0.98]';
+                card.className = 'glass-card p-8 transition-all hover:border-white/20 active:scale-[0.98]';
+                card.style.animation = 'fadeIn 0.5s ease forwards ' + (idx * 0.1) + 's';
+                card.style.opacity = '0';
+                
                 card.innerHTML = \`
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
-                        <h2 class="text-emerald-400 text-[11px] font-black uppercase tracking-[0.2em] font-bold">\${section.title}</h2>
+                    <div class="flex items-center gap-3 mb-5">
+                        <div class="w-1 h-5 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
+                        <h2 class="text-emerald-400 text-[11px] font-black uppercase tracking-[0.25em] font-bold">\${section.title}</h2>
                     </div>
-                    <p class="text-slate-200 text-sm leading-relaxed font-medium">\${section.content}</p>
+                    <p class="text-slate-200 text-[15px] leading-relaxed font-medium opacity-90">\${section.content}</p>
                 \`;
                 mount.appendChild(card);
             });
         }
     </script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </body>
 </html>`;
 
@@ -172,7 +181,7 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     idle: {
       text: "Download for Offline Use",
       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>,
-      styles: "bg-white text-white border border-slate-200 hover:bg-slate-50 cursor-pointer"
+      styles: "bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 cursor-pointer"
     },
     syncing: {
       text: isMobile ? "Syncing Tactical Logic..." : "Packaging App Experience...",
@@ -216,16 +225,14 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
             </p>
 
             <button 
-              onClick={() => { setShowSuccessModal(false); if(isMobile) handleMobileSync(); }}
+              onClick={() => setShowSuccessModal(false)}
               className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest active:scale-95 transition-all"
             >
-              {isMobile ? 'Confirm & Install' : 'Return to Dashboard'}
+              Return to Dashboard
             </button>
           </div>
         </div>
       )}
-
-      {/* IOS Top-Floating Tactical Checklist logic remains same as provided in previous file versions */}
     </>
   );
 }
