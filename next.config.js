@@ -11,35 +11,30 @@ const withPWA = require("@ducanh2912/next-pwa").default({
   disable: process.env.NODE_ENV === "development",
   register: true,
   skipWaiting: true,
-  cacheOnFrontEndNav: true, // Crucial for Next.js app router
+  cacheOnFrontEndNav: true,
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   workboxOptions: {
+    // PRE-CACHE the home page and main assets immediately on first visit
+    importScripts: [], 
     runtimeCaching: [
-      // 1. CACHE THE PAGES (HTML)
       {
         urlPattern: ({ request }) => request.mode === 'navigate',
         handler: 'NetworkFirst',
         options: {
           cacheName: 'pages-cache',
-          expiration: {
-            maxEntries: 50,
-          },
+          networkTimeoutSeconds: 3, // If network is slow, fallback to cache fast
+          expiration: { maxEntries: 50 },
         },
       },
-      // 2. CACHE THE API DATA (Your Travel Packs)
       {
         urlPattern: /\/api\/travel-packs\/?(\?.*)?$/,
         handler: "NetworkFirst",
         options: {
           cacheName: "travel-packs-api",
-          expiration: { 
-            maxEntries: 32, 
-            maxAgeSeconds: 7 * 24 * 60 * 60 
-          },
+          expiration: { maxEntries: 32, maxAgeSeconds: 7 * 24 * 60 * 60 },
         },
       },
-      // 3. CACHE STATIC ASSETS (JS, CSS, Images)
       {
         urlPattern: /\.(?:js|css|png|jpg|jpeg|svg|json|woff2)$/,
         handler: 'StaleWhileRevalidate',
