@@ -1,58 +1,36 @@
 /**
- * Fetch Travel Pack for City
- * 
- * Returns TravelInsight[] for a given city.
- * Falls back to Paris gold-standard pack for unknown cities.
- * 
- * This function works with the Tier 1-3 Travel Pack structure.
- * Future: Will fetch from API or generate with AI.
+ * Data Coordinator for Travel Packs
+ * * Logic:
+ * 1. Try to find a local JSON file in /data/travelPacks
+ * 2. If not found, return null (allowing the UI to trigger AI generation)
+ * 3. Fallback to Paris ONLY if absolutely necessary for UI stability
  */
 
-import { TravelInsight } from './travelPackSchema';
-import { parisTravelInsights } from '@/data/parisTravelInsights';
+import { TravelPack, getTravelPackForCity } from './travelPacks';
+import { normalizeCityName } from './cities';
 
 /**
- * Extract city name from full city string (e.g., "Paris, Île-de-France, France" -> "Paris")
+ * Orchestrates the retrieval of a travel pack.
+ * Note: This version is designed for Client-Side or Server-Side use.
  */
-function extractCityName(fullCityName: string): string {
-  // Handle formats like "Paris, Île-de-France, France" or just "Paris"
-  const parts = fullCityName.split(',');
-  return parts[0].trim();
-}
+export function fetchTravelPack(cityName: string): TravelPack | null {
+  if (!cityName || !cityName.trim()) return null;
 
-/**
- * Fetch travel pack insights for a city
- * 
- * Currently returns Paris pack for all cities (gold-standard fallback).
- * Future: Will fetch city-specific packs from API or generate with AI.
- * 
- * @param cityName - Full city name (e.g., "Paris, Île-de-France, France") or just city name
- * @returns Array of TravelInsight objects (Tier 1-3 structure)
- */
-export function fetchTravelPackForCity(cityName: string): TravelInsight[] {
-  if (!cityName || !cityName.trim()) {
-    // Return Paris as default
-    return parisTravelInsights;
+  // 1. Normalize the search term (e.g., "Paris, France" -> "paris")
+  const normalizedSearch = normalizeCityName(cityName);
+
+  // 2. Attempt to pull from our local JSON repository (data/travelPacks/*.json)
+  // This uses the fuzzy matching logic we built in travelPacks.ts
+  const pack = getTravelPackForCity(cityName);
+
+  if (pack) {
+    console.log(`🛡️ Vault: Local asset found for ${cityName}`);
+    return pack;
   }
 
-  const city = extractCityName(cityName);
-
-  // TODO: Check if we have city-specific pack data
-  // For now, return Paris pack for all cities (gold-standard fallback)
-  // Future: 
-  // 1. Check database/API for city-specific pack
-  // 2. If not found, generate with AI
-  // 3. If AI fails, fallback to Paris
-
-  // Normalize city name for comparison (case-insensitive)
-  const normalizedCity = city.toLowerCase();
-
-  // For now, only Paris has data - return Paris pack
-  // Future: Add more city packs here
-  if (normalizedCity === 'paris') {
-    return parisTravelInsights;
-  }
-
-  // Unknown cities → fallback to Paris gold-standard pack
-  return parisTravelInsights;
+  // 3. If no local asset exists, return null.
+  // This tells the UI to show the "Generate with AI" button instead of 
+  // lying to the user by showing them Paris data for London.
+  console.warn(`⚠️ Vault: No local asset for ${cityName}. AI Generation required.`);
+  return null;
 }

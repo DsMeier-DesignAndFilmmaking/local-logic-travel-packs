@@ -1,81 +1,60 @@
 /**
- * Format Travel Pack for Export
- * 
- * Pure function that converts TravelInsight[] to a normalized, text-first structure
- * optimized for PDF generation and offline export.
- * 
- * This formatter:
- * - Groups insights by category
- * - Provides text-first structure (no UI dependencies)
- * - Is independent of browser APIs
- * - Can be used in Node.js/server environments
- * 
- * Future: This structure can be directly consumed by PDF generators,
- * markdown converters, or other export formats.
+ * Format Travel Pack for Mission Export
+ * * Converts the nested TravelPack (Tiers > Cards > Situations) into a 
+ * flat, text-heavy structure optimized for PDF, Markdown, or Print.
  */
 
-import { TravelInsight } from './travelPackSchema';
+import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
 
-export interface ExportTravelPack {
+export interface ExportSection {
+  heading: string;    // e.g., "ARRIVAL PROTOCOL"
+  subheading: string; // e.g., "Exiting Airport"
+  protocol: string[]; // e.g., ["Follow green signs", "Ignore fixers"]
+}
+
+export interface ExportMissionBrief {
   city: string;
-  sections: {
-    category: string;
-    items: {
-      title: string;
-      summary: string;
-      reasoning?: string;
-    }[];
-  }[];
+  country: string;
+  generatedAt: string;
+  intel: ExportSection[];
 }
 
 /**
- * Format TravelInsight[] to normalized export structure
- * 
- * Groups insights by category and creates a text-first structure
- * suitable for PDF generation, markdown export, or other formats.
- * 
- * @param insights - Array of TravelInsight objects
- * @returns Normalized export structure grouped by category
+ * Transforms a Tiered TravelPack into a flat Mission Briefing.
  */
-export function formatTravelPackForExport(
-  insights: TravelInsight[]
-): ExportTravelPack {
-  if (insights.length === 0) {
-    return {
-      city: '',
-      sections: [],
-    };
+export function formatTravelPackForExport(pack: TravelPack): ExportMissionBrief {
+  const intel: ExportSection[] = [];
+
+  // 1. Process Tier 1 (Tactical Essentials)
+  if (pack.tiers?.tier1?.cards) {
+    pack.tiers.tier1.cards.forEach((card: ProblemCard) => {
+      card.microSituations.forEach((ms: MicroSituation) => {
+        intel.push({
+          heading: card.headline.toUpperCase(),
+          subheading: ms.title,
+          protocol: ms.actions
+        });
+      });
+    });
   }
 
-  // Get city from first insight (all insights should have same city)
-  const city = insights[0].city;
-
-  // Group insights by category
-  const categoryMap = new Map<string, TravelInsight[]>();
-
-  insights.forEach((insight) => {
-    const category = insight.category;
-    if (!categoryMap.has(category)) {
-      categoryMap.set(category, []);
-    }
-    categoryMap.get(category)!.push(insight);
-  });
-
-  // Convert map to sections array
-  const sections = Array.from(categoryMap.entries()).map(([category, items]) => ({
-    category,
-    items: items.map((insight) => ({
-      title: insight.title,
-      summary: insight.summary,
-      reasoning: insight.reasoning,
-    })),
-  }));
-
-  // Sort sections by category name for consistent output
-  sections.sort((a, b) => a.category.localeCompare(b.category));
+  // 2. Process Tier 2 (Strategic/Logistical) if exists
+  if (pack.tiers?.tier2?.cards) {
+    pack.tiers.tier2.cards.forEach((card: ProblemCard) => {
+      card.microSituations.forEach((ms: MicroSituation) => {
+        intel.push({
+          heading: `LOGISTICS: ${card.headline.toUpperCase()}`,
+          subheading: ms.title,
+          protocol: ms.actions
+        });
+      });
+    });
+  }
 
   return {
-    city,
-    sections,
+    city: pack.city,
+    country: pack.country,
+    generatedAt: pack.downloadedAt || new Date().toISOString(),
+    intel: intel
   };
 }

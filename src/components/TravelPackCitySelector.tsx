@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { sortTravelInsights } from '@/lib/sortTravelInsights';
-import { transformInsightsToUIPack } from '@/lib/transformTravelInsights';
-import { fetchTravelPackForCity } from '@/lib/fetchTravelPack';
+// Updated Imports
+import { fetchTravelPack } from '@/lib/fetchTravelPack'; 
+import { normalizeCityName } from '@/lib/cities';
+import { TravelPack } from '@/lib/travelPacks';
 import PackCard from '@/components/PackCard';
-import OfflineDownload from '@/components/OfflineDownload';
-import { OfflineTravelPack } from '@/types';
+import Tier1Download from '@/components/Tier1Download';
 
 interface CitySuggestion {
   name: string;
@@ -15,214 +15,166 @@ interface CitySuggestion {
   fullName: string;
 }
 
-/**
- * Fully Integrated City Autocomplete + Travel Pack Loader
- * 
- * Features:
- * - RapidAPI GeoDB first, Mapbox fallback (via server-side API route)
- * - Deduplicates suggestions
- * - Unique React keys
- * - Dropdown closes on selection, outside click, or Enter key
- * - Auto-fetches and renders Tier 1-3 Travel Pack immediately
- * - Handles errors gracefully
- */
 const TravelPackCitySelector: React.FC = () => {
-  const [city, setCity] = useState('');
+  const [cityInput, setCityInput] = useState('');
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
-  const [travelPack, setTravelPack] = useState<OfflineTravelPack | null>(null);
+  const [activePack, setActivePack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   /**
-   * Deduplicate cities by fullName to avoid duplicate suggestions
-   */
-  const deduplicateCities = (cities: CitySuggestion[]): CitySuggestion[] => {
-    const seen = new Set<string>();
-    return cities.filter((c) => {
-      if (seen.has(c.fullName)) return false;
-      seen.add(c.fullName);
-      return true;
-    });
-  };
-
-  /**
-   * Fetch city suggestions from server-side API route (secure)
-   * Uses RapidAPI GeoDB first, Mapbox fallback (handled server-side)
+   * Fetch city suggestions from API
    */
   const fetchCities = async (query: string) => {
-    if (!query || query.trim().length === 0) {
+    if (!query || query.trim().length < 2) {
       setSuggestions([]);
       return;
     }
 
     try {
       const res = await fetch(`/api/cities?q=${encodeURIComponent(query)}`);
-      
-      if (!res.ok) {
-        console.error('City API error:', res.status, res.statusText);
-        setSuggestions([]);
-        return;
-      }
+      if (!res.ok) return;
 
       const data = await res.json();
-      
-      if (Array.isArray(data) && data.length > 0) {
-        // Deduplicate suggestions
-        const deduplicated = deduplicateCities(data);
-        setSuggestions(deduplicated);
-      } else {
-        setSuggestions([]);
+      if (Array.isArray(data)) {
+        // Deduplicate
+        const unique = data.filter((v, i, a) => 
+          a.findIndex(t => t.fullName === v.fullName) === i
+        );
+        setSuggestions(unique);
       }
     } catch (err) {
       console.error('City API error:', err);
-      setSuggestions([]);
     }
   };
 
   /**
-   * Fetch and load Travel Pack for selected city
-   * Uses existing Tier 1-3 Travel Pack system
+   * Load the Tactical Pack using the new Coordinator
    */
-  const loadTravelPack = async (cityName: string) => {
-    if (!cityName || !cityName.trim()) {
-      setTravelPack(null);
-      setError(null);
-      return;
-    }
-
+  const loadTacticalData = async (fullName: string) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Extract city name from full string (e.g., "Paris, Île-de-France, France" -> "Paris")
-      const city = cityName.split(',')[0].trim() || cityName.trim();
+      // USE NORMALIZATION: Ensures "New York, USA" matches "new_york"
+      const normalizedName = normalizeCityName(fullName);
+      
+      // FETCH: Uses the refined coordinator logic
+      const pack = fetchTravelPack(fullName);
 
-      // Fetch travel pack insights (Tier 1-3 structure)
-      const insights = fetchTravelPackForCity(cityName);
-
-      if (!insights || insights.length === 0) {
-        setError('Travel Pack unavailable for this city.');
-        setTravelPack(null);
-        return;
+      if (!pack) {
+        setError(`Tactical intelligence for ${fullName.split(',')[0]} is restricted or generating.`);
+        setActivePack(null);
+      } else {
+        setActivePack(pack);
       }
-
-      // Sort insights by priority score
-      const sortedInsights = sortTravelInsights(insights);
-
-      // Transform to UI format (includes all Tier 1-3 content)
-      const uiPack = transformInsightsToUIPack(
-        city,
-        '1.0',
-        new Date().toISOString(),
-        `A curated travel pack for ${city}, focusing on authentic experiences beyond the tourist traps.`,
-        sortedInsights
-      );
-
-      setTravelPack(uiPack);
-      setError(null);
     } catch (err) {
-      console.error('Error loading Travel Pack:', err);
-      setError('Error loading Travel Pack.');
-      setTravelPack(null);
+      setError('System error retrieving tactical data.');
+      setActivePack(null);
     } finally {
       setLoading(false);
     }
   };
 
-  // Debounced API call on city input change
+  // Debounce search
   useEffect(() => {
-    const handler = setTimeout(() => fetchCities(city), 250);
+    const handler = setTimeout(() => fetchCities(cityInput), 300);
     return () => clearTimeout(handler);
-  }, [city]);
+  }, [cityInput]);
 
-  // Close dropdown on outside click
+  // Click outside to close dropdown
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setSuggestions([]);
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
   }, []);
 
-  /**
-   * Handle city selection from dropdown or Enter key
-   */
   const handleSelect = async (selectedCity: string) => {
-    setCity(selectedCity);
+    setCityInput(selectedCity);
     setSuggestions([]);
-    
-    // Auto-fetch Travel Pack immediately
-    await loadTravelPack(selectedCity);
+    await loadTacticalData(selectedCity);
   };
 
-  /**
-   * Handle Enter key - select first suggestion
-   */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && suggestions.length > 0) {
-      e.preventDefault();
       handleSelect(suggestions[0].fullName);
-    } else if (e.key === 'Escape') {
-      setSuggestions([]);
     }
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      {/* City Input with Autocomplete */}
-      <div className="relative w-full mb-8" ref={containerRef}>
-        <input
-          type="text"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Enter city name..."
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-        /> 
+    <div className="w-full max-w-2xl mx-auto px-4">
+      {/* Search Input Section */}
+      <div className="relative mb-12" ref={containerRef}>
+        <div className="relative group">
+          <input
+            type="text"
+            value={cityInput}
+            onChange={(e) => setCityInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Search Target City..."
+            className="w-full px-6 py-5 bg-white border-2 border-slate-200 rounded-[24px] font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-900 transition-all shadow-xl shadow-slate-200/50"
+          />
+        </div>
         
-        {/* Suggestions Dropdown */}
+        {/* Dropdown Results */}
         {suggestions.length > 0 && (
-          <ul className="absolute z-50 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto text-sm">
+          <div className="absolute z-[100] mt-3 w-full bg-white border-2 border-slate-900 rounded-[24px] shadow-2xl overflow-hidden">
             {suggestions.map((s, idx) => (
-              <li
+              <button
                 key={`${s.fullName}-${idx}`}
-                className="px-3 py-2 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100"
+                className="w-full px-6 py-4 text-left hover:bg-slate-50 border-b border-slate-100 last:border-0 transition-colors flex flex-col"
                 onClick={() => handleSelect(s.fullName)}
               >
-                {s.fullName}
-              </li>
+                <span className="font-black text-slate-900 uppercase tracking-tight text-sm">{s.name}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{s.region}, {s.country}</span>
+              </button>
             ))}
-          </ul> 
+          </div>
         )}
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="text-center py-8 text-gray-600 dark:text-gray-400">
-          <p>Loading Travel Pack...</p>
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-red-600 dark:text-red-400">{error}</p>
-        </div>
-      )}
-
-      {/* Travel Pack Display - Auto-loaded when city is selected */}
-      {travelPack && !loading && (
-        <div className="space-y-6">
-          <PackCard pack={travelPack} />
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <OfflineDownload pack={travelPack} />
+      {/* Content States */}
+      <div className="min-h-[200px]">
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-10 h-10 border-4 border-slate-100 border-t-slate-900 rounded-full animate-spin" />
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Decrypting Asset...</p>
           </div>
-        </div>
-      )}
+        )}
+
+        {error && !loading && (
+          <div className="p-8 bg-rose-50 border-2 border-rose-100 rounded-[32px] text-center animate-in fade-in zoom-in-95">
+            <p className="text-rose-600 font-bold text-sm uppercase tracking-tight mb-4">{error}</p>
+            <button 
+              onClick={() => setCityInput('')}
+              className="text-[10px] font-black uppercase tracking-widest text-rose-400 hover:text-rose-600 transition-colors"
+            >
+              Reset Terminal
+            </button>
+          </div>
+        )}
+
+        {activePack && !loading && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* The Main Pack View (Now using updated Tier 1-4 types) */}
+            <PackCard pack={activePack as any} />
+            
+            {/* The Sync/PWA Controller */}
+            <div className="p-2 bg-slate-50 rounded-[32px] border border-slate-100">
+              <Tier1Download pack={activePack} />
+            </div>
+            
+            <p className="text-center text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 py-4">
+              End of Briefing
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
