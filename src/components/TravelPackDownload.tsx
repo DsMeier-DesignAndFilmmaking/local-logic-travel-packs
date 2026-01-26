@@ -89,6 +89,20 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     }
   };
 
+  useEffect(() => {
+    const handleMenuOpen = () => {
+      // If instructions are open and user taps the browser UI, 
+      // we assume they moved to the next logical step.
+      if (showInstructions) {
+        setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+      }
+    };
+  
+    // When the native menu opens, the window 'blurs'
+    window.addEventListener('blur', handleMenuOpen);
+    return () => window.removeEventListener('blur', handleMenuOpen);
+  }, [showInstructions]);
+
   const config = {
     idle: {
       text: "Download for Offline Use",
@@ -193,61 +207,60 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       )}
 
 {showInstructions && (
-  <div className="fixed inset-0 z-[130] bg-slate-900 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
-    <div className="max-w-xs w-full">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <h2 className="text-2xl font-black mb-2">Tactical Install</h2>
-        <p className="text-slate-400 text-sm">Follow these 3 taps exactly</p>
+  <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-10 pointer-events-none animate-in slide-in-from-top duration-500">
+    {/* High-Performance Blur Backdrop */}
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm -z-10" />
+
+    <div className="bg-slate-900/90 border border-white/20 backdrop-blur-xl rounded-[24px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto">
+      
+      {/* Dynamic Progress Glow */}
+      <div className="h-1 w-full bg-white/10">
+        <div 
+          className="h-full bg-emerald-400 transition-all duration-700 shadow-[0_0_15px_#34d399]" 
+          style={{ width: `${(iosStep / 4) * 100}%` }}
+        />
       </div>
 
-      {/* The Visual Sequence */}
-      <div className="space-y-3 mb-10">
-        {[
-          { step: 1, text: "Tap the '...' or 'AA' icon", sub: "Bottom of screen" },
-          { step: 2, text: "Select 'Share'", sub: "In the popup menu" },
-          { step: 3, text: "Select 'Add to Home Screen'", sub: "You may need to tap '... More' first" }
-        ].map((item) => (
-          <div key={item.step} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center font-bold text-sm shrink-0">
-              {item.step}
-            </div>
-            <div>
-              <p className="font-bold text-sm leading-tight">{item.text}</p>
-              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-0.5">{item.sub}</p>
-            </div>
+      <div className="p-4 flex items-center gap-4">
+        {/* Step Indicator */}
+        <div className="relative flex-shrink-0">
+          <div className="w-10 h-10 rounded-full border-2 border-emerald-500/30 flex items-center justify-center">
+             <span className="text-emerald-400 font-black text-lg">{iosStep}</span>
           </div>
-        ))}
-      </div>
-
-      {/* Action Button */}
-      <div className="space-y-4">
-        <button 
-          onClick={() => {
-            // This closes the UI so they can see the browser bars to start tapping
-            setShowInstructions(false);
-            // Optional: add a small toast that says "TAPPING NOW"
-          }}
-          className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-black shadow-[0_0_20px_rgba(16,185,129,0.4)] active:scale-95 transition-all"
-        >
-          START INSTALLATION
-        </button>
+          <div className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-20" />
+        </div>
         
+        <div className="flex-grow">
+          <h3 className="text-white font-bold text-sm leading-tight">
+            {iosStep === 1 && "Tap 'AA' or '...' below"}
+            {iosStep === 2 && "Tap the Share button"}
+            {iosStep === 3 && "Tap '... More' at the end"}
+            {iosStep === 4 && "Tap 'Add to Home Screen'"}
+          </h3>
+          <p className="text-emerald-400/70 text-[10px] font-black uppercase tracking-widest mt-0.5">
+            {iosStep === 4 ? "Final Step" : "Instructions updating live"}
+          </p>
+        </div>
+
+        {/* Small Close Button only if they get stuck */}
         <button 
           onClick={() => setShowInstructions(false)}
-          className="w-full text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors"
+          className="p-2 text-white/30 hover:text-white"
         >
-          Cancel
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" strokeWidth={3} strokeLinecap="round" />
+          </svg>
         </button>
       </div>
     </div>
 
-    {/* Footer Detail */}
-    <div className="absolute bottom-10 flex flex-col items-center animate-bounce">
-      <p className="text-[10px] text-slate-600 font-bold mb-2 uppercase tracking-tighter">Instructions will close so you can tap</p>
-      <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-      </svg>
+    {/* The "Look Down" Indicator */}
+    <div className="flex justify-center mt-3">
+      <div className="bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
+        <svg className="w-4 h-4 text-emerald-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+        </svg>
+      </div>
     </div>
   </div>
 )}
