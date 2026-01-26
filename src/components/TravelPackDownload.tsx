@@ -14,6 +14,8 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  // Add this state to track which step of the iOS menu they are in
+  const [iosStep, setIosStep] = useState(1);
   
   const { triggerInstall, canInstall } = usePWAInstall();
 
@@ -189,32 +191,55 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   </div>
       )}
 
-      {showInstructions && (
-  <div className="fixed bottom-0 left-0 right-0 z-[110] p-4 pb-12 animate-in slide-in-from-bottom duration-500">
-    {/* The Instructional Bubble */}
-    <div className="bg-blue-600 text-white p-6 rounded-[24px] shadow-2xl relative mb-4">
-      <div className="flex items-start gap-4">
-        <div className="bg-white/20 p-2 rounded-lg">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
+{showInstructions && (
+  <div className="fixed inset-0 z-[120] pointer-events-none">
+    {/* 1. The Ghost Overlay: Dims the page content but lets the user see the browser bars */}
+    <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-[2px] pointer-events-none" />
+
+    {/* 2. The Dynamic Guide Box */}
+    <div className="absolute bottom-20 left-4 right-4 pointer-events-auto">
+      <div className="bg-white rounded-[24px] shadow-2xl overflow-hidden border border-slate-200 animate-in slide-in-from-bottom-8 duration-500">
+        
+        {/* Progress Bar */}
+        <div className="h-1.5 w-full bg-slate-100 flex">
+          <div className={`h-full bg-blue-600 transition-all duration-500 ${iosStep === 1 ? 'w-1/3' : iosStep === 2 ? 'w-2/3' : 'w-full'}`} />
         </div>
-        <div>
-          <h3 className="font-bold text-lg leading-tight">Install Travel Pack</h3>
-          <p className="text-blue-100 text-sm mt-1">
-            Tap the <span className="font-bold text-white uppercase">Share</span> button below, then select <span className="font-bold text-white italic">"Add to Home Screen"</span>.
-          </p>
+
+        <div className="p-5 flex items-center gap-4">
+          <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 font-black text-xl">
+            {iosStep}
+          </div>
+          
+          <div className="flex-grow">
+            <h3 className="text-slate-900 font-bold text-base leading-tight">
+              {iosStep === 1 && "Tap the Menu icon"}
+              {iosStep === 2 && "Find the Share button"}
+              {iosStep === 3 && "Add to Home Screen"}
+            </h3>
+            <p className="text-slate-500 text-xs mt-0.5">
+              {iosStep === 1 && "Look for the ( ... ) or ( AA ) in the address bar."}
+              {iosStep === 2 && "Tap the 'Share' icon in the list."}
+              {iosStep === 3 && "Scroll down to finalize the install."}
+            </p>
+          </div>
+
+          <button 
+            onClick={() => {
+              if (iosStep < 3) setIosStep(iosStep + 1);
+              else setShowInstructions(false);
+            }}
+            className="flex-shrink-0 bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-transform"
+          >
+            {iosStep < 3 ? "Next" : "Done"}
+          </button>
         </div>
-        <button 
-          onClick={() => setShowInstructions(false)}
-          className="text-white/60 hover:text-white"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" /></svg>
-        </button>
       </div>
 
-      {/* The Pulsing Arrow pointing to the Safari Share Button */}
-      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-blue-600 rotate-45 rounded-sm animate-bounce" />
+      {/* 3. The Pulsing Directional Arrow */}
+      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
+        <div className="w-1 h-8 bg-gradient-to-t from-blue-600 to-transparent animate-pulse rounded-full" />
+        <div className="w-4 h-4 bg-blue-600 rotate-45 rounded-sm" />
+      </div>
     </div>
   </div>
 )}
