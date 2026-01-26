@@ -3,32 +3,22 @@
 import { useState, useEffect } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
-// Fixed: Using the standard alias path for your hook
 import { usePWAInstall } from '../hooks/usePWAInstall'; 
 
 interface Tier1DownloadProps {
   pack: TravelPack;
 }
 
-/**
- * Top-bar Download button
- * Updated with Device Detection, PWA Install Trigger, and Success Modal
- */
 export default function Tier1Download({ pack }: Tier1DownloadProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [step, setStep] = useState<'success' | 'instructions'>('success');
+  const [showInstructions, setShowInstructions] = useState(false);
   
-  // Initialize the PWA install logic
   const { triggerInstall, canInstall } = usePWAInstall();
 
-  // Add 'instructions' to the possible steps
-  const [step, setStep] = useState<'success' | 'instructions'>('success');
-
-  const [showInstructions, setShowInstructions] = useState(false);
-
   useEffect(() => {
-    // Detect device for the modal message
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
 
     async function checkExisting() {
@@ -44,33 +34,25 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
 
   const handleSync = async () => {
     if (!pack.tiers?.tier1 || status !== 'idle') return;
-
     setStatus('syncing');
 
     const downloadData = {
       city: pack.city,
       country: pack.country,
       downloadedAt: new Date().toISOString(),
-      tiers: {
-        tier1: pack.tiers.tier1,
-      },
+      tiers: { tier1: pack.tiers.tier1 },
     };
 
     try {
-      // 1. Save data to IndexedDB
       await savePack(downloadData);
-      
-      // 2. Artificial delay for UX "weight"
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // 3. Trigger Native Install Prompt
       if (canInstall) {
         await triggerInstall();
       }
 
       setStatus('saved');
       setShowSuccessModal(true); 
-      
     } catch (err) {
       console.error('Failed to sync:', err);
       setStatus('idle');
@@ -85,9 +67,8 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
       setShowSuccessModal(false);
       window.location.reload();
     } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      // 1. Close the success modal
+      // SUCCESS: These now run independently
       setShowSuccessModal(false);
-      // 2. Open the persistent "Pointer" instructions
       setShowInstructions(true);
     } else {
       setShowSuccessModal(false);
@@ -153,86 +134,77 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
 
       {/* SUCCESS CONFIRMATION MODAL */}
       {showSuccessModal && (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-      
-      {step === 'success' ? (
-        <div className="text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
+          <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
+            {step === 'success' ? (
+              <div className="text-center">
+                <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-black text-slate-900 mb-3">Sync Complete</h2>
+                <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+                  Tactical data is now locked in your local vault.
+                </p>
+                <button 
+                  onClick={handleLaunchApp}
+                  className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
+                >
+                  Confirm & Add App to Home Screen
+                </button>
+              </div>
+            ) : (
+              <div className="text-left">
+                <h2 className="text-xl font-black text-slate-900 mb-4">Install to Home Screen</h2>
+                <p className="text-slate-600 mb-6 text-sm">
+                  To access this pack offline anytime, you must add it to your Home Screen:
+                </p>
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">1</span>
+                    <span>Tap the <strong className="text-blue-600">Share</strong> icon</span>
+                  </div>
+                  <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
+                    <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">2</span>
+                    <span>Tap <strong className="text-slate-900">Add to Home Screen</strong></span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold active:scale-[0.98]"
+                >
+                  Got it, I'll do that
+                </button>
+              </div>
+            )}
           </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-3">Sync Complete</h2>
-          <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-            Tactical data is now locked in your local vault.
-          </p>
-          <button 
-            onClick={handleLaunchApp}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
-          >
-            Confirm & Add App to Home Screen
-          </button>
-        </div>
-      ) : (
-        <div className="text-left">
-          <h2 className="text-xl font-black text-slate-900 mb-4">Install to Home Screen</h2>
-          <p className="text-slate-600 mb-6 text-sm">
-            To access this pack offline anytime, you must add it to your Home Screen:
-          </p>
-          
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">1</span>
-              <span>Tap the <strong className="text-blue-600">Share</strong> icon (the square with an arrow)</span>
-            </div>
-            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">2</span>
-              <span>Scroll down and tap <strong className="text-slate-900">Add to Home Screen</strong></span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setShowSuccessModal(false)}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold active:scale-[0.98]"
-          >
-            Got it, I'll do that
-          </button>
         </div>
       )}
-    </div>
 
-    {showInstructions && (
-  <div className="fixed bottom-0 left-0 right-0 z-[110] p-4 pb-12 animate-in slide-in-from-bottom duration-500">
-    {/* The Instructional Bubble */}
-    <div className="bg-blue-600 text-white p-6 rounded-[24px] shadow-2xl relative mb-4">
-      <div className="flex items-start gap-4">
-        <div className="bg-white/20 p-2 rounded-lg">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
+      {/* FLOATING INSTRUCTIONS - Moved outside of the modal block */}
+      {showInstructions && (
+        <div className="fixed bottom-0 left-0 right-0 z-[110] p-4 pb-12 animate-in slide-in-from-bottom duration-500">
+          <div className="bg-blue-600 text-white p-6 rounded-[24px] shadow-2xl relative mb-4">
+            <div className="flex items-start gap-4">
+              <div className="bg-white/20 p-2 rounded-lg">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-bold text-lg leading-tight">Install Travel Pack</h3>
+                <p className="text-blue-100 text-sm mt-1">
+                  Tap the <span className="font-bold text-white uppercase">Share</span> button below, then select <span className="font-bold text-white italic">"Add to Home Screen"</span>.
+                </p>
+              </div>
+              <button onClick={() => setShowInstructions(false)} className="text-white/60 hover:text-white">
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" /></svg>
+              </button>
+            </div>
+            <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-blue-600 rotate-45 rounded-sm animate-bounce" />
+          </div>
         </div>
-        <div>
-          <h3 className="font-bold text-lg leading-tight">Install Travel Pack</h3>
-          <p className="text-blue-100 text-sm mt-1">
-            Tap the <span className="font-bold text-white uppercase">Share</span> button below, then select <span className="font-bold text-white italic">"Add to Home Screen"</span>.
-          </p>
-        </div>
-        <button 
-          onClick={() => setShowInstructions(false)}
-          className="text-white/60 hover:text-white"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" /></svg>
-        </button>
-      </div>
-
-      {/* The Pulsing Arrow pointing to the Safari Share Button */}
-      <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-blue-600 rotate-45 rounded-sm animate-bounce" />
-    </div>
-  </div>
-)}
-
-  </div>
       )}
     </>
   );
