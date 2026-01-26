@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import CityInput from '@/components/CityInput';
 import { TravelPack } from '@/lib/travelPacks';
-import { storePackLocally } from '@/lib/offlineStorage';
 import { preloadAllPacksBackground } from '@/lib/preloadPacks';
 import { SupportedCity } from '@/lib/cities';
 
@@ -37,21 +36,32 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [packNotFound, setPackNotFound] = useState(false);
-  
-  // NEW: State for the "Resume Session" feature
   const [activeSession, setActiveSession] = useState<string | null>(null);
+  
+  // NEW: State to track environment for UI Lockdown
+  const [isOffline, setIsOffline] = useState(false);
+  const [isStandalone, setIsStandalone] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 1. Initial Load: Preload and Check for Offline Sessions
   useEffect(() => {
     preloadAllPacksBackground();
     
+    // Check connectivity and PWA status
+    setIsOffline(!navigator.onLine);
+    setIsStandalone(
+      window.matchMedia('(display-mode: standalone)').matches || 
+      (window.navigator as any).standalone === true
+    );
+
+    const handleStatusChange = () => setIsOffline(!navigator.onLine);
+    window.addEventListener('online', handleStatusChange);
+    window.addEventListener('offline', handleStatusChange);
+
     const checkActiveSession = async () => {
       try {
         const localPacks = await getAllPacks();
         if (localPacks && localPacks.length > 0) {
-          // Take the most recently saved city
           setActiveSession(localPacks[0].city);
         }
       } catch (err) {
@@ -59,9 +69,14 @@ export default function Home() {
       }
     };
     checkActiveSession();
+
+    return () => {
+      window.removeEventListener('online', handleStatusChange);
+      window.removeEventListener('offline', handleStatusChange);
+    };
   }, []);
 
-  // 2. Refactored Offline-first loading
+  // Offline-first loading logic
   useEffect(() => {
     if (!selectedCity) return;
 
@@ -71,7 +86,6 @@ export default function Home() {
       setPackNotFound(false);
 
       try {
-        // First: Attempt to pull from IndexedDB
         const offlinePack = await getPack(selectedCity);
 
         if (offlinePack) {
@@ -81,20 +95,16 @@ export default function Home() {
             tiers: offlinePack.tiers, 
           });
           setIsLoading(false);
-          console.log(`📦 Loaded from Offline Vault: ${selectedCity}`);
           return; 
         }
 
-        // Second: If offline and not in DB, show error
         if (!navigator.onLine) {
           setPackNotFound(true);
           setIsLoading(false);
           return;
         }
 
-        // Third: Fetch from Network
         const response = await fetch(`/api/travel-packs?city=${encodeURIComponent(selectedCity)}`);
-        
         if (!response.ok) {
           if (response.status === 404) setPackNotFound(true);
           else setError('Failed to load travel pack');
@@ -105,7 +115,6 @@ export default function Home() {
         const travelPack = await response.json();
         setPack(travelPack);
 
-        // Auto-persist to DB for next time
         try {
           await savePack(travelPack);
         } catch (err) {
@@ -113,7 +122,6 @@ export default function Home() {
         }
 
       } catch (err) {
-        console.error('Vault Access Error:', err);
         setError('Error loading tactical data');
       } finally {
         setIsLoading(false);
@@ -123,6 +131,11 @@ export default function Home() {
     loadPack();
   }, [selectedCity]);
 
+  // UI HELPERS
+  // Hide the search/selector if we are in a saved offline session (PWA) 
+  // and already have a pack loaded or are strictly offline.
+  const showCitySelector = !isOffline && !isStandalone && !pack;
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FFFFFF' }}>
       <SWRegister />
@@ -131,14 +144,16 @@ export default function Home() {
         {/* 1. Page Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-slate-900">
-            Local Logic <span className="text-blue-600">Travel Packs</span>
+            Local Logic <span className="text-blue-600">Vault</span>
           </h1>
-          <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
-            Curated, opinionated travel guides designed for offline use.
-          </p>
+          {showCitySelector && (
+            <p className="text-lg text-slate-600 max-w-xl mx-auto leading-relaxed">
+              Curated, opinionated travel guides designed for offline use.
+            </p>
+          )}
         </div>
 
-        {/* 2. OPTIMIZED UX: Active Session Card */}
+        {/* 2. Resume Session Card (Hidden if a pack is already being viewed) */}
         {activeSession && !pack && (
           <div className="mb-10 p-1 bg-gradient-to-r from-emerald-500 to-blue-600 rounded-[34px] shadow-lg animate-in fade-in slide-in-from-top-4 duration-700">
             <div className="bg-slate-900 rounded-[32px] p-6 text-white flex flex-col sm:flex-row justify-between items-center gap-6">
@@ -147,7 +162,9 @@ export default function Home() {
                   <div className="w-3 h-3 bg-emerald-500 rounded-full animate-pulse" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">Offline Vault Active</p>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">
+                    {isOffline ? 'Offline Mode Active' : 'Vault Detected'}
+                  </p>
                   <h3 className="text-xl font-bold">Resume {activeSession} Session</h3>
                 </div>
               </div>
@@ -161,39 +178,46 @@ export default function Home() {
           </div>
         )}
   
-        {/* 3. City Search Container */}
-        <div ref={containerRef} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 mb-10">
-          <h2 className="text-xl font-bold text-slate-800 mb-4">
-            {pack ? 'Change Destination' : 'Select Your Destination'}
-          </h2>
-  
-          <CityInput
-            value={selectedCity ?? ''}
-            onChange={(value) => setSelectedCity(value as SupportedCity)}
-            onPackSelect={setSelectedCity}
-          />
-  
-          {isLoading && <p className="mt-4 text-center text-slate-500 animate-pulse">Accessing Vault...</p>}
-          {error && <div className="mt-4 p-4 border rounded-lg bg-red-50 text-red-600 border-red-200">{error}</div>}
-          
-          {packNotFound && !isLoading && (
-            <div className="mt-6 p-6 border rounded-lg text-center bg-blue-50 border-blue-200">
-              <h3 className="text-xl font-semibold mb-2 text-slate-900">Coming Soon</h3>
-              <p className="text-slate-600">We're working on a travel pack for <strong>{selectedCity}</strong>.</p>
-            </div>
-          )}
-        </div>
+        {/* 3. City Search Container: LOCKED DOWN logic applied here */}
+        {showCitySelector && (
+          <div ref={containerRef} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 mb-10">
+            <h2 className="text-xl font-bold text-slate-800 mb-4">
+              Select Your Destination
+            </h2>
+    
+            <CityInput
+              value={selectedCity ?? ''}
+              onChange={(value) => setSelectedCity(value as SupportedCity)}
+              onPackSelect={setSelectedCity}
+            />
+    
+            {isLoading && <p className="mt-4 text-center text-slate-500 animate-pulse">Accessing Vault...</p>}
+            {error && <div className="mt-4 p-4 border rounded-lg bg-red-50 text-red-600 border-red-200">{error}</div>}
+          </div>
+        )}
   
         {/* 4. Travel Pack Results */}
         {pack && !isLoading && (
           <div className="animate-fadeIn space-y-6 mb-12">
+            {/* Exit Button: Only show if Online, allowing user to change city. 
+                If Offline, they are locked to this city for safety. */}
+            {!isOffline && (
+              <button 
+                onClick={() => { setPack(null); setSelectedCity(null); }}
+                className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 mb-2 flex items-center gap-2 transition-colors"
+              >
+                ← Back to Search
+              </button>
+            )}
+
             <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-              {/* Dark Header Card */}
               <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 p-8 text-white">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                   <div>
                     <h2 className="text-3xl font-bold tracking-tight">{pack.city}, {pack.country}</h2>
-                    <p className="text-slate-300 mt-1">Tactical Asset • Fully Downloaded</p>
+                    <p className="text-slate-300 mt-1">
+                      {isOffline ? 'OFFLINE VERIFIED ASSET' : 'Tactical Asset • Fully Downloaded'}
+                    </p>
                   </div>
                   {pack.tiers?.tier1 && <Tier1Download pack={pack} />}
                 </div>
@@ -205,7 +229,6 @@ export default function Home() {
   
               {pack.tiers?.tier1 && <ProblemFirstNavigation pack={pack} />}
   
-              {/* Premium Section */}
               {pack.tiers?.tier2 && (
                 <div className="px-6 sm:px-10 py-6 border-t border-slate-100">
                   <h3 className="text-xl font-bold text-slate-900 mb-4">Additional Content</h3>
@@ -216,7 +239,6 @@ export default function Home() {
                 </div>
               )}
   
-              {/* Unified Sync/Download Control */}
               <div className="mt-6 pt-6 border-t border-slate-100 pb-6">
                 <TravelPackDownload pack={pack} />
               </div>
@@ -224,42 +246,33 @@ export default function Home() {
           </div>
         )}
   
-        {/* 5. Spontaneity Section */}
         <div className={`transition-all duration-700 ease-in-out ${pack ? 'mt-20 opacity-100' : 'mt-0 opacity-100'}`}>
           <Spontaneity pack={pack} />
         </div>
   
       </main>
 
-      <footer className="mt-20 border-t border-slate-100 bg-slate-50/50 py-16">
-        <div className="container mx-auto max-w-4xl px-6 sm:px-10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-12">
-            <div className="space-y-4">
-              <h3 className="text-lg font-bold text-slate-900 tracking-tight">
-                Local Logic <span className="text-blue-600">Travel Packs</span>
-              </h3>
-              <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
-                High-fidelity, offline-first tactical intelligence for global travelers.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Reliability</h4>
-              <p className="text-[13px] text-slate-500 leading-relaxed">
-                Source: Experienced travelers. Use as a supporting resource for official guidance.
+      {/* Footer: Hidden in Offline/Standalone mode to maximize screen real estate */}
+      {!isStandalone && (
+        <footer className="mt-20 border-t border-slate-100 bg-slate-50/50 py-16">
+          <div className="container mx-auto max-w-4xl px-6 sm:px-10">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="flex flex-wrap gap-x-8 gap-y-2">
+                {/* Now using the Link component */}
+                <Link href="/privacy" className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">
+                  Privacy
+                </Link>
+                <Link href="/terms" className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">
+                  Terms
+                </Link>
+              </div>
+              <p className="text-[12px] text-slate-400 font-medium">
+                © {new Date().getFullYear()} Dan Meier. Verified Tactical Logic.
               </p>
             </div>
           </div>
-  
-          <div className="pt-8 border-t border-slate-200/60 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="flex flex-wrap gap-x-8 gap-y-2">
-              <Link href="/privacy" className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Privacy</Link>
-              <Link href="/terms" className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Terms</Link>
-              <Link href="/sources" className="text-[12px] font-bold text-slate-400 hover:text-slate-900 transition-colors uppercase tracking-widest">Sources</Link>
-            </div>
-            <p className="text-[12px] text-slate-400 font-medium">© {new Date().getFullYear()} Dan Meier.</p>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   );
 }
