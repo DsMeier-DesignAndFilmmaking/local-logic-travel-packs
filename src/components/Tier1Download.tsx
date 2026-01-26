@@ -134,24 +134,23 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   const current = config[status];
 
   return (
-    <>
+    <div className="w-full space-y-3">
       <button
         onClick={handleSync}
         disabled={status !== 'idle'}
-        className="px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium flex items-center gap-2 text-sm"
-        style={{ 
-          minHeight: '36px', 
-          backgroundColor: current.bg, 
-          color: current.textColor,
-          border: status === 'saved' ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(255, 255, 255, 0.3)',
-          cursor: status === 'idle' ? 'pointer' : 'default'
-        }}
+        className={`w-full px-6 py-4 rounded-2xl focus:outline-none transition-all font-bold flex items-center justify-center gap-3 active:scale-[0.98] touch-manipulation ${current.styles}`}
       >
         {current.icon}
         {current.text}
       </button>
 
-      {/* SUCCESS CONFIRMATION MODAL */}
+      {status === 'saved' && (
+        <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest animate-fadeIn">
+          Saved to local vault • No signal required
+        </p>
+      )}
+
+      {/* SUCCESS MODAL */}
       {showSuccessModal && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
@@ -171,7 +170,7 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
             onClick={handleLaunchApp}
             className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
           >
-            Confirm & Launch App
+            Confirm & Save App to Home Screen
           </button>
         </div>
       ) : (
@@ -201,8 +200,10 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
         </div>
       )}
     </div>
+  </div>
+      )}
 
-    {showInstructions && (
+      {showInstructions && (
   <div className="fixed bottom-0 left-0 right-0 z-[110] p-4 pb-12 animate-in slide-in-from-bottom duration-500">
     {/* The Instructional Bubble */}
     <div className="bg-blue-600 text-white p-6 rounded-[24px] shadow-2xl relative mb-4">
@@ -231,9 +232,6 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     </div>
   </div>
 )}
-
-  </div>
-      )}
-    </>
+    </div>
   );
 }
