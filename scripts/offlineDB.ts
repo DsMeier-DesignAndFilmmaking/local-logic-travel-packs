@@ -3,8 +3,8 @@ import { openDB, DBSchema } from 'idb';
 
 interface TravelPackDB extends DBSchema {
   packs: {
-    key: string; // city name
-    value: any;   // your JSON travel pack
+    key: string; 
+    value: any;   
   };
 }
 
@@ -22,32 +22,21 @@ export async function getDB() {
   });
 }
 
-// Save a travel pack
 export async function savePack(pack: any) {
   const db = await getDB();
-  await db.put(STORE_NAME, pack, pack.city);
+  // Ensure we are saving with a consistent key (lowercase trimmed)
+  const key = pack.city.toLowerCase().trim();
+  await db.put(STORE_NAME, pack, key);
 }
 
-// Get a travel pack by city
 export async function getPack(city: string) {
   const db = await getDB();
-  return db.get(STORE_NAME, city);
+  return db.get(STORE_NAME, city.toLowerCase().trim());
 }
 
-// Get a travel pack by city
-export async function getTier1Pack(city: string) {
-    const db = await getDB();
-    return db.get(STORE_NAME, city);
-  }
-
-// Get all stored packs
 export async function getAllPacks() {
   const db = await getDB();
-  return db.getAll(STORE_NAME);
-}
-
-// Delete a pack
-export async function deletePack(city: string) {
-  const db = await getDB();
-  await db.delete(STORE_NAME, city);
+  const all = await db.getAll(STORE_NAME);
+  // Return most recently saved (assuming you add a timestamp or use array order)
+  return all;
 }
