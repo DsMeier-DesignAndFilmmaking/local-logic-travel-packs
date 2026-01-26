@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { usePWAInstall } from '../hooks/usePWAInstall'; 
@@ -10,35 +10,29 @@ interface Tier1DownloadProps {
 }
 
 export default function Tier1Download({ pack }: Tier1DownloadProps) {
-  // --- STATE ---
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
   const { triggerInstall, canInstall } = usePWAInstall();
 
-  // --- INITIALIZATION ---
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-
     async function checkExisting() {
       if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
         try {
           const existing = await getPack(pack.city);
           if (existing) setStatus('saved');
-        } catch (err) {
-          console.error('Error checking IndexedDB:', err);
-        }
+        } catch (err) { console.error('Error checking IndexedDB:', err); }
       }
     }
     checkExisting();
   }, [pack.city]);
 
-  // --- DESKTOP STANDALONE EXPORT (HIGH-FIDELITY UI) ---
   const handleDesktopExport = async () => {
     setStatus('syncing');
     
-    // SAFE EXTRACTION: Solve the "Property sections does not exist" error
+    // Explicitly extract sections to prevent "undefined" data in the HTML
     const tierData = (pack.tiers?.tier1 as any) || {};
     const sections = tierData.sections || [];
 
@@ -59,43 +53,13 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
         
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #020617; 
-            color: #f8fafc; 
-            margin: 0; 
-            overflow-x: hidden; 
-        }
-
-        .app-shell { 
-            max-width: 450px; 
-            margin: 0 auto; 
-            min-height: 100vh; 
-            background: #020617; 
-            border-left: 1px solid rgba(255,255,255,0.05); 
-            border-right: 1px solid rgba(255,255,255,0.05); 
-            position: relative;
-            box-shadow: 0 0 100px rgba(0,0,0,0.5);
-        }
-
-        .glass-card { 
-            background: rgba(30, 41, 59, 0.4); 
-            border: 1px solid rgba(255, 255, 255, 0.08); 
-            backdrop-filter: blur(16px); 
-            border-radius: 32px; 
-        }
-
-        .emerald-glow {
-            box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-        }
-
-        ::-webkit-scrollbar { display: none; }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-up { animation: slideUp 0.6s ease forwards; }
+        /* Fallback CSS in case CDN is offline */
+        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
+        .app-shell { max-width: 450px; margin: 0 auto; min-height: 100vh; background: #020617; border-left: 1px solid rgba(255,255,255,0.05); border-right: 1px solid rgba(255,255,255,0.05); position: relative; }
+        .glass-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(16px); border-radius: 32px; padding: 2rem; margin-bottom: 1.5rem; }
+        .emerald-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-up { animation: slideUp 0.6s ease forwards; opacity: 0; }
     </style>
 </head>
 <body>
@@ -109,12 +73,12 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
             <p class="text-slate-400 font-bold text-xl tracking-tight">${pack.country}</p>
         </header>
 
-        <main id="offline-main" class="px-6 space-y-6">
-            <div id="loading-state" class="text-slate-500 text-xs tracking-widest uppercase py-10 text-center">Decrypting Vault...</div>
+        <main id="offline-main" class="px-6">
+            <div id="status-msg" class="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] text-center py-10">Decrypting Tactical Data...</div>
         </main>
 
         <footer class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto p-6 bg-gradient-to-t from-[#020617] via-[#020617] to-transparent">
-            <div class="glass-card py-5 px-8 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+            <div class="glass-card !p-5 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
                 <div class="flex items-center gap-2">
                     <span class="w-1 h-1 rounded-full bg-slate-600"></span>
                     <span>Ref: ${pack.city.substring(0, 3).toUpperCase()}-OFL</span>
@@ -125,36 +89,30 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     </div>
 
     <script>
-        const data = ${cityData};
-        const main = document.getElementById('offline-main');
-        const loader = document.getElementById('loading-state');
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = ${cityData};
+            const main = document.getElementById('offline-main');
+            const status = document.getElementById('status-msg');
 
-        function render() {
-            if (!data.sections || data.sections.length === 0) {
-                loader.innerText = "No Encrypted Data Found";
-                return;
+            if (data.sections && data.sections.length > 0) {
+                status.style.display = 'none';
+                data.sections.forEach((section, idx) => {
+                    const el = document.createElement('div');
+                    el.className = 'glass-card animate-up';
+                    el.style.animationDelay = (idx * 0.1) + 's';
+                    el.innerHTML = \`
+                        <div class="flex items-center gap-3 mb-5">
+                            <div class="w-1 h-5 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
+                            <h2 class="text-emerald-400 text-[11px] font-black uppercase tracking-[0.25em] font-bold">\${section.title}</h2>
+                        </div>
+                        <p class="text-slate-200 text-[15px] leading-relaxed font-medium opacity-90">\${section.content}</p>
+                    \`;
+                    main.appendChild(el);
+                });
+            } else {
+                status.innerText = "Error: No tactical data found in this package.";
             }
-
-            loader.style.display = 'none';
-
-            data.sections.forEach((section, idx) => {
-                const el = document.createElement('div');
-                el.className = 'glass-card p-8 animate-up opacity-0';
-                el.style.animationDelay = (idx * 0.1) + 's';
-                el.style.marginBottom = '24px';
-                
-                el.innerHTML = \`
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="w-1 h-5 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
-                        <h2 class="text-emerald-400 text-[11px] font-black uppercase tracking-[0.25em] font-bold">\${section.title}</h2>
-                    </div>
-                    <p class="text-slate-200 text-[15px] leading-relaxed font-medium opacity-90">\${section.content}</p>
-                \`;
-                main.appendChild(el);
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', render);
+        });
     </script>
 </body>
 </html>`;
@@ -178,7 +136,6 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
         link.download = fileName;
         link.click();
       }
-      
       setStatus('saved');
       setShowSuccessModal(true);
       setTimeout(() => setStatus('idle'), 4000);
@@ -188,7 +145,6 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  // --- MOBILE SYNC ACTION ---
   const handleMobileSync = async () => {
     setStatus('syncing');
     try {
@@ -202,7 +158,6 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  // --- MAIN BUTTON HANDLER ---
   const handleMainAction = () => {
     if (status === 'syncing') return;
     if (isMobile) {
