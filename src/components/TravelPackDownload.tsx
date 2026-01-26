@@ -13,10 +13,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
-  const [iosStep, setIosStep] = useState<1 | 2>(1);
   
-  const lastJumpRef = useRef(0);
   const { triggerInstall, canInstall } = usePWAInstall();
 
   useEffect(() => {
@@ -31,138 +28,130 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   }, [pack.city]);
 
   const handleDesktopExport = async () => {
-    // 1. Explicitly extract sections to ensure 'data.sections' exists in the HTML
-    const tierData = (pack.tiers?.tier1 as any) || {};
-    const sections = tierData.sections || [];
+    setStatus('syncing');
 
-    // 2. Format exactly for the offline script
-    const cityData = JSON.stringify({
-      city: pack.city,
-      country: pack.country,
-      sections: sections
-    });
+    // 1. DATA PREP: Explicitly extract the tier sections
+    const tierData = (pack.tiers as any)?.tier1;
+    const sections = tierData?.sections || [];
 
+    // 2. THE OFFLINE APP ENGINE (Native CSS + Immediate JS Injection)
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${pack.city} | Tactical Vault</title>
-    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap');
-        /* Hardcoded Fallback Styles in case CDN fails */
-        body { font-family: 'Inter', sans-serif; background-color: #020617; color: #f8fafc; margin: 0; }
-        .app-shell { max-width: 450px; margin: 0 auto; min-height: 100vh; background: #020617; border-left: 1px solid #1e293b; border-right: 1px solid #1e293b; position: relative; }
-        .glass-card { background: rgba(30, 41, 59, 0.4); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 32px; padding: 32px; margin-bottom: 24px; }
-        .emerald-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.3); }
+        :root { --bg: #020617; --card: rgba(30, 41, 59, 0.4); --accent: #10b981; --text: #f8fafc; --muted: #94a3b8; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; justify-content: center; }
+        .app-shell { width: 100%; max-width: 450px; min-height: 100vh; padding: 40px 24px; box-sizing: border-box; border-left: 1px solid #1e293b; border-right: 1px solid #1e293b; position: relative; }
+        header { margin-bottom: 48px; padding-top: 20px; }
+        .indicator { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
+        .tag { font-size: 10px; font-weight: 900; letter-spacing: 0.3em; text-transform: uppercase; color: var(--accent); }
+        h1 { font-size: 56px; font-weight: 900; margin: 0; letter-spacing: -0.05em; line-height: 0.9; }
+        .country { font-size: 20px; color: var(--muted); font-weight: 700; margin-top: 8px; }
+        .card { background: var(--card); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; padding: 28px; margin-bottom: 20px; backdrop-filter: blur(12px); animation: slideUp 0.5s ease forwards; opacity: 0; }
+        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .line { width: 3px; height: 16px; background: var(--accent); border-radius: 4px; }
+        .card-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: var(--accent); }
+        .card-content { font-size: 15px; line-height: 1.6; color: #cbd5e1; }
+        footer { position: fixed; bottom: 0; width: 100%; max-width: 450px; padding: 24px; box-sizing: border-box; background: linear-gradient(transparent, var(--bg) 40%); }
+        .footer-bar { background: var(--card); border: 1px solid rgba(255,255,255,0.05); padding: 16px 24px; border-radius: 20px; display: flex; justify-content: space-between; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; color: var(--muted); }
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-up { animation: slideUp 0.6s ease forwards; opacity: 0; }
     </style>
 </head>
 <body>
-    <div class="app-shell pb-32">
-        <header class="p-8 pt-16">
-            <div class="flex items-center gap-3 mb-6">
-                <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse emerald-glow shadow-[0_0_8px_#10b981]"></div>
-                <span class="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-400">Offline Deployment</span>
-            </div>
-            <h1 class="text-6xl font-black tracking-tighter mb-2 leading-[0.85]">${pack.city.toUpperCase()}</h1>
-            <p class="text-slate-400 font-bold text-xl">${pack.country}</p>
+    <div class="app-shell">
+        <header>
+            <div class="indicator"><div class="dot"></div><span class="tag">Tactical Vault</span></div>
+            <h1>${pack.city.toUpperCase()}</h1>
+            <div class="country">${pack.country}</div>
         </header>
-
-        <main id="offline-main" class="px-6">
-            <div id="status-msg" class="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] text-center py-10">Initializing...</div>
-        </main>
-
-        <footer class="fixed bottom-0 left-0 right-0 max-w-[450px] mx-auto p-6 bg-gradient-to-t from-[#020617] to-transparent">
-            <div class="glass-card !py-4 !px-8 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
+        <div id="content"></div>
+        <div style="height: 100px;"></div>
+        <footer>
+            <div class="footer-bar">
                 <span>REF: ${pack.city.substring(0, 3).toUpperCase()}-OFL</span>
-                <span class="text-emerald-500">Asset Secured</span>
+                <span style="color: var(--accent)">ENCRYPTION ACTIVE</span>
             </div>
         </footer>
     </div>
-
     <script>
-        // Use a small delay to ensure Tailwind has processed the DOM
-        window.addEventListener('load', () => {
-            try {
-                const data = ${cityData};
-                const main = document.getElementById('offline-main');
-                const status = document.getElementById('status-msg');
-
-                if (data.sections && data.sections.length > 0) {
-                    status.style.display = 'none';
-                    data.sections.forEach((section, idx) => {
-                        const el = document.createElement('div');
-                        el.className = 'glass-card animate-up';
-                        el.style.animationDelay = (idx * 0.1) + 's';
-                        el.innerHTML = \`
-                            <div class="flex items-center gap-3 mb-5">
-                                <div class="w-1 h-5 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
-                                <h2 class="text-emerald-400 text-[11px] font-black uppercase tracking-widest">\${section.title}</h2>
-                            </div>
-                            <p class="text-slate-200 text-[15px] leading-relaxed font-medium opacity-90">\${section.content}</p>
-                        \`;
-                        main.appendChild(el);
-                    });
-                } else {
-                    status.innerText = "NO DATA SECTIONS FOUND IN THIS PACK";
-                }
-            } catch (err) {
-                document.getElementById('status-msg').innerText = "DECRYPTION ERROR: " + err.message;
+        (function() {
+            const sections = ${JSON.stringify(sections)};
+            const container = document.getElementById('content');
+            if (!sections || sections.length === 0) {
+                container.innerHTML = '<div class="card" style="opacity:1"><div class="card-title">Error</div><div class="card-content">No data sections found in payload.</div></div>';
+                return;
             }
-        });
+            sections.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.style.animationDelay = (i * 0.1) + 's';
+                div.innerHTML = \`<div class="card-header"><div class="line"></div><div class="card-title">\${s.title}</div></div><div class="card-content">\${s.content}</div>\`;
+                container.appendChild(div);
+            });
+        })();
     </script>
 </body>
 </html>`;
 
     const blob = new Blob([htmlContent], { type: 'text/html' });
-    const fileName = `${pack.city.replace(/\s+/g, '_')}_Tactical_Pack.html`;
-
-    try {
-      if ('showSaveFilePicker' in window) {
-        const handle = await (window as any).showSaveFilePicker({ suggestedName: fileName, types: [{ description: 'HTML', accept: { 'text/html': ['.html'] } }] });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-      } else {
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url; link.download = fileName; link.click();
-      }
-      setStatus('saved');
-      setShowSuccessModal(true);
-    } catch (err) { console.error('Export failed', err); setStatus('idle'); }
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${pack.city.replace(/\s+/g, '_')}_Tactical_Vault.html`;
+    link.click();
+    
+    setStatus('saved');
+    setShowSuccessModal(true);
   };
 
   const handleMainAction = async () => {
     if (status === 'syncing') return;
-    if (status === 'saved' && isMobile) {
-      window.location.href = `/packs/\${pack.city.toLowerCase().replace(/\\s+/g, '-')}`;
-      return;
-    }
-    setStatus('syncing');
     if (isMobile) {
-      try {
-        await savePack({ ...pack, downloadedAt: new Date().toISOString() });
-        if (canInstall) await triggerInstall();
-        setStatus('saved');
-        setShowSuccessModal(true);
-      } catch (err) { setStatus('idle'); }
+      if (status === 'saved') {
+        window.location.href = `/packs/${pack.city.toLowerCase().replace(/\s+/g, '-')}`;
+      } else {
+        setStatus('syncing');
+        try {
+          await savePack({ ...pack, downloadedAt: new Date().toISOString() });
+          if (canInstall) await triggerInstall();
+          setStatus('saved');
+          setShowSuccessModal(true);
+        } catch (err) { setStatus('idle'); }
+      }
     } else {
-      await handleDesktopExport();
+      handleDesktopExport();
     }
   };
 
-  // ... (Rest of modal/ios logic same as previous response)
   return (
     <div className="w-full space-y-3">
-        <button onClick={handleMainAction} disabled={status === 'syncing'} className="w-full px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 active:scale-[0.98] bg-white text-slate-900 border border-slate-200">
-            {status === 'syncing' ? "Syncing..." : status === 'saved' ? "Open Offline Pack" : "Download for Offline Use"}
-        </button>
-        {/* Modals omitted for brevity, logic remains identical */}
+      <button
+        onClick={handleMainAction}
+        disabled={status === 'syncing'}
+        className={`w-full px-6 py-4 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all active:scale-95 touch-manipulation 
+          ${status === 'saved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-white text-slate-900 border-slate-200 border'}`}
+      >
+        {status === 'syncing' ? 'Syncing...' : status === 'saved' ? 'Open Offline Pack' : 'Download for Offline Use'}
+      </button>
+
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
+          <div className="bg-white text-slate-900 rounded-[40px] p-8 max-w-sm w-full text-center shadow-2xl">
+            <h2 className="text-2xl font-black mb-2">{isMobile ? 'Vault Synced' : 'Vault Exported'}</h2>
+            <p className="text-slate-600 mb-8 text-sm leading-relaxed">
+              {isMobile ? 'Data is now locked in your local vault.' : 'Your interactive standalone guide has been generated.'}
+            </p>
+            <button onClick={() => setShowSuccessModal(false)} className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95">
+              Confirm
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
