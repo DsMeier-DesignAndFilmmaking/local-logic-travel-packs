@@ -90,17 +90,30 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   };
 
   useEffect(() => {
-    const handleMenuOpen = () => {
-      // If instructions are open and user taps the browser UI, 
-      // we assume they moved to the next logical step.
-      if (showInstructions) {
+    let lastHeight = window.innerHeight;
+  
+    const handleUIChange = () => {
+      const currentHeight = window.innerHeight;
+      
+      // If the height changes (menu opens or address bar expands)
+      if (currentHeight !== lastHeight && showInstructions) {
         setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+        lastHeight = currentHeight;
       }
     };
   
-    // When the native menu opens, the window 'blurs'
-    window.addEventListener('blur', handleMenuOpen);
-    return () => window.removeEventListener('blur', handleMenuOpen);
+    // 1. Detect when the menu slides up (Resize)
+    window.addEventListener('resize', handleUIChange);
+    
+    // 2. Detect when the user interacts with browser chrome (Blur)
+    window.addEventListener('blur', () => {
+      if (showInstructions) setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+    });
+  
+    return () => {
+      window.removeEventListener('resize', handleUIChange);
+      window.removeEventListener('blur', handleUIChange);
+    };
   }, [showInstructions]);
 
   const config = {
@@ -207,64 +220,65 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       )}
 
 {showInstructions && (
-  <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-10 pointer-events-none animate-in slide-in-from-top duration-500">
-    {/* High-Performance Blur Backdrop */}
-    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm -z-10" />
+  <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-12 pointer-events-none">
+    {/* Deepened Tactical Blur */}
+    <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md -z-10" />
 
-    <div className="bg-slate-900/90 border border-white/20 backdrop-blur-xl rounded-[24px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto">
+    <div className="bg-slate-900/95 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto ring-1 ring-white/10">
       
-      {/* Dynamic Progress Glow */}
-      <div className="h-1 w-full bg-white/10">
-        <div 
-          className="h-full bg-emerald-400 transition-all duration-700 shadow-[0_0_15px_#34d399]" 
-          style={{ width: `${(iosStep / 4) * 100}%` }}
-        />
+      {/* Animated Step Tracker */}
+      <div className="flex h-1.5 w-full bg-white/5">
+        {[1, 2, 3, 4].map((s) => (
+          <div 
+            key={s}
+            className={`h-full flex-1 transition-all duration-500 ${
+              s <= iosStep ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-transparent'
+            }`}
+          />
+        ))}
       </div>
 
-      <div className="p-4 flex items-center gap-4">
-        {/* Step Indicator */}
-        <div className="relative flex-shrink-0">
-          <div className="w-10 h-10 rounded-full border-2 border-emerald-500/30 flex items-center justify-center">
-             <span className="text-emerald-400 font-black text-lg">{iosStep}</span>
+      <div className="p-5 flex items-center gap-5">
+        {/* Visual Pulse Indicator */}
+        <div className="relative">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
+             <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
           </div>
-          <div className="absolute inset-0 rounded-full border-2 border-emerald-400 animate-ping opacity-20" />
+          <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_#10b981]" />
         </div>
         
         <div className="flex-grow">
-          <h3 className="text-white font-bold text-sm leading-tight">
+          <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
+            Live Logic Update
+          </p>
+          <h3 className="text-white font-bold text-base leading-tight">
             {iosStep === 1 && "Tap 'AA' or '...' below"}
-            {iosStep === 2 && "Tap the Share button"}
-            {iosStep === 3 && "Tap '... More' at the end"}
+            {iosStep === 2 && "Tap the Share Icon"}
+            {iosStep === 3 && "Find & Tap '... More'"}
             {iosStep === 4 && "Tap 'Add to Home Screen'"}
           </h3>
-          <p className="text-emerald-400/70 text-[10px] font-black uppercase tracking-widest mt-0.5">
-            {iosStep === 4 ? "Final Step" : "Instructions updating live"}
-          </p>
         </div>
 
-        {/* Small Close Button only if they get stuck */}
-        <button 
-          onClick={() => setShowInstructions(false)}
-          className="p-2 text-white/30 hover:text-white"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12" strokeWidth={3} strokeLinecap="round" />
+        {/* Minimal Close */}
+        <button onClick={() => setShowInstructions(false)} className="text-white/20 p-1">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" />
           </svg>
         </button>
       </div>
     </div>
 
-    {/* The "Look Down" Indicator */}
-    <div className="flex justify-center mt-3">
-      <div className="bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
-        <svg className="w-4 h-4 text-emerald-400 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
+    {/* The Dynamic Pointer */}
+    <div className="flex justify-center mt-6">
+      <div className="flex flex-col items-center">
+        <div className="w-px h-10 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
+        <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">
+          Interact Below
+        </div>
       </div>
     </div>
   </div>
 )}
-
     </div>
   );
 }
