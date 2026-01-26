@@ -84,47 +84,29 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   useEffect(() => {
     let lastHeight = window.innerHeight;
   
-    const advance = () => {
-      const now = Date.now();
-      // Use the Ref to prevent double-jumping
-      if (now - lastJumpRef.current < 800) return;
-  
-      setIosStep((prev) => {
-        if (prev < 3) {
-          lastJumpRef.current = now;
-          return (prev + 1) as 1 | 2 | 3;
-        }
-        return prev;
-      });
-    };
-  
     const handleResize = () => {
       if (!showInstructions) return;
       const currentHeight = window.innerHeight;
-      // Step 1 to 2 happens when the address bar is engaged (height shift)
+      
+      // Once the address bar is engaged or the menu pops up, 
+      // we move to the final "Checklist" view immediately.
       if (iosStep === 1 && currentHeight !== lastHeight) {
-        advance();
+        setIosStep(2);
         lastHeight = currentHeight;
       }
     };
   
-    const handleMenuOpen = () => {
-      // Step 2 to 3 happens when the native menu overlays the webview
-      if (showInstructions && iosStep === 2) {
-        advance();
-      }
-    };
-  
     window.addEventListener('resize', handleResize);
-    window.addEventListener('blur', handleMenuOpen);
-    document.addEventListener('visibilitychange', handleMenuOpen);
+    // Backup: If they tap and the menu opens without a resize, blur will trigger it
+    window.addEventListener('blur', () => {
+      if (showInstructions && iosStep === 1) setIosStep(2);
+    });
   
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('blur', handleMenuOpen);
-      document.removeEventListener('visibilitychange', handleMenuOpen);
+      window.removeEventListener('blur', () => {});
     };
-  }, [showInstructions, iosStep]); // Added iosStep to dependencies for specific step-checks 
+  }, [showInstructions, iosStep]);
 
   if (!pack.tiers?.tier1) return null;
 

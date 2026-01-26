@@ -93,45 +93,27 @@ const { triggerInstall, canInstall } = usePWAInstall();
   useEffect(() => {
     let lastHeight = window.innerHeight;
   
-    const advance = () => {
-      const now = Date.now();
-      // Use the Ref to prevent double-jumping
-      if (now - lastJumpRef.current < 800) return;
-  
-      setIosStep((prev) => {
-        if (prev < 3) {
-          lastJumpRef.current = now;
-          return (prev + 1) as 1 | 2 | 3;
-        }
-        return prev;
-      });
-    };
-  
     const handleResize = () => {
       if (!showInstructions) return;
       const currentHeight = window.innerHeight;
-      // Step 1 to 2 happens when the address bar is engaged (height shift)
+      
+      // Once the address bar is engaged or the menu pops up, 
+      // we move to the final "Checklist" view immediately.
       if (iosStep === 1 && currentHeight !== lastHeight) {
-        advance();
+        setIosStep(2);
         lastHeight = currentHeight;
       }
     };
   
-    const handleMenuOpen = () => {
-      // Step 2 to 3 happens when the native menu overlays the webview
-      if (showInstructions && iosStep === 2) {
-        advance();
-      }
-    };
-  
     window.addEventListener('resize', handleResize);
-    window.addEventListener('blur', handleMenuOpen);
-    document.addEventListener('visibilitychange', handleMenuOpen);
+    // Backup: If they tap and the menu opens without a resize, blur will trigger it
+    window.addEventListener('blur', () => {
+      if (showInstructions && iosStep === 1) setIosStep(2);
+    });
   
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('blur', handleMenuOpen);
-      document.removeEventListener('visibilitychange', handleMenuOpen);
+      window.removeEventListener('blur', () => {});
     };
   }, [showInstructions, iosStep]); // Added iosStep to dependencies for specific step-checks
 
@@ -240,63 +222,76 @@ const { triggerInstall, canInstall } = usePWAInstall();
 
 {showInstructions && (
   <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-12 pointer-events-none">
-    {/* Deep Backdrop Blur */}
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md -z-10 animate-in fade-in duration-500" />
 
     <div className="bg-slate-900 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto ring-1 ring-white/10">
       
-      {/* 3-Step Tactical Progress */}
+      {/* 2-Part Progress Bar */}
       <div className="flex h-1.5 w-full bg-white/10 gap-1 p-1">
-        {[1, 2, 3].map((s) => (
-          <div 
-            key={s}
-            className={`h-full flex-1 rounded-full transition-all duration-500 ${
-              s <= iosStep ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-white/5'
-            }`}
-          />
-        ))}
+        <div className={`h-full flex-1 rounded-full transition-all duration-500 bg-emerald-400 shadow-[0_0_10px_#34d399]`} />
+        <div className={`h-full flex-1 rounded-full transition-all duration-500 ${iosStep === 2 ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-white/5'}`} />
       </div>
 
-      <div className="p-5 flex items-center gap-4">
-        {/* Step Indicator */}
-        <div className="shrink-0 relative">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center relative z-10">
-            <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
+      <div className="p-5">
+        {iosStep === 1 ? (
+          // INITIAL VIEW
+          <div className="flex items-center gap-4">
+            <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
+              <span className="text-emerald-400 font-black text-xl">1</span>
+            </div>
+            <h3 className="text-white font-bold text-[15px] leading-tight">
+              Tap the browser bar below
+            </h3>
           </div>
-          <div className="absolute inset-0 rounded-2xl bg-emerald-400 animate-ping opacity-10" key={iosStep} />
-        </div>
-        
-        <div className="flex-grow">
-          <p className="text-emerald-500/50 text-[10px] font-black uppercase tracking-[0.2em] mb-1">
-            {iosStep === 3 ? "Final Actions" : "System Guide"}
-          </p>
-          <h3 className="text-white font-bold text-[15px] leading-tight">
-            {iosStep === 1 && "Tap the browser bar below"}
-            {iosStep === 2 && "Tap 'AA' or '...' in the bar"}
-            {iosStep === 3 && (
-              <div className="flex flex-col gap-1">
-                <span>Tap <span className="text-emerald-400">'Share'</span></span>
-                <span className="text-white/60 text-xs font-normal">Then select <span className="text-white font-bold">'Add to Home Screen'</span></span>
+        ) : (
+          // THE TACTICAL CHECKLIST (Steps 2, 3, and 4 combined)
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Final Sequence</p>
+              <button onClick={() => setShowInstructions(false)} className="text-white/20 p-1">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">2</div>
+                <p className="text-white text-sm font-medium">Tap <span className="text-emerald-400 font-bold">'AA'</span> or <span className="text-emerald-400 font-bold">'...'</span> in the bar</p>
               </div>
-            )}
-          </h3>
+              
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">3</div>
+                <p className="text-white text-sm font-medium">Select the <span className="text-emerald-400 font-bold">'Share'</span> icon</p>
+              </div>
+
+              <div className="flex items-start gap-3 pb-1">
+                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">4</div>
+                <p className="text-white text-sm font-medium">Find <span className="text-emerald-400 font-bold">'Add to Home Screen'</span></p>
+              </div>
+            </div>
+            
+            <button 
+              onClick={() => setShowInstructions(false)}
+              className="w-full py-3 bg-emerald-500 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+            >
+              I'm Done
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+
+    {/* Dynamic Pointer (only shows for Step 1) */}
+    {iosStep === 1 && (
+      <div className="flex flex-col items-center mt-6">
+        <div className="w-px h-10 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
+        <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">
+          Tap Below
         </div>
-
-        <button onClick={() => setShowInstructions(false)} className="text-white/20 p-1">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" />
-          </svg>
-        </button>
       </div>
-    </div>
-
-    {/* Dynamic Pointer */}
-    <div className="flex flex-col items-center mt-6">
-      <div className="w-px h-10 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
-      <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">
-        Action Required Below
-      </div>
-    </div>
+    )}
   </div>
 )}
     </div>
