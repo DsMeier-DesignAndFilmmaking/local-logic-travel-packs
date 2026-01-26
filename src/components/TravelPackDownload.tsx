@@ -92,31 +92,39 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   useEffect(() => {
     let lastHeight = window.innerHeight;
   
-    const handleInteraction = () => {
+    const advanceStep = () => {
+      setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+    };
+  
+    const handleUIChange = () => {
       const currentHeight = window.innerHeight;
-      
-      // If the height changes (bar activates or menu slides up)
       if (currentHeight !== lastHeight && showInstructions) {
-        setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+        advanceStep();
         lastHeight = currentHeight;
       }
     };
   
-    // Listen for the layout shifts caused by Safari UI
-    window.addEventListener('resize', handleInteraction);
+    // 1. Listen for height changes
+    window.addEventListener('resize', handleUIChange);
     
-    // Also advance if the window loses focus (menu opens)
-    const handleBlur = () => {
+    // 2. Listen for Focus/Blur (Menu opening)
+    window.addEventListener('blur', advanceStep);
+  
+    // 3. THE FIX: Listen for any touch interaction
+    // When the user taps 'Share' or 'More', even if Safari swallows the click,
+    // the 'touchstart' often still bubbles up to the window level before the menu opens.
+    const handleTouch = () => {
       if (showInstructions) {
-        setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
+        // Small delay to ensure the OS menu has time to start opening
+        setTimeout(advanceStep, 100);
       }
     };
-  
-    window.addEventListener('blur', handleBlur);
+    window.addEventListener('touchstart', handleTouch);
   
     return () => {
-      window.removeEventListener('resize', handleInteraction);
-      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('resize', handleUIChange);
+      window.removeEventListener('blur', advanceStep);
+      window.removeEventListener('touchstart', handleTouch);
     };
   }, [showInstructions]);
 
@@ -170,8 +178,8 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
         </p>
       )}
 
-      {/* SUCCESS MODAL */}
-      {showSuccessModal && (
+{/* SUCCESS MODAL */}
+{showSuccessModal && (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
     <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
       
@@ -244,9 +252,13 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
 
       <div className="p-5 flex items-center gap-4">
         {/* Step Indicator with Glow */}
-        <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
+        <div className="shrink-0 relative">
+        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center relative z-10">
           <span className="text-emerald-400 font-black text-xl">{iosStep}</span>
         </div>
+        {/* The Pulse Ring - helps the user see that the app "felt" their tap */}
+        <div className="absolute inset-0 rounded-2xl bg-emerald-400 animate-ping opacity-20" key={iosStep} />
+       </div>
         
         <div className="flex-grow">
           <p className="text-emerald-500/50 text-[10px] font-black uppercase tracking-widest mb-1">
@@ -255,7 +267,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
           <h3 className="text-white font-bold text-[15px] leading-tight transition-all duration-300">
             {iosStep === 1 && "Tap the browser bar below"}
             {iosStep === 2 && "Tap 'AA' or '...' then 'Share'"}
-            {iosStep === 3 && "Tap '... More' or scroll down"}
+            {iosStep === 3 && "Tap '... More' (end of icon row)"}
             {iosStep === 4 && "Select 'Add to Home Screen'"}
           </h3>
         </div>
