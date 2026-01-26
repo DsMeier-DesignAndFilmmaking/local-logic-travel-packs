@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
-// Fixed import path: Avoid importing from .next folder
 import { usePWAInstall } from '../hooks/usePWAInstall'; 
 
 interface TravelPackDownloadProps {
@@ -11,20 +10,17 @@ interface TravelPackDownloadProps {
 }
 
 export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
+  // --- STATE ---
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
-const [showSuccessModal, setShowSuccessModal] = useState(false);
-const [isMobile, setIsMobile] = useState(false);
-const [showInstructions, setShowInstructions] = useState(false);
-
-// Consolidate iOS logic into one state
-const [iosStep, setIosStep] = useState<1 | 2 | 3 | 4>(1);
-
-// Standard PWA Hook
-const { triggerInstall, canInstall } = usePWAInstall();
-  // 1. Add this Ref at the top with your other states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
+  const [iosStep, setIosStep] = useState<1 | 2>(1);
+  
   const lastJumpRef = useRef(0);
+  const { triggerInstall, canInstall } = usePWAInstall();
 
-  // Detect device type for custom modal messaging
+  // --- INITIALIZATION & DEVICE DETECTION ---
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     
@@ -39,11 +35,49 @@ const { triggerInstall, canInstall } = usePWAInstall();
     checkExisting();
   }, [pack.city]);
 
+  // --- DESKTOP DOWNLOAD LOGIC ---
+  const handleDesktopDownload = async () => {
+    try {
+      setStatus('syncing');
+      const fileData = JSON.stringify(pack, null, 2);
+      const blob = new Blob([fileData], { type: 'application/json' });
+      const fileName = `${pack.city.replace(/\s+/g, '_')}_Tactical_Pack.json`;
+
+      if ('showSaveFilePicker' in window) {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: fileName,
+          types: [{ description: 'Tactical Pack', accept: { 'application/json': ['.json'] } }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.click();
+        window.URL.revokeObjectURL(url);
+      }
+      
+      setStatus('saved');
+      setShowSuccessModal(true);
+    } catch (err) {
+      console.error("Download cancelled or failed", err);
+      setStatus('idle');
+    }
+  };
+
+  // --- SYNC LOGIC ---
   const handleSync = async () => {
     if (status !== 'idle') return;
     
-    setStatus('syncing');
+    if (!isMobile) {
+      handleDesktopDownload();
+      return;
+    }
 
+    setStatus('syncing');
     const downloadData = {
       city: pack.city,
       country: pack.country,
@@ -52,13 +86,9 @@ const { triggerInstall, canInstall } = usePWAInstall();
     };
 
     try {
-      // 1. Lock data into IndexedDB
       await savePack(downloadData);
-      
-      // 2. Tactical delay for UX weight
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // 3. Trigger Native App Install (Address Bar behavior)
       if (canInstall) {
         await triggerInstall();
       }
@@ -71,17 +101,16 @@ const { triggerInstall, canInstall } = usePWAInstall();
     }
   };
 
+  // --- APP LAUNCH / INSTALL LOGIC ---
   const handleLaunchApp = () => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                          (window.navigator as any).standalone === true;
   
-    if (isStandalone) {
+    if (isStandalone || !isMobile) {
       setShowSuccessModal(false);
-      window.location.reload();
+      if (isStandalone) window.location.reload();
     } else if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-      // 1. Close the success modal
       setShowSuccessModal(false);
-      // 2. Open the persistent "Pointer" instructions
       setShowInstructions(true);
     } else {
       setShowSuccessModal(false);
@@ -89,61 +118,51 @@ const { triggerInstall, canInstall } = usePWAInstall();
     }
   };
 
-
+  // --- IOS INTERACTION OBSERVER ---
   useEffect(() => {
     let lastHeight = window.innerHeight;
-  
-    const handleResize = () => {
-      if (!showInstructions) return;
-      const currentHeight = window.innerHeight;
-      
-      // Once the address bar is engaged or the menu pops up, 
-      // we move to the final "Checklist" view immediately.
-      if (iosStep === 1 && currentHeight !== lastHeight) {
+
+    const advance = () => {
+      const now = Date.now();
+      if (now - lastJumpRef.current < 900) return;
+      if (showInstructions && iosStep === 1) {
+        lastJumpRef.current = now;
         setIosStep(2);
-        lastHeight = currentHeight;
       }
     };
-  
+
+    const handleResize = () => {
+      if (window.innerHeight !== lastHeight) {
+        advance();
+        lastHeight = window.innerHeight;
+      }
+    };
+
     window.addEventListener('resize', handleResize);
-    // Backup: If they tap and the menu opens without a resize, blur will trigger it
-    window.addEventListener('blur', () => {
-      if (showInstructions && iosStep === 1) setIosStep(2);
-    });
-  
+    window.addEventListener('blur', advance);
+    document.addEventListener('visibilitychange', advance);
+
     return () => {
       window.removeEventListener('resize', handleResize);
-      window.removeEventListener('blur', () => {});
+      window.removeEventListener('blur', advance);
+      document.removeEventListener('visibilitychange', advance);
     };
-  }, [showInstructions, iosStep]); // Added iosStep to dependencies for specific step-checks
+  }, [showInstructions, iosStep]);
 
   const config = {
     idle: {
-      text: "Download for Offline Use",
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ),
+      text: isMobile ? "Download for Offline Use" : "Download Offline File",
+      icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
       styles: "bg-transparent text-slate-900 border border-slate-200 hover:bg-slate-50"
     },
     syncing: {
       text: "Syncing Tactical Logic...",
-      icon: (
-        <svg className="w-5 h-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-      ),
+      icon: <svg className="w-5 h-5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>,
       styles: "bg-slate-50 text-blue-600 border border-blue-100 animate-pulse cursor-wait"
     },
     saved: {
       text: "Available Offline",
-      icon: (
-        <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      ),
+      icon: <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>,
       styles: "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-default"
     }
   };
@@ -162,138 +181,91 @@ const { triggerInstall, canInstall } = usePWAInstall();
       </button>
 
       {status === 'saved' && (
-        <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest animate-fadeIn">
+        <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest">
           Saved to local vault • No signal required
         </p>
       )}
 
-{/* SUCCESS MODAL */}
-{showSuccessModal && (
-  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-    <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-      
-      {showSuccessModal === true ? (
-        <div className="text-center">
-          <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-3">Sync Complete</h2>
-          <p className="text-slate-600 mb-8 text-sm leading-relaxed">
-            Tactical data is now locked in your local vault.
-          </p>
-          <button 
-            onClick={handleLaunchApp}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold active:scale-[0.98]"
-          >
-            Confirm & Save App to Home Screen
-          </button>
-        </div>
-      ) : (
-        <div className="text-left">
-          <h2 className="text-xl font-black text-slate-900 mb-4">Install to Home Screen</h2>
-          <p className="text-slate-600 mb-6 text-sm">
-            To access this pack offline anytime, you must add it to your Home Screen:
-          </p>
-          
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">1</span>
-              <span>Tap the <strong className="text-blue-600">Share</strong> icon (the square with an arrow)</span>
-            </div>
-            <div className="flex items-center gap-4 text-sm font-medium text-slate-700">
-              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center text-xs">2</span>
-              <span>Scroll down and tap <strong className="text-slate-900">Add to Home Screen</strong></span>
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setShowSuccessModal(false)}
-            className="w-full py-4 bg-blue-600 text-white rounded-2xl font-bold active:scale-[0.98]"
-          >
-            Got it, I'll do that
-          </button>
-        </div>
-      )}
-    </div>
-  </div>
-      )}
-
-{showInstructions && (
-  <div className="fixed inset-x-0 top-0 z-[120] p-4 pt-12 pointer-events-none">
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md -z-10 animate-in fade-in duration-500" />
-
-    <div className="bg-slate-900 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto ring-1 ring-white/10">
-      
-      {/* 2-Part Progress Bar */}
-      <div className="flex h-1.5 w-full bg-white/10 gap-1 p-1">
-        <div className={`h-full flex-1 rounded-full transition-all duration-500 bg-emerald-400 shadow-[0_0_10px_#34d399]`} />
-        <div className={`h-full flex-1 rounded-full transition-all duration-500 ${iosStep === 2 ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-white/5'}`} />
-      </div>
-
-      <div className="p-5">
-        {iosStep === 1 ? (
-          // INITIAL VIEW
-          <div className="flex items-center gap-4">
-            <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
-              <span className="text-emerald-400 font-black text-xl">1</span>
-            </div>
-            <h3 className="text-white font-bold text-[15px] leading-tight">
-              Tap the browser bar below
-            </h3>
-          </div>
-        ) : (
-          // THE TACTICAL CHECKLIST (Steps 2, 3, and 4 combined)
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Final Sequence</p>
-              <button onClick={() => setShowInstructions(false)} className="text-white/20 p-1">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" />
-                </svg>
-              </button>
+      {/* SUCCESS MODAL (Adaptive for Desktop/Mobile) */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className={`${isMobile ? 'bg-white text-slate-900' : 'bg-slate-900 text-white border border-emerald-500/30'} rounded-[40px] p-8 max-w-sm w-full shadow-2xl text-center`}>
+            <div className={`w-20 h-20 ${isMobile ? 'bg-emerald-100' : 'bg-emerald-500/20'} rounded-full flex items-center justify-center mx-auto mb-6`}>
+              <svg className={`w-10 h-10 ${isMobile ? 'text-emerald-600' : 'text-emerald-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
             
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">2</div>
-                <p className="text-white text-sm font-medium">Tap <span className="text-emerald-400 font-bold">'AA'</span> or <span className="text-emerald-400 font-bold">'...'</span> in the bar</p>
-              </div>
-              
-              <div className="flex items-start gap-3">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">3</div>
-                <p className="text-white text-sm font-medium">Select the <span className="text-emerald-400 font-bold">'Share'</span> icon</p>
-              </div>
+            <h2 className="text-2xl font-black mb-2">{isMobile ? 'Sync Complete' : 'Pack Exported'}</h2>
+            <p className={`${isMobile ? 'text-slate-600' : 'text-slate-400'} text-sm mb-8 leading-relaxed`}>
+              {isMobile 
+                ? 'Tactical data is now locked in your local vault.' 
+                : 'Tactical pack saved. Check your Downloads folder to import this file into your desktop application.'}
+            </p>
 
-              <div className="flex items-start gap-3 pb-1">
-                <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">4</div>
-                <p className="text-white text-sm font-medium">Find <span className="text-emerald-400 font-bold">'Add to Home Screen'</span></p>
-              </div>
-            </div>
-            
             <button 
-              onClick={() => setShowInstructions(false)}
-              className="w-full py-3 bg-emerald-500 text-slate-900 rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+              onClick={handleLaunchApp}
+              className={`w-full py-4 ${isMobile ? 'bg-slate-900 text-white' : 'bg-emerald-500 text-slate-900'} rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition-all`}
             >
-              I'm Done
+              {isMobile ? 'Confirm & Save to Home Screen' : 'Return to Dashboard'}
             </button>
           </div>
-        )}
-      </div>
-    </div>
-
-    {/* Dynamic Pointer (only shows for Step 1) */}
-    {iosStep === 1 && (
-      <div className="flex flex-col items-center mt-6">
-        <div className="w-px h-10 bg-gradient-to-b from-emerald-500 to-transparent animate-pulse" />
-        <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">
-          Tap Below
         </div>
-      </div>
-    )}
-  </div>
-)}
+      )}
+
+      {/* TACTICAL IOS INSTRUCTIONS */}
+      {showInstructions && (
+        <div className="fixed inset-x-0 top-0 z-[160] p-4 pt-12 pointer-events-none">
+          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md -z-10 animate-in fade-in duration-500" />
+          <div className="bg-slate-900 border border-white/20 rounded-[32px] shadow-2xl overflow-hidden max-w-sm mx-auto pointer-events-auto ring-1 ring-white/10 p-6">
+            
+            <div className="flex h-1.5 w-full bg-white/10 gap-1 p-1 mb-6 rounded-full">
+              <div className="h-full flex-1 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]" />
+              <div className={`h-full flex-1 rounded-full transition-all duration-500 ${iosStep === 2 ? 'bg-emerald-400 shadow-[0_0_10px_#34d399]' : 'bg-white/5'}`} />
+            </div>
+
+            {iosStep === 1 ? (
+              <div className="flex items-center gap-4 animate-in slide-in-from-left duration-300">
+                <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
+                  <span className="text-emerald-400 font-black text-xl">1</span>
+                </div>
+                <h3 className="text-white font-bold text-lg">Tap the browser bar below</h3>
+              </div>
+            ) : (
+              <div className="space-y-5 animate-in slide-in-from-right duration-300">
+                <div className="flex items-center justify-between">
+                  <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Final Checklist</p>
+                  <button onClick={() => setShowInstructions(false)} className="text-white/20"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" /></svg></button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">2</div>
+                    <p className="text-white text-sm font-medium">Tap <span className="text-emerald-400 font-bold">'AA'</span> or <span className="text-emerald-400 font-bold">'...'</span></p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">3</div>
+                    <p className="text-white text-sm font-medium">Select the <span className="text-emerald-400 font-bold">'Share'</span> icon</p>
+                  </div>
+                  <div className="flex items-start gap-3 pb-2">
+                    <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 mt-0.5">4</div>
+                    <p className="text-white text-sm font-medium">Find <span className="text-emerald-400 font-bold">'Add to Home Screen'</span></p>
+                  </div>
+                </div>
+
+                <button onClick={() => setShowInstructions(false)} className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest">I'm Done</button>
+              </div>
+            )}
+          </div>
+
+          {iosStep === 1 && (
+            <div className="flex flex-col items-center mt-8 animate-bounce">
+              <div className="w-px h-12 bg-gradient-to-b from-emerald-500 to-transparent" />
+              <div className="bg-emerald-500 text-slate-900 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tighter shadow-lg -mt-1">Tap Below</div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
