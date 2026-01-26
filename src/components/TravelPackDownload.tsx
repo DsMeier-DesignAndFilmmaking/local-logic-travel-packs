@@ -16,6 +16,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   const [isMobile, setIsMobile] = useState(false);
   // Add this state to track which step of the iOS menu they are in
   const [iosStep, setIosStep] = useState(1);
+  const [isReady, setIsReady] = useState(false);
   
   const { triggerInstall, canInstall } = usePWAInstall();
 
@@ -192,58 +193,65 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       )}
 
 {showInstructions && (
-  <div className="fixed inset-x-0 top-0 z-[120] p-4 animate-in slide-in-from-top duration-500 pointer-events-none">
-    {/* Background Blur for the rest of the screen to focus eyes upward */}
-    <div className="fixed inset-0 bg-slate-900/20 backdrop-blur-[1px] -z-10" />
-
-    <div className="bg-slate-900 text-white rounded-[24px] shadow-2xl overflow-hidden border border-white/10 pointer-events-auto max-w-sm mx-auto">
-      {/* Progress Line */}
-      <div className="h-1 w-full bg-white/10 flex">
-        <div 
-          className="h-full bg-blue-500 transition-all duration-500" 
-          style={{ width: `${(iosStep / 3) * 100}%` }}
-        />
+  <div className="fixed inset-0 z-[130] bg-slate-900 flex flex-col items-center justify-center p-6 text-white animate-in fade-in duration-300">
+    <div className="max-w-xs w-full">
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h2 className="text-2xl font-black mb-2">Tactical Install</h2>
+        <p className="text-slate-400 text-sm">Follow these 3 taps exactly</p>
       </div>
 
-      <div className="p-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center font-black text-sm">
-            {iosStep}
+      {/* The Visual Sequence */}
+      <div className="space-y-3 mb-10">
+        {[
+          { step: 1, text: "Tap the '...' or 'AA' icon", sub: "Bottom of screen" },
+          { step: 2, text: "Select 'Share'", sub: "In the popup menu" },
+          { step: 3, text: "Select 'Add to Home Screen'", sub: "You may need to tap '... More' first" }
+        ].map((item) => (
+          <div key={item.step} className="bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center gap-4">
+            <div className="w-8 h-8 rounded-full bg-emerald-500 text-slate-900 flex items-center justify-center font-bold text-sm shrink-0">
+              {item.step}
+            </div>
+            <div>
+              <p className="font-bold text-sm leading-tight">{item.text}</p>
+              <p className="text-[10px] text-slate-500 uppercase tracking-wider font-bold mt-0.5">{item.sub}</p>
+            </div>
           </div>
-          <div>
-            <h3 className="font-bold text-sm leading-tight">
-              {iosStep === 1 && "Tap the '...' or 'AA'"}
-              {iosStep === 2 && "Select the 'Share' icon"}
-              {iosStep === 3 && "Tap 'Add to Home Screen'"}
-            </h3>
-            <p className="text-white/60 text-[11px] font-medium">
-              {iosStep === 1 && "Located in your address bar"}
-              {iosStep === 2 && "Inside the menu that opened"}
-              {iosStep === 3 && "Scroll down to find it"}
-            </p>
-          </div>
-        </div>
+        ))}
+      </div>
 
+      {/* Action Button */}
+      <div className="space-y-4">
         <button 
           onClick={() => {
-            if (iosStep < 3) setIosStep(iosStep + 1);
-            else setShowInstructions(false);
+            // This closes the UI so they can see the browser bars to start tapping
+            setShowInstructions(false);
+            // Optional: add a small toast that says "TAPPING NOW"
           }}
-          className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors active:scale-95"
+          className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-black shadow-[0_0_20px_rgba(16,185,129,0.4)] active:scale-95 transition-all"
         >
-          {iosStep < 3 ? "Next" : "Done"}
+          START INSTALLATION
+        </button>
+        
+        <button 
+          onClick={() => setShowInstructions(false)}
+          className="w-full text-slate-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors"
+        >
+          Cancel
         </button>
       </div>
     </div>
 
-    {/* Subtle indicator pointing UP (reminding them the browser controls are at the ends) */}
-    <div className="flex justify-center mt-2">
-      <svg className="w-5 h-5 text-blue-500 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+    {/* Footer Detail */}
+    <div className="absolute bottom-10 flex flex-col items-center animate-bounce">
+      <p className="text-[10px] text-slate-600 font-bold mb-2 uppercase tracking-tighter">Instructions will close so you can tap</p>
+      <svg className="w-5 h-5 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
       </svg>
     </div>
   </div>
 )}
+
     </div>
   );
 }
