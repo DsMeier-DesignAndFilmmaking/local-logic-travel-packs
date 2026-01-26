@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TravelPack } from '@/lib/travelPacks';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { usePWAInstall } from '../hooks/usePWAInstall'; 
@@ -13,13 +13,15 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
   const [status, setStatus] = useState<'idle' | 'syncing' | 'saved'>('idle');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [step, setStep] = useState<'success' | 'instructions'>('success');
   const [showInstructions, setShowInstructions] = useState(false);
-  // Add this state to track which step of the iOS menu they are in
-  const [iosStep, setIosStep] = useState(1);
-  const [isReady, setIsReady] = useState(false);
   
+  // Consolidate iOS logic into one state
+  const [iosStep, setIosStep] = useState<1 | 2 | 3 | 4>(1);
+  
+  // Standard PWA Hook
   const { triggerInstall, canInstall } = usePWAInstall();
+    // 1. Add this Ref at the top with your other states
+  const lastJumpRef = useRef(0);
 
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
@@ -79,44 +81,58 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
     }
   };
 
-  useEffect(() => {
-    let lastHeight = window.innerHeight;
-  
-    const advanceStep = () => {
-      setIosStep((prev) => (prev < 4 ? prev + 1 : prev));
-    };
-  
-    const handleUIChange = () => {
-      const currentHeight = window.innerHeight;
-      if (currentHeight !== lastHeight && showInstructions) {
-        advanceStep();
-        lastHeight = currentHeight;
+  // 2. Updated useEffect
+useEffect(() => {
+  let lastHeight = window.innerHeight;
+
+  const advance = () => {
+    const now = Date.now();
+    // OPTIMAL UX: The Ref persists even when the component re-renders
+    if (now - lastJumpRef.current < 900) return;
+
+    setIosStep((prev) => {
+      if (prev < 4) {
+        lastJumpRef.current = now; // Update the Ref
+        return (prev + 1) as 1 | 2 | 3 | 4;
       }
-    };
-  
-    // 1. Listen for height changes
-    window.addEventListener('resize', handleUIChange);
-    
-    // 2. Listen for Focus/Blur (Menu opening)
-    window.addEventListener('blur', advanceStep);
-  
-    // 3. THE FIX: Listen for any touch interaction
-    // When the user taps 'Share' or 'More', even if Safari swallows the click,
-    // the 'touchstart' often still bubbles up to the window level before the menu opens.
-    const handleTouch = () => {
-      if (showInstructions) {
-        // Small delay to ensure the OS menu has time to start opening
-        setTimeout(advanceStep, 100);
-      }
-    };
-    window.addEventListener('touchstart', handleTouch);
-  
-    return () => {
-      window.removeEventListener('resize', handleUIChange);
-      window.removeEventListener('blur', advanceStep);
-      window.removeEventListener('touchstart', handleTouch);
-    };
-  }, [showInstructions]);
+      return prev;
+    });
+  };
+
+  const handleResize = () => {
+    if (!showInstructions) return;
+    const currentHeight = window.innerHeight;
+    if (currentHeight !== lastHeight) {
+      advance();
+      lastHeight = currentHeight;
+    }
+  };
+
+  const handleTouch = (e: TouchEvent) => {
+    if (!showInstructions) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button')) return;
+    setTimeout(advance, 150);
+  };
+
+  const handleVisibility = () => {
+    if (document.hidden && showInstructions) {
+      advance();
+    }
+  };
+
+  window.addEventListener('resize', handleResize);
+  window.addEventListener('touchstart', handleTouch, { passive: true });
+  window.addEventListener('blur', advance);
+  document.addEventListener('visibilitychange', handleVisibility);
+
+  return () => {
+    window.removeEventListener('resize', handleResize);
+    window.removeEventListener('touchstart', handleTouch);
+    window.removeEventListener('blur', advance);
+    document.removeEventListener('visibilitychange', handleVisibility);
+  };
+}, [showInstructions]); // iosStep is removed from dependencies so it doesn't re-run on every step
 
   if (!pack.tiers?.tier1) return null;
 
@@ -178,7 +194,7 @@ export default function Tier1Download({ pack }: Tier1DownloadProps) {
       {showSuccessModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
           <div className="bg-white rounded-[32px] p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-300">
-            {step === 'success' ? (
+            {showSuccessModal === true ? (
               <div className="text-center">
                 <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
                   <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
