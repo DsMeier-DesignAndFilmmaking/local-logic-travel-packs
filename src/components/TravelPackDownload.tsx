@@ -20,7 +20,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   const lastJumpRef = useRef(0);
   const { triggerInstall, canInstall } = usePWAInstall();
 
-  // --- INITIALIZATION & DEVICE DETECTION ---
+  // --- INITIALIZATION ---
   useEffect(() => {
     setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
     
@@ -35,48 +35,18 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     checkExisting();
   }, [pack.city]);
 
-  // --- DESKTOP DOWNLOAD LOGIC ---
-  const handleDesktopDownload = async () => {
-    try {
-      setStatus('syncing');
-      const fileData = JSON.stringify(pack, null, 2);
-      const blob = new Blob([fileData], { type: 'application/json' });
-      const fileName = `${pack.city.replace(/\s+/g, '_')}_Tactical_Pack.json`;
+  // --- ACTION HANDLER (Sync or Launch) ---
+  const handleMainAction = async () => {
+    if (status === 'syncing') return;
 
-      if ('showSaveFilePicker' in window) {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: fileName,
-          types: [{ description: 'Tactical Pack', accept: { 'application/json': ['.json'] } }],
-        });
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-      } else {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.click();
-        window.URL.revokeObjectURL(url);
-      }
-      
-      setStatus('saved');
-      setShowSuccessModal(true);
-    } catch (err) {
-      console.error("Download cancelled or failed", err);
-      setStatus('idle');
-    }
-  };
-
-  // --- SYNC LOGIC ---
-  const handleSync = async () => {
-    if (status !== 'idle') return;
-    
-    if (!isMobile) {
-      handleDesktopDownload();
+    if (status === 'saved') {
+      // Launch the specific offline view
+      const slug = pack.city.toLowerCase().replace(/\s+/g, '-');
+      window.location.href = `/packs/${slug}`;
       return;
     }
 
+    // Start Sync Process
     setStatus('syncing');
     const downloadData = {
       city: pack.city,
@@ -101,8 +71,8 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     }
   };
 
-  // --- APP LAUNCH / INSTALL LOGIC ---
-  const handleLaunchApp = () => {
+  // --- MODAL CTA LOGIC ---
+  const handleModalCTA = () => {
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || 
                          (window.navigator as any).standalone === true;
   
@@ -114,11 +84,10 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       setShowInstructions(true);
     } else {
       setShowSuccessModal(false);
-      window.location.href = '/?mode=standalone';
     }
   };
 
-  // --- IOS INTERACTION OBSERVER ---
+  // --- IOS AUTO-INSTRUCTION LOGIC ---
   useEffect(() => {
     let lastHeight = window.innerHeight;
 
@@ -149,11 +118,12 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
     };
   }, [showInstructions, iosStep]);
 
+  // --- UI CONFIG ---
   const config = {
     idle: {
-      text: isMobile ? "Download for Offline Use" : "Download Offline File",
+      text: "Download for Offline Use",
       icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>,
-      styles: "bg-transparent text-slate-900 border border-slate-200 hover:bg-slate-50"
+      styles: "bg-transparent text-slate-900 border border-slate-200 hover:bg-slate-50 cursor-pointer"
     },
     syncing: {
       text: "Syncing Tactical Logic...",
@@ -161,9 +131,9 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       styles: "bg-slate-50 text-blue-600 border border-blue-100 animate-pulse cursor-wait"
     },
     saved: {
-      text: "Available Offline",
-      icon: <svg className="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>,
-      styles: "bg-emerald-50 text-emerald-700 border border-emerald-100 cursor-default"
+      text: "Open Offline Pack", 
+      icon: <svg className="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+      styles: "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 cursor-pointer shadow-sm shadow-emerald-200/50"
     }
   };
 
@@ -172,8 +142,8 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
   return (
     <div className="w-full space-y-3">
       <button
-        onClick={handleSync}
-        disabled={status !== 'idle'}
+        onClick={handleMainAction}
+        disabled={status === 'syncing'}
         className={`w-full px-6 py-4 rounded-2xl focus:outline-none transition-all font-bold flex items-center justify-center gap-3 active:scale-[0.98] touch-manipulation ${current.styles}`}
       >
         {current.icon}
@@ -181,33 +151,31 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
       </button>
 
       {status === 'saved' && (
-        <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest">
+        <p className="text-[11px] text-center text-slate-400 font-bold uppercase tracking-widest animate-fadeIn">
           Saved to local vault • No signal required
         </p>
       )}
 
-      {/* SUCCESS MODAL (Adaptive for Desktop/Mobile) */}
+      {/* SUCCESS MODAL */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className={`${isMobile ? 'bg-white text-slate-900' : 'bg-slate-900 text-white border border-emerald-500/30'} rounded-[40px] p-8 max-w-sm w-full shadow-2xl text-center`}>
-            <div className={`w-20 h-20 ${isMobile ? 'bg-emerald-100' : 'bg-emerald-500/20'} rounded-full flex items-center justify-center mx-auto mb-6`}>
-              <svg className={`w-10 h-10 ${isMobile ? 'text-emerald-600' : 'text-emerald-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white text-slate-900 rounded-[40px] p-8 max-w-sm w-full shadow-2xl text-center">
+            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
               </svg>
             </div>
             
-            <h2 className="text-2xl font-black mb-2">{isMobile ? 'Sync Complete' : 'Pack Exported'}</h2>
-            <p className={`${isMobile ? 'text-slate-600' : 'text-slate-400'} text-sm mb-8 leading-relaxed`}>
-              {isMobile 
-                ? 'Tactical data is now locked in your local vault.' 
-                : 'Tactical pack saved. Check your Downloads folder to import this file into your desktop application.'}
+            <h2 className="text-2xl font-black mb-2">Sync Complete</h2>
+            <p className="text-slate-600 text-sm mb-8 leading-relaxed">
+              Tactical data is now locked in your local vault.
             </p>
 
             <button 
-              onClick={handleLaunchApp}
-              className={`w-full py-4 ${isMobile ? 'bg-slate-900 text-white' : 'bg-emerald-500 text-slate-900'} rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition-all`}
+              onClick={handleModalCTA}
+              className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold uppercase tracking-widest active:scale-95 transition-all"
             >
-              {isMobile ? 'Confirm & Save to Home Screen' : 'Return to Dashboard'}
+              {isMobile ? 'Add App to Home Screen' : 'Return to Dashboard'}
             </button>
           </div>
         </div>
@@ -229,13 +197,15 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
                 <div className="shrink-0 w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center">
                   <span className="text-emerald-400 font-black text-xl">1</span>
                 </div>
-                <h3 className="text-white font-bold text-lg">Tap the browser bar below</h3>
+                <h3 className="text-white font-bold text-lg leading-tight">Tap the browser bar below</h3>
               </div>
             ) : (
               <div className="space-y-5 animate-in slide-in-from-right duration-300">
                 <div className="flex items-center justify-between">
                   <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em]">Final Checklist</p>
-                  <button onClick={() => setShowInstructions(false)} className="text-white/20"><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" /></svg></button>
+                  <button onClick={() => setShowInstructions(false)} className="text-white/20">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" strokeWidth={2.5} strokeLinecap="round" /></svg>
+                  </button>
                 </div>
                 
                 <div className="space-y-4">
@@ -253,7 +223,7 @@ export default function TravelPackDownload({ pack }: TravelPackDownloadProps) {
                   </div>
                 </div>
 
-                <button onClick={() => setShowInstructions(false)} className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest">I'm Done</button>
+                <button onClick={() => setShowInstructions(false)} className="w-full py-4 bg-emerald-500 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all">I'm Done</button>
               </div>
             )}
           </div>
