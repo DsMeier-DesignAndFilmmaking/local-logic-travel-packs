@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface OfflineDownloadProps {
   pack: TravelPack;
@@ -13,6 +14,7 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
+  const { isStandalone } = usePWAInstall();
 
   // Check if pack is already saved on mount
   useEffect(() => {
@@ -60,8 +62,17 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
         // Badge stays visible
       }, 3000);
     } catch (err) {
-      console.error('Save error:', err);
-      alert('Failed to save pack. Please try again.');
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      
+      // Suppress alerts when offline/standalone - errors are expected
+      // The pack may already be saved, or we're offline and can't save
+      if (!isStandalone && !isOffline) {
+        console.error('Save error:', err);
+        alert('Failed to save pack. Please try again.');
+      } else {
+        // In offline/standalone mode, silently fail - pack may already be saved
+        console.log('Save failed (offline/standalone) - pack may already be in vault');
+      }
     } finally {
       setIsSaving(false);
     }

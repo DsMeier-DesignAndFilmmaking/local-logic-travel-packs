@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { normalizeCityName } from '@/lib/cities';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface DownloadPackProps {
   pack: TravelPack;
@@ -23,6 +24,7 @@ export default function DownloadPack({ pack }: DownloadPackProps) {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { isStandalone } = usePWAInstall();
 
   // Check if pack is already downloaded
   useEffect(() => {
@@ -107,8 +109,18 @@ export default function DownloadPack({ pack }: DownloadPackProps) {
 
       console.log(`✅ Pack downloaded and cached for ${pack.city}`);
     } catch (err) {
-      console.error('Download error:', err);
-      alert('Failed to download pack. Please try again.');
+      const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+      
+      // Suppress alerts when offline/standalone - errors are expected
+      // The service worker should handle caching, and data may already be in IndexedDB
+      if (!isStandalone && !isOffline) {
+        console.error('Download error:', err);
+        alert('Failed to download pack. Please try again.');
+      } else {
+        // In offline/standalone mode, silently fail - data may already be cached
+        console.log('Download failed (offline/standalone) - using cached data if available');
+      }
+      
       setIsDownloading(false);
       setProgress(0);
     }

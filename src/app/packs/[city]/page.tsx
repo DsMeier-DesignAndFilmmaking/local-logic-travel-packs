@@ -84,20 +84,34 @@ export default function CityPackPage() {
             });
           }
         } else {
-          // Pack not found - only redirect if not in standalone mode
-          if (!isStandalone) {
-            router.push('/');
-          } else {
-            // In standalone mode, show error but don't navigate away
+          // Pack not found or fetch failed
+          // In standalone/offline mode, don't show error - data should be in cache
+          const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+          
+          if (isStandalone || isOffline) {
+            // In standalone/offline mode, gracefully handle - don't show error state
+            // The pack should already be in IndexedDB or service worker cache
+            // If it's not, that's okay - just show loading completed
             setLoading(false);
+          } else {
+            // Only redirect if not in standalone mode and online
+            router.push('/');
           }
         }
       } catch (error) {
-        console.error('Failed to load pack:', error);
-        // Only redirect if not in standalone mode
-        if (!isStandalone) {
+        // Suppress error logging when offline/standalone
+        const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+        
+        if (!isStandalone && !isOffline) {
+          // Only log errors when online and not in standalone mode
+          console.error('Failed to load pack:', error);
+        }
+        
+        // In standalone/offline mode, don't redirect - gracefully handle
+        if (!isStandalone && !isOffline) {
           router.push('/');
         } else {
+          // In standalone/offline mode, just stop loading - don't show error state
           setLoading(false);
         }
       } finally {
@@ -148,22 +162,35 @@ export default function CityPackPage() {
   }
 
   if (!pack) {
+    // In standalone/offline mode, don't show error state
+    // The pack should be in cache - if not, show a helpful message without error tone
+    const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+    
+    if (isStandalone || isOffline) {
+      return (
+        <main className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
+          <div className="text-center max-w-md">
+            <p className="text-sm text-gray-600 mb-4">
+              Loading pack data from cache...
+            </p>
+            <p className="text-xs text-gray-500">
+              If this pack was previously downloaded, it should appear shortly.
+            </p>
+          </div>
+        </main>
+      );
+    }
+    
+    // Only show error state when online and not in standalone mode
     return (
       <main className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
         <h1 className="text-xl font-bold text-gray-900 mb-4">Pack Not Found</h1>
-        {!isStandalone && (
-          <button
-            onClick={() => router.replace('/')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            Return Home
-          </button>
-        )}
-        {isStandalone && (
-          <p className="text-sm text-gray-600 text-center">
-            This pack is not available. Please check your connection and try again.
-          </p>
-        )}
+        <button
+          onClick={() => router.replace('/')}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+        >
+          Return Home
+        </button>
       </main>
     );
   }

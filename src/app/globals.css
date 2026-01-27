@@ -42,6 +42,15 @@ body {
   }
 }
 
+/* Hide any 'No Internet' or 'Offline Warning' banners in the standalone app */
+@media (display-mode: standalone) {
+  .offline-banner, 
+  .connection-error-alert,
+  [data-testid="offline-warning"] {
+    display: none !important;
+  }
+}
+
 /* --- Professional UI Elements --- */
 
 /* Modern Card Hover */
