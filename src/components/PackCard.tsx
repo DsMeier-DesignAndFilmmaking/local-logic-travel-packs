@@ -1,159 +1,89 @@
-import { OfflineTravelPack } from '@/types';
+'use client';
+
+import React from 'react';
+import { TravelPack, ProblemCard, MicroSituation } from '@/lib/travelPacks';
 
 interface PackCardProps {
-  pack: OfflineTravelPack;
+  pack: TravelPack;
 }
 
-export default function PackCard({ pack }: PackCardProps) {
+const PackCard: React.FC<PackCardProps> = ({ pack }) => {
+  // We prioritize Tier 1 (Arrival/Tactical) as the main view
+  const tier1 = pack.tiers?.tier1;
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm">
-      {/* Header Section */}
-      <div className="border-b border-gray-200 dark:border-gray-700 px-6 py-5">
-        <div className="flex justify-between items-start mb-3">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
+    <div className="w-full space-y-6">
+      {/* 1. Tactical Header */}
+      <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden shadow-2xl">
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-4">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
+              Active Vault Asset
+            </span>
+          </div>
+          <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-1">
             {pack.city}
           </h2>
-          <span className="text-sm font-medium text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-            v{pack.version}
-          </span>
+          <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+            {pack.country} • Intelligence Tier 1
+          </p>
         </div>
-        {pack.context && (
-          <p className="text-base text-gray-600 dark:text-gray-300 leading-relaxed mb-2">
-            {pack.context}
-          </p>
-        )}
-        {pack.lastUpdated && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Last updated: {new Date(pack.lastUpdated).toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </p>
-        )}
+        
+        {/* Background Visual Element */}
+        <div className="absolute right-[-10%] top-[-20%] text-[120px] font-black text-white/[0.03] italic pointer-events-none select-none">
+          {pack.city.substring(0, 3)}
+        </div>
       </div>
 
-      {/* Content Sections */}
-      <div className="px-6 py-6 space-y-8">
-        {/* Must Know First */}
-        {pack.mustKnowFirst && pack.mustKnowFirst.length > 0 && (
-          <section>
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                Must Know First
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Essential information to read before you go
-              </p>
-            </div>
-            <ul className="space-y-3">
-              {pack.mustKnowFirst.map((item, index) => (
-                <li key={index} className="text-gray-700 dark:text-gray-300 leading-relaxed flex items-start">
-                  <span className="text-blue-600 dark:text-blue-400 mr-3 mt-1 font-bold flex-shrink-0">•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Neighborhoods */}
-        {pack.neighborhoods && pack.neighborhoods.length > 0 && (
-          <section>
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                Neighborhoods
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Where to go and why it matters
-              </p>
-            </div>
-            <div className="space-y-5">
-              {pack.neighborhoods.map((neighborhood, index) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                  <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {neighborhood.name}
+      {/* 2. Tactical Cards (The "Must Know" content) */}
+      <div className="grid gap-4">
+        {tier1?.cards.map((card: ProblemCard, cardIdx: number) => (
+          <div 
+            key={`${card.headline}-${cardIdx}`}
+            className="bg-white border-2 border-slate-100 rounded-[24px] p-6 shadow-sm hover:border-slate-900 transition-colors group"
+          >
+            <h3 className="text-lg font-black uppercase tracking-tight text-slate-900 mb-4 flex items-center justify-between">
+              {card.headline}
+              <span className="text-slate-200 group-hover:text-slate-900 transition-colors">→</span>
+            </h3>
+            
+            <div className="space-y-4">
+              {card.microSituations.map((situation: MicroSituation, sIdx: number) => (
+                <div key={`${situation.title}-${sIdx}`} className="space-y-2">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                    Situation: {situation.title}
                   </h4>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-3">
-                    {neighborhood.whyItMatters}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Best for:</span> {neighborhood.bestFor}
-                  </p>
+                  <ul className="space-y-2">
+                    {situation.actions.map((action, aIdx) => (
+                      <li key={aIdx} className="flex gap-3 text-sm font-medium text-slate-600">
+                        <span className="text-slate-900 font-bold">•</span>
+                        {action}
+                      </li>
+                    ))}
+                  </ul>
+                  {situation.whatToDoInstead && (
+                    <div className="mt-2 p-3 bg-slate-50 rounded-xl border-l-4 border-slate-900">
+                      <p className="text-[11px] font-bold text-slate-900">
+                        PRO-TIP: {situation.whatToDoInstead}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
-          </section>
-        )}
+          </div>
+        ))}
+      </div>
 
-        {/* Eat Like a Local */}
-        {pack.eatLikeALocal && pack.eatLikeALocal.length > 0 && (
-          <section>
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">
-                Eat Like a Local
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Dining customs and insider tips
-              </p>
-            </div>
-            <ul className="space-y-2.5">
-              {pack.eatLikeALocal.map((item, index) => (
-                <li key={index} className="text-gray-700 dark:text-gray-300 leading-relaxed flex items-start">
-                  <span className="text-blue-600 dark:text-blue-400 mr-3 mt-1 font-bold flex-shrink-0">•</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Avoid These Mistakes */}
-        {pack.avoidTheseMistakes && pack.avoidTheseMistakes.length > 0 && (
-          <section>
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-1">
-                Avoid These Mistakes
-              </h3>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Common pitfalls to steer clear of
-              </p>
-            </div>
-            <ul className="space-y-2.5">
-              {pack.avoidTheseMistakes.map((item, index) => (
-                <li key={index} className="text-gray-700 dark:text-gray-300 leading-relaxed flex items-start">
-                  <span className="text-red-600 dark:text-red-400 mr-3 mt-1 font-bold flex-shrink-0">✗</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        {/* Offline Tips */}
-        {pack.offlineTips && pack.offlineTips.length > 0 && (
-          <section>
-            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-5 border border-blue-200 dark:border-blue-800">
-              <div className="mb-4">
-                <h3 className="text-xl font-semibold text-blue-900 dark:text-blue-200 mb-1">
-                  Offline Tips
-                </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Prepare your device for offline use
-                </p>
-              </div>
-              <ul className="space-y-2.5">
-                {pack.offlineTips.map((tip, index) => (
-                  <li key={index} className="text-gray-700 dark:text-gray-300 leading-relaxed flex items-start">
-                    <span className="text-blue-600 dark:text-blue-400 mr-3 mt-1 font-bold flex-shrink-0">📱</span>
-                    <span>{tip}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
-        )}
+      {/* 3. Vault Metadata */}
+      <div className="text-center pt-4">
+        <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
+          Downloaded: {new Date(pack.downloadedAt || '').toLocaleDateString()} • Offline Ready
+        </p>
       </div>
     </div>
   );
-}
+};
+
+export default PackCard;
