@@ -5,6 +5,7 @@ import { TravelPack, ProblemCard, MicroSituation, TravelPackTier } from '@/types
 
 interface PackCardProps {
   pack: TravelPack;
+  vaultStatus?: 'idle' | 'syncing' | 'secured';
 }
 
 interface TierSectionProps {
@@ -85,7 +86,7 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
   );
 };
 
-const PackCard: React.FC<PackCardProps> = ({ pack }) => {
+const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
   const [openTiers, setOpenTiers] = useState<Set<number>>(new Set([1])); // Tier 1 open by default
 
   // Defensive check: if no pack or tiers exist, return null or a loader
@@ -118,11 +119,30 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
       {/* 1. Tactical Header - Mobile Optimized */}
       <div className="bg-slate-900 rounded-[24px] sm:rounded-[32px] p-6 sm:p-8 text-white relative overflow-hidden shadow-2xl">
         <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3 sm:mb-4">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
-              Active Vault Asset
-            </span>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">
+                Active Vault Asset
+              </span>
+            </div>
+            {/* Vault Status Indicator */}
+            {vaultStatus === 'syncing' && (
+              <div className="flex items-center gap-2 px-2 py-1 bg-blue-500/20 border border-blue-500/50 rounded-lg">
+                <div className="w-2 h-2 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="text-[9px] font-black uppercase tracking-widest text-blue-400">
+                  Syncing...
+                </span>
+              </div>
+            )}
+            {vaultStatus === 'secured' && (
+              <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-lg">
+                <span className="text-[10px]">🛡️</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
+                  Vault Secured
+                </span>
+              </div>
+            )}
           </div>
           <h2 className="text-3xl sm:text-4xl font-black italic uppercase tracking-tighter mb-1">
             {pack.city}

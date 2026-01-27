@@ -1,19 +1,40 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getAllPacks } from '../../scripts/offlineDB';
+import { getAllPacks, getPack } from '../../scripts/offlineDB';
 import { TravelPack } from '@/types/travel';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 import TravelPackCitySelector from '@/components/TravelPackCitySelector';
 import Footer from '@/components/Footer';
 
 export default function Home() {
   const [initialPack, setInitialPack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(true);
+  const { isStandalone } = usePWAInstall();
 
   // Hydration: Load pack from IndexedDB on mount (crucial for PWA icon launch)
   useEffect(() => {
     async function checkVault() {
       try {
+        // If standalone mode, try to recover from URL path first (offline recovery)
+        if (isStandalone && typeof window !== 'undefined') {
+          const path = window.location.pathname;
+          // Check if path indicates a city (e.g., /packs/paris or query param)
+          const urlParams = new URLSearchParams(window.location.search);
+          const cityParam = urlParams.get('city');
+          
+          if (cityParam) {
+            // Try to load specific city from IndexedDB
+            const cityPack = await getPack(cityParam);
+            if (cityPack) {
+              setInitialPack(cityPack);
+              setLoading(false);
+              return; // Bypass network, use offline data
+            }
+          }
+        }
+        
+        // Default: Load most recent pack
         const saved = await getAllPacks();
         if (saved && saved.length > 0) {
           // Properly typed - getAllPacks returns TravelPack[]

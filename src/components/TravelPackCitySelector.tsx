@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { fetchTravelPack } from '@/lib/fetchTravelPack'; 
 import { TravelPack } from '@/types/travel';
+import { savePack } from '../../scripts/offlineDB';
 import PackCard from '@/components/PackCard';
 import OfflineDownload from '@/components/OfflineDownload';
 import Spontaneity from '@/components/Spontaneity';
@@ -10,6 +11,7 @@ import Spontaneity from '@/components/Spontaneity';
 const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({ initialPack }) => {
   const [travelPack, setTravelPack] = useState<TravelPack | null>(initialPack || null);
   const [loading, setLoading] = useState(false);
+  const [vaultStatus, setVaultStatus] = useState<'idle' | 'syncing' | 'secured'>('idle');
 
   // Sync if a pack is recovered from the offline vault on launch
   useEffect(() => {
@@ -18,13 +20,52 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
 
   const handleSelect = async (selectedCity: string) => {
     setLoading(true);
+    setVaultStatus('syncing');
     
-    // Fetch via our API bridge (Safe from 'fs' build errors)
-    const pack = await fetchTravelPack(selectedCity);
-    if (pack) {
-      setTravelPack(pack);
+    try {
+      // Fetch via our API bridge (Safe from 'fs' build errors)
+      const pack = await fetchTravelPack(selectedCity);
+      if (pack) {
+        setTravelPack(pack);
+        
+        // IMMEDIATELY save to IndexedDB to prime the vault
+        const packWithMeta: TravelPack = {
+          ...pack,
+          downloadedAt: new Date().toISOString(),
+          offlineReady: true,
+        };
+        
+        await savePack(packWithMeta);
+        
+        // Message Service Worker to cache the current page
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'CACHE_URL',
+            payload: window.location.pathname
+          });
+        }
+        
+        // Also cache the home page for fallback
+        if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+            type: 'CACHE_URL',
+            payload: '/'
+          });
+        }
+        
+        setVaultStatus('secured');
+        
+        // Broadcast sync event for page.tsx hydration
+        window.dispatchEvent(new CustomEvent('vault-sync-complete', {
+          detail: { city: pack.city, timestamp: packWithMeta.downloadedAt }
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load pack:', error);
+      setVaultStatus('idle');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -62,7 +103,7 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
       {/* 2. Show the Pack and Download options if a pack is active */}
       {travelPack && !loading && (
         <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-          <PackCard pack={travelPack} />
+          <PackCard pack={travelPack} vaultStatus={vaultStatus} />
           
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
             <h3 className="text-base sm:text-lg font-bold mb-4">Offline Access</h3>
