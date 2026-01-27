@@ -12,10 +12,11 @@ import { getTravelPackForCity } from '@/lib/travelPacks';
  */
 export async function GET(
   request: NextRequest,
-  context: { params: { city: string } }
+  context: { params: Promise<{ city: string }> }
 ) {
   try {
-    const cityParam = context.params?.city;
+    const params = await context.params;
+    const cityParam = params.city;
 
     if (!cityParam) {
       return NextResponse.json(
