@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { TravelPack } from '@/types/travel';
 import { normalizeCityName } from '@/lib/cities';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
@@ -9,16 +9,33 @@ import Spontaneity from '@/components/Spontaneity';
 
 const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({ initialPack }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { isStandalone } = usePWAInstall();
   const [loading, setLoading] = useState(false);
+  
+  // Guard: Never auto-navigate when on root "/" route
+  const isHome = pathname === '/';
 
   // If initial pack exists, navigate to its city page
+  // GUARD: Only redirect when NOT on home - redirects only occur when user is already inside a city/pack flow
+  // ESCAPE HATCH: Check for explicit user intent to go home - skip auto-navigation if flag is set
   useEffect(() => {
-    if (initialPack) {
+    // Check for explicit user intent to go home
+    if (typeof window !== 'undefined') {
+      const allowHome = localStorage.getItem('allowHome');
+      if (allowHome === 'true') {
+        // User explicitly clicked "Back to Home" - respect their intent, skip auto-navigation
+        localStorage.removeItem('allowHome');
+        return;
+      }
+    }
+    
+    // Only auto-navigate if initialPack exists and not on home
+    if (initialPack && !isHome) {
       const normalizedCity = normalizeCityName(initialPack.city);
       router.push(`/packs/${normalizedCity}`);
     }
-  }, [initialPack, router]);
+  }, [initialPack, router, isHome]);
 
   const handleSelect = async (selectedCity: string) => {
     setLoading(true);
