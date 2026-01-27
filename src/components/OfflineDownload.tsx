@@ -204,33 +204,6 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
         </button>
       </section>
 
-      {/* HTML Export Section */}
-      <section 
-        className="p-5 sm:p-8 bg-slate-50 rounded-2xl border border-slate-300"
-        aria-labelledby="backup-heading"
-      >
-        <div className="mb-6">
-          <h4 id="backup-heading" className="text-slate-900 text-sm sm:text-base font-black uppercase tracking-wider">
-            Emergency Backup
-          </h4>
-          <p className="text-slate-700 text-xs sm:text-sm leading-relaxed mt-2">
-            Generate a standalone HTML asset for use as a hard backup outside of the app.
-          </p>
-        </div>
-        <button 
-          onClick={handleExport}
-          disabled={isExporting}
-          aria-busy={isExporting}
-          className="w-full py-4 min-h-[48px] bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white rounded-xl font-black text-sm uppercase tracking-widest transition-all focus-visible:ring-4 focus-visible:ring-slate-400 outline-none flex items-center justify-center gap-3"
-        >
-          {isExporting ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
-              <span>Generating...</span>
-            </>
-          ) : 'Export Offline Asset'}
-        </button>
-      </section>
     </div>
   );
 }

@@ -227,90 +227,125 @@ export default function CityPackPage() {
 <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">
   <div className="p-8 sm:p-12">
     
-    {/* Minimalist Header - Removed max-width to allow full-width text expansion */}
+    {/* Minimalist Header */}
     <header className="w-full mb-12">
       <div className="flex items-center gap-3 mb-4">
-        <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
-        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-500">
-          Offline Deployment Protocol
+        {/* Decorative element - aria-hidden for screen readers */}
+        <span aria-hidden="true" className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
+        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-400">
+          Offline Deployment Protocols
         </h3>
       </div>
-      <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-4">
+      <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-tight mb-4">
         Download For Offline Use
       </h2>
-      {/* Expanded to full width of parent container */}
-      <p className="text-slate-400 text-sm sm:text-base leading-relaxed w-full">
-        Select your deployment method to ensure 100% access in zero-connectivity environments. Follow the protocol for your current device to sync intelligence to your local hardware.
+      <p className="text-slate-200 text-base leading-relaxed w-full">
+        Don't rely on shaky Wi-Fi. Follow the steps below to keep this travel pack intel stored safely on your device, ready to use whenever you need it.
       </p>
     </header>
 
     {/* Responsive Grid */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       
-      {/* BLOCK 1: DESKTOP VAULT (Hidden on Mobile, Visible on Desktop/Laptop) */}
+      {/* BLOCK 1: DESKTOP VAULT */}
       <div className="hidden lg:flex bg-white rounded-3xl p-8 flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
         <div>
           <div className="flex items-center justify-between mb-6">
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 px-2 py-1 rounded">
+            <span className="text-xs font-black text-slate-600 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">
               Desktop Protocol
             </span>
           </div>
-          <h4 className="text-slate-900 font-black uppercase tracking-tighter text-2xl mb-2">
-            Desktop Vault
+          <h4 className="text-slate-900 font-black tracking-tighter text-2xl mb-3">
+            Save to Local Storage
           </h4>
-          <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+          <p className="text-slate-700 text-base mb-8 leading-relaxed">
             Archive this intelligence to your local hardware. Open via any browser without an internet connection.
           </p>
         </div>
 
         <div className="mt-auto">
+          {/* Ensure the button inside OfflineDownload meets 44x44px touch target */}
           <OfflineDownload pack={pack} />
         </div>
       </div>
 
-      {/* BLOCK 2: MOBILE INSTALL (Always visible) */}
-      <div className="bg-slate-800/40 p-8 rounded-3xl flex flex-col justify-between border border-slate-800 transition-all hover:bg-slate-800/60">
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded">
-              Mobile Protocol
-            </span>
-          </div>
-          <h4 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">
-            Mobile Install
-          </h4>
-          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
-            Deploy a dedicated app icon to your home screen. Verified for airplane mode and low-signal sectors.
-          </p>
+      {/* BLOCK 2: MOBILE INSTALL */}
+      <div className="bg-slate-800/60 p-8 rounded-3xl flex flex-col border border-slate-700 transition-all">
+        <div className="flex items-center justify-between mb-6">
+          <span className="text-xs font-black text-slate-300 uppercase tracking-widest border border-slate-600 px-2 py-1 rounded">
+            Mobile Protocol
+          </span>
         </div>
         
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-          <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center">
-            In the browser address bar, Find and Tap "Share" then "Add to Home Screen"
-          </p>
+        <h4 className="text-white font-black tracking-tighter text-2xl mb-8">
+          Mobile Device Install
+        </h4>
+
+        {/* 1-2-3 Step Container */}
+        <div className="space-y-8 relative" role="list">
+          {/* Vertical Connecting Line */}
+          <div aria-hidden="true" className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-600" />
+
+          {/* Step 1 */}
+          <div className="relative flex items-start gap-5" role="listitem">
+            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 border border-slate-500 text-xs font-black text-emerald-400">
+              01
+            </div>
+            <div>
+              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Browser Bar Menu</p>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Tap the <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">Share</span> button in your mobile browser address bar.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 2 */}
+          <div className="relative flex items-start gap-5" role="listitem">
+            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 border border-slate-500 text-xs font-black text-emerald-400">
+              02
+            </div>
+            <div>
+              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Add to Home</p>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Find and select <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">Add to Home Screen</span>.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="relative flex items-start gap-5" role="listitem">
+            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
+              03
+            </div>
+            <div>
+              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Launch Travel Pack</p>
+              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+                Tap the new icon to access your intel <span className="text-emerald-400 font-bold">100% offline</span>.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
-
     </div>
 
     {/* Verification Footer */}
-    <footer className="mt-12 pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-6">
+    <footer className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
       <div className="flex items-center gap-6">
         <div className="flex flex-col">
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Data Integrity</span>
-          <span className="text-xs font-bold text-slate-300">Verified Offline Asset</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Integrity</span>
+          <span className="text-sm font-bold text-slate-200">Verified Offline Asset</span>
         </div>
-        <div className="h-8 w-px bg-slate-800 hidden sm:block" />
+        <div aria-hidden="true" className="h-8 w-px bg-slate-800 hidden sm:block" />
         <div className="flex flex-col">
-          <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Sync Status</span>
+          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sync Status</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-emerald-500">Local Sync Active</span>
+            <span className="text-sm font-bold text-emerald-400">Local Sync Active</span>
             <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
           </div>
         </div>
       </div>
       
-      <p className="text-[10px] text-slate-600 font-medium italic">
+      <p className="text-xs text-slate-400 font-medium italic">
         Format: Encrypted Standalone Blob • SHA-256 Verified
       </p>
     </footer>

@@ -89,7 +89,7 @@ export default function InstallApp({ city }: InstallAppProps) {
             Add this pack to your home screen for quick access
           </p>
           <ol className="text-blue-700 text-[10px] sm:text-xs space-y-2 list-decimal list-inside">
-            <li>Tap the <strong>Share</strong> button <span className="text-lg">⎋</span></li>
+            <li>Tap the <strong>"..."</strong> or the <strong>"AA"</strong><strong>Share</strong> button <span className="text-lg">⎋</span></li>
             <li>Scroll down and tap <strong>"Add to Home Screen"</strong></li>
             <li>Tap <strong>"Add"</strong> to confirm</li>
           </ol>
