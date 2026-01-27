@@ -3,10 +3,7 @@
 import { useEffect } from 'react';
 
 /**
- * Global Service Worker Registration
- * 
- * Registers service worker with app-wide scope ('/') for the homepage.
- * City pages use CitySWRegister instead with city-specific scope.
+ * Global Service Worker Registration (HOMEPAGE ONLY)
  */
 export default function SWRegister() {
   useEffect(() => {
@@ -14,66 +11,40 @@ export default function SWRegister() {
       return;
     }
 
-    // Skip registration on city pages - they use CitySWRegister
     const pathname = window.location.pathname;
+
+    // 🚫 Never register root SW on city pages
     if (pathname.startsWith('/packs/')) {
+      console.log('⛔ Root SW blocked on city route');
       return;
     }
-      
-      // 1. Handle Controller Changes
-      // This ensures that if the SW is updated in the background, 
-      // the app reloads to ensure the UI is in sync with the new logic.
-      let refreshing = false;
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (!refreshing) {
-          refreshing = true;
-          window.location.reload();
-        }
-      });
 
-      const registerSW = async () => {
-        try {
-          const reg = await navigator.serviceWorker.register('/sw.js', {
-            scope: '/',
-          });
-          
-          console.log('🛡️ Tactical Vault: Service Worker active', reg.scope);
+    let refreshing = false;
 
-          // 2. Immediate Update Check
-          // This tells Safari: "Check for a newer sw.js immediately."
-          if (reg) {
-            reg.update();
-          }
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
 
-          // 3. Update Found Logic
-          reg.onupdatefound = () => {
-            const installingWorker = reg.installing;
-            if (installingWorker) {
-              installingWorker.onstatechange = () => {
-                if (installingWorker.state === 'installed') {
-                  if (navigator.serviceWorker.controller) {
-                    // New content is available; the 'controllerchange' 
-                    // event above will handle the reload if we call skipWaiting() 
-                    // in the sw.js itself.
-                    console.log('✨ Vault Update: New version installed.');
-                  } else {
-                    console.log('✅ Vault Ready: Content is cached for offline use.');
-                  }
-                }
-              };
-            }
-          };
-        } catch (err) {
-          console.error('❌ Vault Error: SW registration failed', err);
-        }
-      };
+    const register = async () => {
+      try {
+        const reg = await navigator.serviceWorker.register('/sw.js', {
+          scope: '/',
+        });
 
-      if (document.readyState === 'complete') {
-        registerSW();
-      } else {
-        window.addEventListener('load', registerSW);
-        return () => window.removeEventListener('load', registerSW);
+        console.log('🛡️ Root SW registered:', reg.scope);
+        await reg.update();
+      } catch (err) {
+        console.error('❌ Root SW registration failed', err);
       }
+    };
+
+    if (document.readyState === 'complete') {
+      register();
+    } else {
+      window.addEventListener('load', register);
+      return () => window.removeEventListener('load', register);
     }
   }, []);
 

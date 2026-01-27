@@ -1,21 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Explicitly use webpack (not Turbopack) to support PWA plugin
-  // Turbopack doesn't support all webpack plugins yet
-  experimental: {
-    // Disable Turbopack - use webpack instead for PWA compatibility
-    turbo: undefined,
-  },
-  // Ensure we don't have issues with double-rendering during hydration
-  webpack: (config, { isServer }) => {
-    // Webpack config for PWA support
-    if (!isServer) {
-      // Client-side webpack config if needed
-    }
+
+  webpack: (config) => {
     return config;
   },
 };
+
+export default nextConfig;
+
 
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
