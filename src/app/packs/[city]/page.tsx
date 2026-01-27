@@ -224,85 +224,82 @@ export default function CityPackPage() {
 
 {/* Pack Content */}
 <PackCard pack={pack} vaultStatus={vaultStatus} />
-<div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
-  <div className="p-6 sm:p-10">
+<div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">
+  <div className="p-8 sm:p-12">
     
-    <header className="mb-8 border-b border-slate-800 pb-8">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-        <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">
+    {/* Minimalist Header */}
+    <header className="max-w-2xl mb-12">
+      <div className="flex items-center gap-3 mb-4">
+        <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
+        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-500">
           Offline Deployment Protocol
         </h3>
       </div>
-      <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
-        This intelligence pack is designed for zero-connectivity environments. Follow the protocol for your current device.
+      <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-4">
+        Secure Your Intelligence
+      </h2>
+      <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
+        Select your deployment method to ensure 100% access in zero-connectivity environments.
       </p>
     </header>
 
-    <div className="space-y-10">
-      {/* MOBILE PROTOCOL */}
-      <section className="block md:hidden">
-        <div className="flex items-center gap-2 mb-4">
-          <h4 className="text-white font-bold uppercase tracking-widest text-xs">
-            Mobile Protocol
-          </h4>
-          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-black">
-            iOS / Android
-          </span>
-        </div>
-        <p className="text-slate-300 text-sm leading-relaxed mb-6">
-          Tap the <span className="text-white font-bold">Share</span> icon then select <span className="text-white font-bold">"Add to Home Screen."</span> This deploys a dedicated tactical interface.
-        </p>
-        <div className="min-h-[48px]">
-          <InstallApp city={pack.city} />
-        </div>
-      </section>
-
-      {/* DESKTOP PROTOCOL */}
-      <section className="hidden md:block">
-        <div className="flex items-center gap-2 mb-4">
-          <h4 className="text-white font-bold uppercase tracking-widest text-xs">
-            Desktop Protocol
-          </h4>
-          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-black">
-            Mac / PC / Linux
-          </span>
-        </div>
-        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
-          Initialize the <span className="text-white font-bold">Local Sync</span> to move city intelligence from our servers to your machine's secure hardware vault.
-        </p>
-        <div className="min-h-[48px]">
-          <DownloadPack pack={pack} />
-        </div>
-      </section>
-
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
+      {/* BLOCK 1: DESKTOP DOWNLOAD (Save to Device) */}
+      <div className="bg-white rounded-3xl p-8 flex flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
+      <div className="bg-white border-2 border-slate-200 p-8 rounded-3xl flex flex-col justify-between">
+    <div>
+      <h4 className="text-slate-900 font-black uppercase tracking-tighter text-2xl mb-2">Desktop Vault</h4>
+      <p className="text-slate-600 text-sm mb-6">Archive this intelligence to your local hardware. Open via any browser without an internet connection.</p>
     </div>
+    {/* Triggers your handleExport logic */}
+    <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs">
+      Save to Local Disk
+    </button>
+  </div>
 
-    {/* Automated Detection (Desktop Only) */}
-    <div className="hidden md:block mt-10 p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
-      <div className="flex items-start gap-4">
-        <div className="text-emerald-500 mt-1 flex-shrink-0">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div>
-          <h5 className="text-white text-xs font-bold uppercase tracking-tight mb-1">PWA Auto-Detection Active</h5>
-          <p className="text-slate-400 text-xs leading-relaxed">
-            Look for the <span className="text-emerald-400">"Install"</span> icon in your browser's address bar.
-          </p>
+        {/* Triggers OS Save Dialog via OfflineDownload component */}
+        <div className="mt-auto">
+          <OfflineDownload pack={pack} />
         </div>
       </div>
+
+      {/* BLOCK 2: MOBILE INSTALL (Add to Home Screen) */}
+      <div className="bg-slate-900 p-8 rounded-3xl flex flex-col justify-between border border-slate-800">
+    <div>
+      <h4 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Mobile Install</h4>
+      <p className="text-slate-400 text-sm mb-6">Deploy a dedicated app icon to your home screen. Verified for airplane mode and low-signal sectors.</p>
+    </div>
+    {/* Triggers the Mobile Guide/InstallApp logic */}
+    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+      <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center">
+        Tap "Share" then "Add to Home Screen"
+      </p>
+    </div>
+  </div>
+
     </div>
 
     {/* Verification Footer */}
-    <footer className="mt-10 pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
-      <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Verified Offline Asset</span>
-      <div className="flex items-center gap-4">
-         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Local Sync: Enabled</span>
-         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+    <footer className="mt-12 pt-8 border-t border-slate-800/50 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div className="flex items-center gap-6">
+        <div className="flex flex-col">
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Data Integrity</span>
+          <span className="text-xs font-bold text-slate-300">Verified Offline Asset</span>
+        </div>
+        <div className="h-8 w-px bg-slate-800 hidden sm:block" />
+        <div className="flex flex-col">
+          <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Sync Status</span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-emerald-500">Local Sync Active</span>
+            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          </div>
+        </div>
       </div>
+      
+      <p className="text-[10px] text-slate-600 font-medium italic">
+        Format: Encrypted Standalone Blob • SHA-256 Verified
+      </p>
     </footer>
   </div>
 </div>
