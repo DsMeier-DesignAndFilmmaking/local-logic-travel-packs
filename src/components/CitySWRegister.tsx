@@ -1,3 +1,23 @@
+
+'use client';
+import { useEffect } from 'react';
+
+export function CitySWRegister({ city }: { city: string }) {
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker
+        .register('/sw.js', { scope: `/packs/${city}/` })
+        .then(() => console.log(`City SW registered for ${city}`))
+        .catch(err => console.error(`City SW registration failed for ${city}:`, err));
+    }
+  }, [city]);
+
+  return null;
+}
+
+// ✅ Add this default export to satisfy the import
+export default CitySWRegister;
+
 /** 'use client';
 
 import { useEffect } from 'react';

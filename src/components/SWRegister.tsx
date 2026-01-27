@@ -2,6 +2,8 @@
 
 import { useEffect } from 'react';
 
+
+
 /**
  * Global Service Worker Registration (HOMEPAGE ONLY)
  */
