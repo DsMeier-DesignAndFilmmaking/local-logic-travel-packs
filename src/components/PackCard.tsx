@@ -32,7 +32,7 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
           <div className={`w-3 h-3 rounded-full ${tierColor} flex-shrink-0`} />
           <div className="text-left">
             <h3 className="text-sm sm:text-base font-black uppercase tracking-tight text-slate-900">
-              Tier {tierNumber}: {tierLabel}
+              {tierLabel}
             </h3>
             <p className="text-[10px] text-slate-500 font-medium">{tier.title}</p>
           </div>

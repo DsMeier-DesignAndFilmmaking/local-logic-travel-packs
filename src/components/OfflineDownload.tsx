@@ -16,7 +16,6 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   const [isVerified, setIsVerified] = useState(false);
   const { isStandalone } = usePWAInstall();
 
-  // Check if pack is already saved on mount
   useEffect(() => {
     async function checkSaved() {
       if (!pack?.city) return;
@@ -33,7 +32,6 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
     checkSaved();
   }, [pack?.city]);
 
-  // Handle saving full pack to IndexedDB
   const handleSaveToVault = async () => {
     if (isSaving || isSaved) return;
     
@@ -46,32 +44,18 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
         offlineReady: true,
       };
 
-      // Save ENTIRE tiered pack to IndexedDB
       await savePack(packToSave);
 
-      // Broadcast sync event for page.tsx hydration
       window.dispatchEvent(new CustomEvent('vault-sync-complete', {
         detail: { city: pack.city, timestamp }
       }));
 
       setIsSaved(true);
       setIsVerified(true);
-      
-      // Show verified badge for 3 seconds, then keep it visible
-      setTimeout(() => {
-        // Badge stays visible
-      }, 3000);
     } catch (err) {
       const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-      
-      // Suppress alerts when offline/standalone - errors are expected
-      // The pack may already be saved, or we're offline and can't save
       if (!isStandalone && !isOffline) {
-        console.error('Save error:', err);
         alert('Failed to save pack. Please try again.');
-      } else {
-        // In offline/standalone mode, silently fail - pack may already be saved
-        console.log('Save failed (offline/standalone) - pack may already be in vault');
       }
     } finally {
       setIsSaving(false);
@@ -80,8 +64,6 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
 
   const handleExport = () => {
     setIsExporting(true);
-    
-    // Extracting the Tier 1 tactical data
     const tier1 = (pack as any).tiers?.tier1;
     const cards = tier1?.cards || [];
     
@@ -92,6 +74,7 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
       exportedAt: new Date().toLocaleString()
     };
 
+    // ADA Compliant Export Template
     const htmlContent = `
 <!DOCTYPE html>
 <html lang="en">
@@ -100,40 +83,54 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OFFLINE VAULT: ${payload.city}</title>
     <style>
-        :root { --bg: #020617; --card: #0f172a; --accent: #10b981; --text: #f8fafc; --border: #1e293b; }
-        body { font-family: ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 24px; }
+        :root { 
+          --bg: #020617; 
+          --card: #0f172a; 
+          --accent: #10b981; /* High contrast emerald */
+          --text: #f8fafc; 
+          --text-muted: #cbd5e1; /* Increased contrast for muted text */
+          --border: #334155; 
+        }
+        body { 
+          font-family: ui-sans-serif, system-ui, sans-serif; 
+          background: var(--bg); 
+          color: var(--text); 
+          line-height: 1.6; 
+          padding: 24px; 
+          font-size: 16px; /* ADA Standard */
+        }
         .container { max-width: 600px; margin: 0 auto; }
-        .header { border-bottom: 2px solid var(--accent); padding-bottom: 20px; margin-bottom: 30px; }
-        .city { font-size: 3rem; font-weight: 900; letter-spacing: -0.05em; text-transform: uppercase; margin: 0; }
-        .badge { background: var(--accent); color: var(--bg); font-size: 10px; font-weight: 900; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
-        .headline { color: var(--accent); font-size: 11px; font-weight: 900; text-transform: uppercase; margin-bottom: 12px; }
-        .situation { font-size: 18px; font-weight: 700; margin-bottom: 12px; display: block; }
-        .action { font-size: 14px; margin: 8px 0; color: #cbd5e1; display: flex; gap: 10px; }
-        .action::before { content: "→"; color: var(--accent); font-weight: bold; }
-        .footer { font-size: 10px; color: #475569; margin-top: 50px; text-align: center; }
+        .header { border-bottom: 3px solid var(--accent); padding-bottom: 20px; margin-bottom: 30px; }
+        .city { font-size: 2.5rem; font-weight: 800; text-transform: uppercase; margin: 0; line-height: 1.1; }
+        .badge { background: var(--accent); color: #020617; font-size: 12px; font-weight: 800; padding: 6px 12px; border-radius: 4px; display: inline-block; margin-bottom: 12px; text-transform: uppercase; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+        .headline { color: var(--accent); font-size: 14px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.05em; }
+        .situation { font-size: 20px; font-weight: 700; margin-bottom: 16px; display: block; color: var(--text); }
+        .action { font-size: 16px; margin: 12px 0; color: var(--text-muted); display: flex; gap: 12px; align-items: flex-start; }
+        .action::before { content: "▶"; color: var(--accent); font-size: 12px; padding-top: 4px; }
+        .footer { font-size: 14px; color: #94a3b8; margin-top: 60px; text-align: center; border-top: 1px solid var(--border); padding-top: 20px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <span class="badge">Standalone Tactical Export</span>
+    <main class="container">
+        <header class="header">
+            <span class="badge">Tactical Export</span>
             <h1 class="city">${payload.city}</h1>
-            <p style="color: #64748b; font-weight: 600; font-size: 12px;">Country: ${payload.country} | Generated: ${payload.exportedAt}</p>
-        </div>
+            <p style="color: var(--text-muted); font-weight: 600;">Location: ${payload.country} | Generated: ${payload.exportedAt}</p>
+        </header>
         <div id="vault-root"></div>
-        <div class="footer">Verified Offline Asset • Local Logic Vault</div>
-    </div>
+        <footer class="footer">Verified Offline Asset &bull; Tactical Vault</footer>
+    </main>
     <script>
         const data = ${JSON.stringify(payload)};
         const root = document.getElementById('vault-root');
         data.cards.forEach(card => {
             card.microSituations.forEach(ms => {
-                const div = document.createElement('div');
+                const div = document.createElement('article');
                 div.className = 'card';
                 div.innerHTML = \`
                     <div class="headline">\${card.headline}</div>
-                    <span class="situation">\${ms.title}</span>
+                    <h2 class="situation">\${ms.title}</h2>
                     \${ms.actions.map(a => '<div class="action">' + a + '</div>').join('')}
                 \`;
                 root.appendChild(div);
@@ -156,71 +153,84 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   };
 
   return (
-    <div className="space-y-4">
-      {/* Main Download Button - Saves Full Pack to IndexedDB */}
-      <div className="p-4 sm:p-6 bg-slate-900 rounded-xl sm:rounded-3xl border border-slate-800 shadow-inner">
-        <div className="mb-4 flex items-center justify-between">
+    <div className="space-y-6">
+      {/* Main Download Button Section */}
+      <section 
+        className="p-5 sm:p-8 bg-slate-900 rounded-2xl border border-slate-700 shadow-xl"
+        aria-labelledby="vault-heading"
+      >
+        <div className="mb-6 flex items-start justify-between gap-4">
           <div>
-            <h4 className="text-white text-xs sm:text-sm font-black uppercase tracking-widest">
+            <h4 id="vault-heading" className="text-white text-sm sm:text-base font-black uppercase tracking-wider">
               Offline Vault
             </h4>
-            <p className="text-slate-400 text-[10px] sm:text-xs font-medium leading-relaxed mt-1">
-              Save all {pack.tiers ? Object.keys(pack.tiers).length : 0} tiers for offline access
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed mt-2">
+              Secure all travel tiers to local storage for use without cellular data.
             </p>
           </div>
           {isVerified && (
-            <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-lg">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
+            <div 
+              role="status"
+              aria-label="Pack is verified and saved"
+              className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/60 rounded-full flex-shrink-0"
+            >
+              <span className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-400">
                 Verified
               </span>
             </div>
           )}
         </div>
+        
         <button 
           onClick={handleSaveToVault}
           disabled={isSaving || isSaved}
-          className="w-full py-3 sm:py-4 min-h-[44px] bg-white hover:bg-slate-100 disabled:bg-slate-700 disabled:text-slate-400 text-slate-900 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+          aria-busy={isSaving}
+          className="w-full py-4 min-h-[48px] bg-white hover:bg-slate-100 disabled:bg-slate-800 disabled:text-slate-500 text-slate-900 rounded-xl font-black text-sm uppercase tracking-widest transition-all focus-visible:ring-4 focus-visible:ring-emerald-500 outline-none flex items-center justify-center gap-3"
         >
           {isSaving ? (
             <>
-              <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-              SAVING...
+              <div className="w-4 h-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <span>Syncing to Vault...</span>
             </>
           ) : isSaved ? (
             <>
-              <span>✓</span>
-              SAVED TO VAULT
+              <span aria-hidden="true">✓</span>
+              <span>Vault Secured</span>
             </>
           ) : (
-            'SAVE FOR OFFLINE ACCESS'
+            'Download Tactical Pack'
           )}
         </button>
-      </div>
+      </section>
 
-      {/* HTML Export (Secondary Action) */}
-      <div className="p-4 sm:p-6 bg-slate-50 rounded-xl sm:rounded-3xl border border-slate-200">
-        <div className="mb-4">
-          <h4 className="text-slate-900 text-xs sm:text-sm font-black uppercase tracking-widest">
+      {/* HTML Export Section */}
+      <section 
+        className="p-5 sm:p-8 bg-slate-50 rounded-2xl border border-slate-300"
+        aria-labelledby="backup-heading"
+      >
+        <div className="mb-6">
+          <h4 id="backup-heading" className="text-slate-900 text-sm sm:text-base font-black uppercase tracking-wider">
             Emergency Backup
           </h4>
-          <p className="text-slate-600 text-[10px] sm:text-xs font-medium leading-relaxed mt-1">
-            Export as standalone HTML file for devices without browser storage
+          <p className="text-slate-700 text-xs sm:text-sm leading-relaxed mt-2">
+            Generate a standalone HTML asset for use as a hard backup outside of the app.
           </p>
         </div>
         <button 
           onClick={handleExport}
           disabled={isExporting}
-          className="w-full py-3 sm:py-4 min-h-[44px] bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+          aria-busy={isExporting}
+          className="w-full py-4 min-h-[48px] bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 text-white rounded-xl font-black text-sm uppercase tracking-widest transition-all focus-visible:ring-4 focus-visible:ring-slate-400 outline-none flex items-center justify-center gap-3"
         >
           {isExporting ? (
             <>
-              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              PREPARING FILE...
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" aria-hidden="true" />
+              <span>Generating...</span>
             </>
-          ) : 'EXPORT HTML FILE'}
+          ) : 'Export Offline Asset'}
         </button>
-      </div>
+      </section>
     </div>
   );
 }

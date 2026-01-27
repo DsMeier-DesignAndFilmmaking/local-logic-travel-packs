@@ -224,23 +224,88 @@ export default function CityPackPage() {
         {/* Pack Content */}
         <PackCard pack={pack} vaultStatus={vaultStatus} />
         
-        {/* Download Pack Section - Separate from A2HS */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
-          <h3 className="text-base sm:text-lg font-bold mb-4">Download Pack</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Download city data, cache assets, and save to device storage. This is separate from app installation.
-          </p>
-          <DownloadPack pack={pack} />
-        </div>
+        <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+  <div className="p-6 sm:p-10">
+    
+    <header className="mb-8 border-b border-slate-800 pb-8">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
+        <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tighter">
+          Offline Deployment Protocol
+        </h3>
+      </div>
+      <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl">
+        This intelligence pack is designed for zero-connectivity environments. Follow the protocol for your current device.
+      </p>
+    </header>
 
-        {/* Install App Section - A2HS */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-4 sm:p-6 border border-gray-100">
-          <h3 className="text-base sm:text-lg font-bold mb-4">Install App</h3>
-          <p className="text-sm text-gray-600 mb-4">
-            Install this pack as a standalone app. Shows only {pack.city}. No navigation to other cities unless online.
-          </p>
+    {/* Viewport Conditional Logic Container - Realigned without numbers */}
+    <div className="space-y-0">
+      
+      {/* MOBILE PROTOCOL: Visible only on small screens */}
+      <section className="block md:hidden">
+        <div className="flex items-center gap-2 mb-4">
+          <h4 className="text-white font-bold uppercase tracking-widest text-xs">
+            Mobile Protocol
+          </h4>
+          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-black">
+            iOS / Android
+          </span>
+        </div>
+        <p className="text-slate-300 text-sm leading-relaxed mb-6">
+          Tap the <span className="text-white font-bold">Share</span> icon then select <span className="text-white font-bold">"Add to Home Screen."</span> This deploys a dedicated, full-screen tactical interface to your device.
+        </p>
+        <div className="min-h-[48px]">
           <InstallApp city={pack.city} />
         </div>
+      </section>
+
+      {/* DESKTOP PROTOCOL: Visible only on medium screens and up */}
+      <section className="hidden md:block">
+        <div className="flex items-center gap-2 mb-4">
+          <h4 className="text-white font-bold uppercase tracking-widest text-xs">
+            Desktop Protocol
+          </h4>
+          <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-black">
+            Mac / PC / Linux
+          </span>
+        </div>
+        <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
+          Initialize the <span className="text-white font-bold">Local Sync</span> to move city intelligence from our servers to your machine's secure hardware vault. This ensures 100% offline access via your browser.
+        </p>
+        <div className="min-h-[48px]">
+          <DownloadPack pack={pack} />
+        </div>
+      </section>
+    </div>
+
+    {/* Automated Detection (Desktop Only) */}
+    <div className="hidden md:block mt-10 p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
+      <div className="flex items-start gap-4">
+        <div className="text-emerald-500 mt-1 flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <div>
+          <h5 className="text-white text-xs font-bold uppercase tracking-tight mb-1">PWA Auto-Detection Active</h5>
+          <p className="text-slate-400 text-xs leading-relaxed">
+            Look for the <span className="text-emerald-400">"Install"</span> icon in your browser's address bar. This allows the system to launch the Travel Intel vault directly from your desktop app dock.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Verification Footer */}
+    <footer className="mt-10 pt-6 border-t border-slate-800 flex flex-wrap items-center justify-between gap-4">
+      <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Verified Offline Asset</span>
+      <div className="flex items-center gap-4">
+         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Local Sync: Enabled</span>
+         <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+      </div>
+    </footer>
+  </div>
+</div>
       </div>
       
       <Footer />

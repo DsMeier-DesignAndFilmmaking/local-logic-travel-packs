@@ -73,27 +73,35 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
-      {/* Header logic - Mobile Optimized */}
-      <div className="mb-6 sm:mb-8">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Travel Intel</h1>
-          <p className="text-gray-500 text-xs sm:text-sm">Select a destination to unlock tactical insights.</p>
-        </div>
-      </div>
-
-      {loading && (
-        <div className="flex justify-center py-20">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      )}
-
-      {!loading && (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <Spontaneity onCitySelect={handleSelect} />
-        </div>
-      )}
+    <div className="w-full max-w-4xl mx-auto px-4 sm:px-6">
+  {/* Added pt-12 (mobile) and sm:pt-20 (desktop) */}
+  <div className="pt-12 sm:pt-20 mb-10 sm:mb-16 text-center space-y-3">
+    <div className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-600 mb-2 border border-slate-200">
+      Beta Access
     </div>
+    
+    <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
+      Travel <span className="text-emerald-500">Intel</span>
+    </h1>
+    
+    <p className="max-w-xl mx-auto text-slate-500 text-sm sm:text-lg font-medium leading-relaxed">
+      Deployment-ready insights for your next destination. 
+      Select a city to unlock tactical travel intelligence.
+    </p>
+    
+    <div className="pt-4 flex justify-center gap-2">
+      <div className="h-1 w-12 bg-emerald-500 rounded-full" />
+      <div className="h-1 w-4 bg-slate-200 rounded-full" />
+      <div className="h-1 w-4 bg-slate-200 rounded-full" />
+    </div>
+  </div>
+  
+    {!loading && (
+      <div className="animate-in fade-in zoom-in-95 duration-700 delay-150 fill-mode-both">
+        <Spontaneity onCitySelect={handleSelect} />
+      </div>
+    )}
+  </div>
   );
 };
 
