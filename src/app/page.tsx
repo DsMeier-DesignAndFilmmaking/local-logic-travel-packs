@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAllPacks, getPack } from '../../scripts/offlineDB';
 import { TravelPack } from '@/types/travel';
@@ -14,12 +14,14 @@ export default function Home() {
   const [initialPack, setInitialPack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(true);
   const { isStandalone } = usePWAInstall();
+  const hasRedirectedRef = useRef(false);
 
   // Hydration: Load pack from IndexedDB on mount (crucial for PWA icon launch)
   useEffect(() => {
     async function checkVault() {
       try {
-        // If standalone mode, redirect to installed city pack
+        // If standalone mode, redirect to installed city pack ONLY on initial PWA launch
+        // Allow explicit navigation to / (e.g., from Back to Home button)
         if (isStandalone && typeof window !== 'undefined') {
           const path = window.location.pathname;
           
@@ -29,26 +31,37 @@ export default function Home() {
             return;
           }
           
-          // Try to get the installed city from URL or IndexedDB
-          const urlParams = new URLSearchParams(window.location.search);
-          const cityParam = urlParams.get('city');
+          // Only redirect on initial PWA launch (when referrer is empty/external or first load)
+          // Don't redirect if user explicitly navigated to / (e.g., via Back button)
+          // Check if referrer is from same origin (internal navigation) - if so, don't redirect
+          const referrer = document.referrer;
+          const isInternalNavigation = referrer && referrer.includes(window.location.origin);
+          const isInitialLaunch = !hasRedirectedRef.current && !isInternalNavigation;
           
-          if (cityParam) {
-            const cityPack = await getPack(cityParam);
-            if (cityPack) {
-              // Redirect to city pack page
-              const normalizedCity = normalizeCityName(cityParam);
+          if (isInitialLaunch && path === '/') {
+            hasRedirectedRef.current = true;
+            
+            // Try to get the installed city from URL or IndexedDB
+            const urlParams = new URLSearchParams(window.location.search);
+            const cityParam = urlParams.get('city');
+            
+            if (cityParam) {
+              const cityPack = await getPack(cityParam);
+              if (cityPack) {
+                // Redirect to city pack page
+                const normalizedCity = normalizeCityName(cityParam);
+                router.push(`/packs/${normalizedCity}`);
+                return;
+              }
+            }
+            
+            // Try to get most recent pack and redirect
+            const saved = await getAllPacks();
+            if (saved && saved.length > 0) {
+              const normalizedCity = normalizeCityName(saved[0].city);
               router.push(`/packs/${normalizedCity}`);
               return;
             }
-          }
-          
-          // Try to get most recent pack and redirect
-          const saved = await getAllPacks();
-          if (saved && saved.length > 0) {
-            const normalizedCity = normalizeCityName(saved[0].city);
-            router.push(`/packs/${normalizedCity}`);
-            return;
           }
         }
         
@@ -95,14 +108,9 @@ export default function Home() {
     );
   }
 
-  // In standalone mode, don't show homepage - should redirect to city pack
-  if (isStandalone) {
-    return (
-      <main className="min-h-screen bg-white p-4 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
-      </main>
-    );
-  }
+  // In standalone mode, show homepage if user explicitly navigated here
+  // (Initial PWA launch will redirect via useEffect above)
+  // Allow / to be accessible even in standalone mode for explicit navigation
 
   return (
     <main className="min-h-screen bg-white p-4 flex flex-col">

@@ -7,6 +7,7 @@ import { fetchTravelPack } from '@/lib/fetchTravelPack';
 import { normalizeCityName } from '@/lib/cities';
 import { getPack, savePack } from '../../../../scripts/offlineDB';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { useStandaloneNavigationLock } from '@/hooks/useStandaloneNavigationLock';
 import PackCard from '@/components/PackCard';
 import DownloadPack from '@/components/DownloadPack';
 import InstallApp from '@/components/InstallApp';
@@ -33,10 +34,11 @@ export default function CityPackPage() {
   const [pack, setPack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(true);
   const [vaultStatus, setVaultStatus] = useState<'idle' | 'syncing' | 'secured'>('idle');
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [targetCity, setTargetCity] = useState<string | undefined>();
-
   const cityParam = params?.city as string;
+
+  // Centralized navigation locking - handles all city pack navigation guards
+  const { showModal: showDownloadModal, setShowModal: setShowDownloadModal, targetCity } = 
+    useStandaloneNavigationLock(pack?.city);
 
   useEffect(() => {
     async function loadPack() {
@@ -106,22 +108,8 @@ export default function CityPackPage() {
     loadPack();
   }, [cityParam, router, isStandalone]);
 
-  // Lock navigation in standalone mode - check if trying to access different city
-  useEffect(() => {
-    if (!isStandalone || !pack || !cityParam) return;
-
-    const currentNormalizedCity = normalizeCityName(pack.city);
-    const pathNormalizedCity = normalizeCityName(cityParam);
-    
-    // If path city doesn't match current pack city, show modal
-    if (pathNormalizedCity !== currentNormalizedCity) {
-      setTargetCity(cityParam);
-      setShowDownloadModal(true);
-      
-      // Redirect back to current city's pack page
-      router.replace(`/packs/${currentNormalizedCity}`);
-    }
-  }, [isStandalone, pack, cityParam, router]);
+  // Navigation locking is handled by useStandaloneNavigationLock hook (called above)
+  // This ensures navigation locking lives in one place only to prevent race conditions
 
   // Update manifest link to city-specific manifest
   useEffect(() => {
@@ -165,9 +153,7 @@ export default function CityPackPage() {
         <h1 className="text-xl font-bold text-gray-900 mb-4">Pack Not Found</h1>
         {!isStandalone && (
           <button
-            onClick={() => {
-              window.location.href = '/';
-            }}
+            onClick={() => router.replace('/')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Return Home

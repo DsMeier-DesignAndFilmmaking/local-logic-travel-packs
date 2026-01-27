@@ -21,51 +21,85 @@ export function useStandaloneNavigationLock(currentCity?: string) {
   const [targetCity, setTargetCity] = useState<string | undefined>();
 
   // Check pathname changes for unauthorized city access
+  // Navigation locking ONLY applies to /packs/[city] → /packs/[otherCity]
   useEffect(() => {
-    if (!isStandalone || !currentCity) return;
-
-    // Extract city from current pathname
+    // Early exit: Not in standalone mode
+    if (!isStandalone) return;
+    
+    // Early exit: No current city defined
+    if (!currentCity) return;
+    
+    // Early exit: / is a global escape route - never intercepted
+    if (pathname === '/') return;
+    
+    // Early exit: Non-/packs/* routes are unrestricted
+    if (!pathname?.startsWith('/packs/')) return;
+    
+    // At this point, we know:
+    // - isStandalone === true
+    // - currentCity is defined
+    // - pathname is a /packs/[city] route
+    
     const currentNormalizedCity = normalizeCityName(currentCity);
     
-    // Check if pathname is a city pack route
-    const packRouteMatch = pathname?.match(/^\/packs\/([^/]+)/);
+    // Extract city from pathname
+    const packRouteMatch = pathname.match(/^\/packs\/([^/]+)/);
+    if (!packRouteMatch) return;
     
-    if (packRouteMatch) {
-      const pathCity = packRouteMatch[1];
-      const pathNormalizedCity = normalizeCityName(pathCity);
+    const pathCity = packRouteMatch[1];
+    const pathNormalizedCity = normalizeCityName(pathCity);
+    
+    // Only guard if trying to access a different city pack
+    if (pathNormalizedCity !== currentNormalizedCity) {
+      setTargetCity(pathCity);
+      setShowModal(true);
       
-      // If trying to access a different city pack
-      if (pathNormalizedCity !== currentNormalizedCity) {
-        setTargetCity(pathCity);
-        setShowModal(true);
-        
-        // Redirect back to current city's pack page
-        router.replace(`/packs/${currentNormalizedCity}`);
-      }
+      // Redirect back to current city's pack page
+      router.replace(`/packs/${currentNormalizedCity}`);
     }
   }, [pathname, isStandalone, currentCity, router]);
 
   /**
    * Guarded navigation helper
    * 
-   * Allows all non-pack routes (/, /privacy, etc.)
-   * Guards navigation only when moving between different city packs
-   * Shows modal when attempting to switch cities in standalone mode
-   * Calls router.push(url) normally when allowed
+   * Navigation locking ONLY applies to /packs/[city] → /packs/[otherCity]
+   * 
+   * Invariants:
+   * - / is a global escape route (always allowed)
+   * - Non-/packs/* routes are unrestricted (always allowed)
+   * - Only cross-city pack navigation is guarded
    */
   const guardedPush = useCallback((url: string) => {
-    // Always allow navigation if not in standalone mode or no current city
+    // Early exit: Not in standalone mode or no current city
     if (!isStandalone || !currentCity) {
       router.push(url);
       return;
     }
 
+    // Early exit: / is a global escape route - always allowed
+    if (url === '/') {
+      router.push(url);
+      return;
+    }
+
+    // Early exit: Non-/packs/* routes are unrestricted - always allowed
+    if (!url.startsWith('/packs/')) {
+      router.push(url);
+      return;
+    }
+
+    // At this point, we know:
+    // - isStandalone === true
+    // - currentCity is defined
+    // - url is a /packs/[city] route
+    
     const currentNormalizedCity = normalizeCityName(currentCity);
     const packMatch = url.match(/^\/packs\/([^/]+)/);
 
     if (packMatch) {
       const targetCity = normalizeCityName(packMatch[1]);
 
+      // Only guard if trying to navigate to a different city pack
       if (targetCity !== currentNormalizedCity) {
         // Different city - show modal and prevent navigation
         setTargetCity(packMatch[1]);
@@ -74,7 +108,7 @@ export function useStandaloneNavigationLock(currentCity?: string) {
       }
     }
 
-    // Allow navigation to same city or non-pack routes
+    // Allow navigation to same city pack
     router.push(url);
   }, [isStandalone, currentCity, router]);
 
