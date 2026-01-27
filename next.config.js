@@ -1,6 +1,7 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
+  webpack: (config) => {
+    delete config.resolve.alias['webpack'];
+    return config;
+  },
 };
-
-export default nextConfig;
