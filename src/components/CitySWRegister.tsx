@@ -27,6 +27,7 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
     const cityScope = `/packs/${normalizedCity}`;
 
     // 🚫 Only register if we're on the correct city page
+    // Must match city folder exactly
     if (!pathname.startsWith(cityScope)) {
       console.log(`⛔ City SW registration blocked: pathname ${pathname} does not match scope ${cityScope}`);
       return;
@@ -52,9 +53,9 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
         }
 
         // Register service worker with city-specific scope
-        // Ensure scope ends with / for proper isolation
+        // Scope must match city folder exactly with trailing slash
         const reg = await navigator.serviceWorker.register('/sw.js', {
-          scope: `${cityScope}/`,
+          scope: `${cityScope}/`,  // must match city folder exactly
         });
 
         console.log(`🛡️ City Service Worker registered for ${city}:`, reg.scope);
