@@ -1,15 +1,18 @@
 'use client';
 
 import React from 'react';
-import { TravelPack, ProblemCard, MicroSituation } from '@/lib/travelPacks';
+// 1. Import the sub-types from your new types file
+import { TravelPack, ProblemCard, MicroSituation } from '@/types/travel';
 
 interface PackCardProps {
   pack: TravelPack;
 }
 
 const PackCard: React.FC<PackCardProps> = ({ pack }) => {
-  // We prioritize Tier 1 (Arrival/Tactical) as the main view
-  const tier1 = pack.tiers?.tier1;
+  // Defensive check: if no pack or tiers exist, return null or a loader
+  if (!pack || !pack.tiers) return null;
+
+  const tier1 = pack.tiers.tier1;
 
   return (
     <div className="w-full space-y-6">
@@ -38,7 +41,8 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
 
       {/* 2. Tactical Cards (The "Must Know" content) */}
       <div className="grid gap-4">
-        {tier1?.cards.map((card: ProblemCard, cardIdx: number) => (
+        {/* Added optional chaining just in case tier1 cards are undefined */}
+        {tier1?.cards?.map((card: ProblemCard, cardIdx: number) => (
           <div 
             key={`${card.headline}-${cardIdx}`}
             className="bg-white border-2 border-slate-100 rounded-[24px] p-6 shadow-sm hover:border-slate-900 transition-colors group"
@@ -50,7 +54,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
             
             <div className="space-y-4">
               {card.microSituations.map((situation: MicroSituation, sIdx: number) => (
-                <div key={`${situation.title}-${sIdx}`} className="space-y-2">
+                <div key={`${situation.title}-${sIdx}`} className="space-y-4">
                   <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                     Situation: {situation.title}
                   </h4>
@@ -79,7 +83,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
       {/* 3. Vault Metadata */}
       <div className="text-center pt-4">
         <p className="text-[9px] font-bold text-slate-300 uppercase tracking-[0.3em]">
-          Downloaded: {new Date(pack.downloadedAt || '').toLocaleDateString()} • Offline Ready
+          Downloaded: {pack.downloadedAt ? new Date(pack.downloadedAt).toLocaleDateString() : 'N/A'} • Offline Ready
         </p>
       </div>
     </div>
