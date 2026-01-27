@@ -179,7 +179,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
           {pack.downloadedAt ? (
             <>Downloaded: {new Date(pack.downloadedAt).toLocaleDateString()} • Offline Ready</>
           ) : (
-            <>Online Preview • Download for Offline Access</>
+            <>Online Preview • Download for Offline Use</>
           )}
         </p>
       </div>
