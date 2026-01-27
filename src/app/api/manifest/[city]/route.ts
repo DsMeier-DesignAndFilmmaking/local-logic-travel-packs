@@ -44,6 +44,8 @@ export async function GET(
     const displayCityName = pack.city;
 
     // City-specific manifest
+    // CRITICAL: Scope and start_url must be strictly city-specific
+    // Do NOT include `/` or any root URLs anywhere
     const manifest = {
       name: `${displayCityName} Travel Pack`,
       short_name: displayCityName,
