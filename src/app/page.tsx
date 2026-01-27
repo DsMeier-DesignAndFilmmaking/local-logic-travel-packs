@@ -28,7 +28,7 @@ export default function Home() {
     checkVault();
 
     // Listen for vault sync events (when pack is saved)
-    const handleVaultSync = async (event: CustomEvent) => {
+    const handleVaultSync = async (event: Event) => {
       // Reload from IndexedDB to get the latest saved pack
       try {
         const saved = await getAllPacks();
@@ -40,10 +40,10 @@ export default function Home() {
       }
     };
 
-    window.addEventListener('vault-sync-complete', handleVaultSync as EventListener);
+    window.addEventListener('vault-sync-complete', handleVaultSync);
     
     return () => {
-      window.removeEventListener('vault-sync-complete', handleVaultSync as EventListener);
+      window.removeEventListener('vault-sync-complete', handleVaultSync);
     };
   }, []);
 
