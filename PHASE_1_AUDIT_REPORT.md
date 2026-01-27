@@ -132,7 +132,7 @@ interface TravelPackDB extends DBSchema {
 - **Header (line 32):** Shows "Intelligence Tier 1" - Hardcoded
 
 **REQUIREMENT:** Display all tiers with proper UX:
-- Tier 1: Arrival/Safety (Current - working)
+- Arrival/Safety (Current - working)
 - Tier 2: Logistics (Missing)
 - Tier 3: Social/Cultural (Missing)
 - Tier 4: Hidden Gems (Missing)
