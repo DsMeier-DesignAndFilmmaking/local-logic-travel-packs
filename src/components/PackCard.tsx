@@ -103,12 +103,15 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
     });
   };
 
-  const tiers = [
+  // Build tiers array with type safety - only include defined tiers
+  const allTiers = [
     { tier: pack.tiers.tier1, number: 1 as const, label: 'Arrival & Safety', color: 'bg-red-500' },
-    { tier: pack.tiers.tier2, number: 2 as const, label: 'Logistics', color: 'bg-blue-500' },
-    { tier: pack.tiers.tier3, number: 3 as const, label: 'Social & Cultural', color: 'bg-purple-500' },
-    { tier: pack.tiers.tier4, number: 4 as const, label: 'Hidden Gems', color: 'bg-emerald-500' },
-  ].filter(t => t.tier); // Only show tiers that exist
+    pack.tiers.tier2 && { tier: pack.tiers.tier2, number: 2 as const, label: 'Logistics', color: 'bg-blue-500' },
+    pack.tiers.tier3 && { tier: pack.tiers.tier3, number: 3 as const, label: 'Social & Cultural', color: 'bg-purple-500' },
+    pack.tiers.tier4 && { tier: pack.tiers.tier4, number: 4 as const, label: 'Hidden Gems', color: 'bg-emerald-500' },
+  ].filter((t): t is { tier: TravelPackTier; number: 1 | 2 | 3 | 4; label: string; color: string } => 
+    t !== null && t !== undefined && t.tier !== undefined
+  );
 
   return (
     <div className="w-full space-y-4 sm:space-y-6">
@@ -125,7 +128,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
             {pack.city}
           </h2>
           <p className="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest">
-            {pack.country} • {tiers.length} Intelligence Tiers Available
+            {pack.country} • {allTiers.length} Intelligence Tiers Available
           </p>
         </div>
         
@@ -137,7 +140,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
 
       {/* 2. Tier Sections - Collapsible */}
       <div className="space-y-3 sm:space-y-4">
-        {tiers.map(({ tier, number, label, color }) => (
+        {allTiers.map(({ tier, number, label, color }) => (
           <TierSection
             key={`tier-${number}`}
             tier={tier}
