@@ -19,12 +19,14 @@
 
 ### 2. Service Worker Registration (`src/components/SWRegister.tsx`)
 
+
 **Current Configuration:**
-```typescript
+**C```typescript
 const reg = await navigator.serviceWorker.register('/sw.js', {
-  scope: '/',  // ❌ Entire app scope
+ scope: '/',  // ❌ Entire app scope
 });
-```
+```**
+
 
 **Issues:**
 - ❌ Service worker scope is `'/'` - controls entire app

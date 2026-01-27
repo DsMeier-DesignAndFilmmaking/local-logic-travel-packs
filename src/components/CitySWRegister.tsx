@@ -1,4 +1,4 @@
-'use client';
+/** 'use client';
 
 import { useEffect } from 'react';
 import { normalizeCityName } from '@/lib/cities';
@@ -15,7 +15,7 @@ interface CitySWRegisterProps {
  * 
  * Scope: /packs/{city}
  * Example: /packs/bangkok
- */
+
 export default function CitySWRegister({ city }: CitySWRegisterProps) {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
@@ -141,3 +141,4 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
 
   return null;
 }
+*/

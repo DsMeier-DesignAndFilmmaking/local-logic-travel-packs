@@ -13,6 +13,7 @@ import InstallApp from '@/components/InstallApp';
 import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 import Footer from '@/components/Footer';
 import CitySWRegister from '@/components/CitySWRegister';
+import BackButton from '@/components/BackButton';
 
 /**
  * City-Specific Pack Page
@@ -164,7 +165,9 @@ export default function CityPackPage() {
         <h1 className="text-xl font-bold text-gray-900 mb-4">Pack Not Found</h1>
         {!isStandalone && (
           <button
-            onClick={() => router.push('/')}
+            onClick={() => {
+              window.location.href = '/';
+            }}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             Return Home
@@ -195,12 +198,7 @@ export default function CityPackPage() {
         {/* Header with back button - Hidden in standalone mode (no navigation to other cities) */}
         {!isStandalone && (
           <div className="flex items-center justify-between mb-4">
-            <button
-              onClick={() => router.push('/')}
-              className="px-4 py-2 min-h-[44px] text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-            >
-              ← Back to Home
-            </button>
+            <BackButton />
           </div>
         )}
         
