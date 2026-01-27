@@ -15,6 +15,7 @@ import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
 import SWRegister from '@/components/SWRegister';
+import OfflineDownload from '@/components/OfflineDownload';
 
 /**
  * City-Specific Pack Page
@@ -221,10 +222,9 @@ export default function CityPackPage() {
           </div>
         )}
 
-        {/* Pack Content */}
-        <PackCard pack={pack} vaultStatus={vaultStatus} />
-        
-        <div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
+{/* Pack Content */}
+<PackCard pack={pack} vaultStatus={vaultStatus} />
+<div className="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden">
   <div className="p-6 sm:p-10">
     
     <header className="mb-8 border-b border-slate-800 pb-8">
@@ -239,10 +239,8 @@ export default function CityPackPage() {
       </p>
     </header>
 
-    {/* Viewport Conditional Logic Container - Realigned without numbers */}
-    <div className="space-y-0">
-      
-      {/* MOBILE PROTOCOL: Visible only on small screens */}
+    <div className="space-y-10">
+      {/* MOBILE PROTOCOL */}
       <section className="block md:hidden">
         <div className="flex items-center gap-2 mb-4">
           <h4 className="text-white font-bold uppercase tracking-widest text-xs">
@@ -253,14 +251,14 @@ export default function CityPackPage() {
           </span>
         </div>
         <p className="text-slate-300 text-sm leading-relaxed mb-6">
-          Tap the <span className="text-white font-bold">Share</span> icon then select <span className="text-white font-bold">"Add to Home Screen."</span> This deploys a dedicated, full-screen tactical interface to your device.
+          Tap the <span className="text-white font-bold">Share</span> icon then select <span className="text-white font-bold">"Add to Home Screen."</span> This deploys a dedicated tactical interface.
         </p>
         <div className="min-h-[48px]">
           <InstallApp city={pack.city} />
         </div>
       </section>
 
-      {/* DESKTOP PROTOCOL: Visible only on medium screens and up */}
+      {/* DESKTOP PROTOCOL */}
       <section className="hidden md:block">
         <div className="flex items-center gap-2 mb-4">
           <h4 className="text-white font-bold uppercase tracking-widest text-xs">
@@ -271,26 +269,28 @@ export default function CityPackPage() {
           </span>
         </div>
         <p className="text-slate-300 text-sm sm:text-base leading-relaxed mb-6 max-w-2xl">
-          Initialize the <span className="text-white font-bold">Local Sync</span> to move city intelligence from our servers to your machine's secure hardware vault. This ensures 100% offline access via your browser.
+          Initialize the <span className="text-white font-bold">Local Sync</span> to move city intelligence from our servers to your machine's secure hardware vault.
         </p>
         <div className="min-h-[48px]">
           <DownloadPack pack={pack} />
         </div>
       </section>
+
+      
     </div>
 
     {/* Automated Detection (Desktop Only) */}
     <div className="hidden md:block mt-10 p-5 bg-emerald-500/5 border border-emerald-500/10 rounded-xl">
       <div className="flex items-start gap-4">
         <div className="text-emerald-500 mt-1 flex-shrink-0">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
         <div>
           <h5 className="text-white text-xs font-bold uppercase tracking-tight mb-1">PWA Auto-Detection Active</h5>
           <p className="text-slate-400 text-xs leading-relaxed">
-            Look for the <span className="text-emerald-400">"Install"</span> icon in your browser's address bar. This allows the system to launch the Travel Intel vault directly from your desktop app dock.
+            Look for the <span className="text-emerald-400">"Install"</span> icon in your browser's address bar.
           </p>
         </div>
       </div>
