@@ -1,36 +1,18 @@
-/**
- * Data Coordinator for Travel Packs
- * * Logic:
- * 1. Try to find a local JSON file in /data/travelPacks
- * 2. If not found, return null (allowing the UI to trigger AI generation)
- * 3. Fallback to Paris ONLY if absolutely necessary for UI stability
- */
-
-import { TravelPack, getTravelPackForCity } from './travelPacks';
-import { normalizeCityName } from './cities';
+// src/lib/fetchTravelPacks.ts
+import { TravelPack } from '@/types/travel';
 
 /**
- * Orchestrates the retrieval of a travel pack.
- * Note: This version is designed for Client-Side or Server-Side use.
+ * Client-safe fetcher. 
+ * Instead of using 'fs', it calls your internal API 
+ * which handles the server-side file reading.
  */
-export function fetchTravelPack(cityName: string): TravelPack | null {
-  if (!cityName || !cityName.trim()) return null;
-
-  // 1. Normalize the search term (e.g., "Paris, France" -> "paris")
-  const normalizedSearch = normalizeCityName(cityName);
-
-  // 2. Attempt to pull from our local JSON repository (data/travelPacks/*.json)
-  // This uses the fuzzy matching logic we built in travelPacks.ts
-  const pack = getTravelPackForCity(cityName);
-
-  if (pack) {
-    console.log(`🛡️ Vault: Local asset found for ${cityName}`);
-    return pack;
+export async function fetchTravelPack(cityName: string): Promise<TravelPack | null> {
+  try {
+    const response = await fetch(`/api/pack?city=${encodeURIComponent(cityName)}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    console.error("Failed to fetch tactical pack:", error);
+    return null;
   }
-
-  // 3. If no local asset exists, return null.
-  // This tells the UI to show the "Generate with AI" button instead of 
-  // lying to the user by showing them Paris data for London.
-  console.warn(`⚠️ Vault: No local asset for ${cityName}. AI Generation required.`);
-  return null;
 }

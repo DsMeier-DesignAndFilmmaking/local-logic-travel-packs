@@ -3,9 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { fetchTravelPack } from '@/lib/fetchTravelPack'; 
 import { normalizeCityName } from '@/lib/cities';
-import { TravelPack } from '@/lib/travelPacks';
+import { TravelPack } from '@/types/travel';
 import PackCard from '@/components/PackCard';
 import Tier1Download from '@/components/Tier1Download';
+
 
 interface CitySuggestion {
   name: string;
@@ -53,32 +54,27 @@ const TravelPackCitySelector: React.FC<Props> = ({ initialPack }) => {
     }
   };
 
-  const handleSelect = async (selectedFullName: string) => {
-    // 1. USE THE IMPORT HERE
-    const normalizedName = normalizeCityName(selectedFullName);
-    
-    setCityInput(selectedFullName);
-    setSuggestions([]);
-    setLoading(true);
-    setError(null);
+  // Inside handleSelect in TravelPackCitySelector.tsx
+const handleSelect = async (selectedFullName: string) => {
+  setLoading(true);
+  setError(null);
 
-    try {
-      // 2. Pass the normalized name to ensure it matches your JSON/DB keys
-      const pack = fetchTravelPack(normalizedName); 
-      
-      if (!pack) {
-        // We use the split logic only for the error message display
-        setError(`Tactical intelligence for ${selectedFullName.split(',')[0]} is restricted.`);
-        setActivePack(null);
-      } else {
-        setActivePack(pack);
-      }
-    } catch (err) {
-      setError('System error retrieving tactical data.');
-    } finally {
-      setLoading(false);
+  try {
+    // Now calling our async API bridge
+    const pack = await fetchTravelPack(selectedFullName);
+    
+    if (!pack) {
+      setError("Intelligence asset not found.");
+      setActivePack(null);
+    } else {
+      setActivePack(pack);
     }
-  };
+  } catch (err) {
+    setError("Connection to vault interrupted.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     const handler = setTimeout(() => {
