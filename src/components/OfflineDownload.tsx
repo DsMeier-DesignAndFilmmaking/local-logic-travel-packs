@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { TravelPack } from '@/types/travel';
-import { savePack, getPack } from '../../scripts/offlineDB';
+import { savePack, getPack, deletePack } from '../../scripts/offlineDB';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface OfflineDownloadProps {
@@ -31,6 +31,20 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
     }
     checkSaved();
   }, [pack?.city]);
+
+  const handleRemoveFromVault = async () => {
+    try {
+      await deletePack(pack.city);
+      setIsSaved(false);
+      setIsVerified(false);
+      window.dispatchEvent(new CustomEvent('vault-update', {
+        detail: { city: pack.city, status: 'deleted' }
+      }));
+      console.log(`Intelligence for ${pack.city} purged from local storage.`);
+    } catch (err) {
+      console.error("Purge Error:", err);
+    }
+  };
 
   const handleSaveToVault = async () => {
     if (isSaving || isSaved) return;
@@ -73,6 +87,8 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
       cards: cards,
       exportedAt: new Date().toLocaleString()
     };
+
+
 
     // ADA Compliant Export Template
     const htmlContent = `
@@ -202,6 +218,15 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
             'Download Tactical Pack'
           )}
         </button>
+        
+        {isSaved && (
+          <button 
+            onClick={handleRemoveFromVault}
+            className="mt-6 w-full text-[10px] font-black text-red-500/40 hover:text-red-500 uppercase tracking-[0.2em] transition-colors py-2 border border-dashed border-red-500/20 hover:border-red-500/50 rounded-lg"
+          >
+            [ Purge Local Data & Reset ]
+          </button>
+        )}
       </section>
 
     </div>
