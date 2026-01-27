@@ -19,33 +19,10 @@ export default function SWRegister() {
       return;
     }
 
-    let refreshing = false;
-
-    navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    });
-
-    const register = async () => {
-      try {
-        const reg = await navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-        });
-
-        console.log('🛡️ Root SW registered:', reg.scope);
-        await reg.update();
-      } catch (err) {
-        console.error('❌ Root SW registration failed', err);
-      }
-    };
-
-    if (document.readyState === 'complete') {
-      register();
-    } else {
-      window.addEventListener('load', register);
-      return () => window.removeEventListener('load', register);
-    }
+    // 🚫 Root SW registration removed
+    // Only CitySWRegister.tsx should register service workers for /packs/<city> routes
+    // Homepage does not need a service worker
+    console.log('ℹ️ Root SW registration skipped - using city-specific SWs only');
   }, []);
 
   return null;

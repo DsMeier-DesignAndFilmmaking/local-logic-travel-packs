@@ -56,9 +56,15 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
         // Scope must match city folder exactly with trailing slash
         const reg = await navigator.serviceWorker.register('/sw.js', {
           scope: `${cityScope}/`,  // must match city folder exactly
+        })
+        .then((registration) => {
+          console.log(`🛡️ City Service Worker registered for ${city}:`, registration.scope);
+          return registration;
+        })
+        .catch((err) => {
+          console.error(`❌ City SW registration failed for ${city}:`, err);
+          throw err;
         });
-
-        console.log(`🛡️ City Service Worker registered for ${city}:`, reg.scope);
 
         // Handle controller changes
         let refreshing = false;
