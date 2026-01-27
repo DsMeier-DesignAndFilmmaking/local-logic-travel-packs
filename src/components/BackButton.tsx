@@ -6,20 +6,16 @@ import { useRouter } from 'next/navigation';
 /**
  * BackButton Component
  * 
- * Navigates back to home page using SPA-safe Next.js router navigation.
- * This ensures proper SPA navigation without triggering service worker
- * scope issues or full page reloads.
+ * Navigates back to home page using router.replace to bypass all navigation guards.
+ * This ensures reliable navigation to / without being intercepted by city pack guards
+ * or creating history loops in standalone mode.
  */
 export default function BackButton() {
   const router = useRouter();
 
-  const goHome = () => {
-    router.push('/');
-  };
-
   return (
     <button
-      onClick={goHome}
+      onClick={() => router.replace('/')}
       className="px-4 py-2 min-h-[44px] text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
     >
       ← Back to Home

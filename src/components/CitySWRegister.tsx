@@ -36,6 +36,8 @@ export default function CitySWRegister({ city }: { city: string }) {
       try {
         console.log(`Registering city SW for: ${cityScope}`);
         
+        // Note: /sw.js may not exist if using city-scoped SWs only
+        // This is expected and should not block navigation
         const registration = await navigator.serviceWorker.register('/sw.js', {
           scope: cityScope,
         });
@@ -43,7 +45,9 @@ export default function CitySWRegister({ city }: { city: string }) {
         console.log(`✅ City SW registered for ${city}:`, registration.scope);
       } catch (err) {
         // Do NOT block navigation on SW registration failure
+        // Failed SW registration is non-critical - app should work offline via IndexedDB
         console.warn(`⚠️ City SW registration failed for ${city}:`, err);
+        console.warn(`   This is non-critical - app will use IndexedDB for offline access`);
       }
     };
 
