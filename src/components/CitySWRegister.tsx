@@ -22,8 +22,15 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
       return;
     }
 
+    const pathname = window.location.pathname;
     const normalizedCity = normalizeCityName(city);
     const cityScope = `/packs/${normalizedCity}`;
+
+    // 🚫 Only register if we're on the correct city page
+    if (!pathname.startsWith(cityScope)) {
+      console.log(`⛔ City SW registration blocked: pathname ${pathname} does not match scope ${cityScope}`);
+      return;
+    }
 
     const registerCitySW = async () => {
       try {
@@ -45,8 +52,9 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
         }
 
         // Register service worker with city-specific scope
+        // Ensure scope ends with / for proper isolation
         const reg = await navigator.serviceWorker.register('/sw.js', {
-          scope: cityScope,
+          scope: `${cityScope}/`,
         });
 
         console.log(`🛡️ City Service Worker registered for ${city}:`, reg.scope);
@@ -82,21 +90,32 @@ export default function CitySWRegister({ city }: CitySWRegisterProps) {
         };
 
         // Send city context to service worker
+        const sendCityContext = (target: ServiceWorker) => {
+          const messageChannel = new MessageChannel();
+          messageChannel.port1.onmessage = (event) => {
+            if (event.data.type === 'CITY_CONTEXT_SET') {
+              console.log(`✅ City context confirmed in SW: ${event.data.city}`);
+            }
+          };
+          
+          target.postMessage(
+            {
+              type: 'SET_CITY_CONTEXT',
+              payload: { city: normalizedCity, displayCity: city }
+            },
+            [messageChannel.port2]
+          );
+        };
+
         if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.controller.postMessage({
-            type: 'SET_CITY_CONTEXT',
-            payload: { city: normalizedCity, displayCity: city }
-          });
+          sendCityContext(navigator.serviceWorker.controller);
         }
 
         // Listen for service worker ready
         navigator.serviceWorker.ready.then((registration) => {
           // Send city context when service worker becomes ready
           if (registration.active) {
-            registration.active.postMessage({
-              type: 'SET_CITY_CONTEXT',
-              payload: { city: normalizedCity, displayCity: city }
-            });
+            sendCityContext(registration.active);
           }
         });
 
