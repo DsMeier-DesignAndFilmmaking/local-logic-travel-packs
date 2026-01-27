@@ -2,9 +2,23 @@
 
 import { useEffect } from 'react';
 
+/**
+ * Global Service Worker Registration
+ * 
+ * Registers service worker with app-wide scope ('/') for the homepage.
+ * City pages use CitySWRegister instead with city-specific scope.
+ */
 export default function SWRegister() {
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    // Skip registration on city pages - they use CitySWRegister
+    const pathname = window.location.pathname;
+    if (pathname.startsWith('/packs/')) {
+      return;
+    }
       
       // 1. Handle Controller Changes
       // This ensures that if the SW is updated in the background, 

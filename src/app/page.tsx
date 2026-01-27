@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { getAllPacks, getPack } from '../../scripts/offlineDB';
 import { TravelPack } from '@/types/travel';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { normalizeCityName } from '@/lib/cities';
 import TravelPackCitySelector from '@/components/TravelPackCitySelector';
 import Footer from '@/components/Footer';
 
 export default function Home() {
+  const router = useRouter();
   const [initialPack, setInitialPack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(true);
   const { isStandalone } = usePWAInstall();
@@ -16,25 +19,40 @@ export default function Home() {
   useEffect(() => {
     async function checkVault() {
       try {
-        // If standalone mode, try to recover from URL path first (offline recovery)
+        // If standalone mode, redirect to installed city pack
         if (isStandalone && typeof window !== 'undefined') {
           const path = window.location.pathname;
-          // Check if path indicates a city (e.g., /packs/paris or query param)
+          
+          // If already on a city pack page, let it handle itself
+          if (path.startsWith('/packs/')) {
+            setLoading(false);
+            return;
+          }
+          
+          // Try to get the installed city from URL or IndexedDB
           const urlParams = new URLSearchParams(window.location.search);
           const cityParam = urlParams.get('city');
           
           if (cityParam) {
-            // Try to load specific city from IndexedDB
             const cityPack = await getPack(cityParam);
             if (cityPack) {
-              setInitialPack(cityPack);
-              setLoading(false);
-              return; // Bypass network, use offline data
+              // Redirect to city pack page
+              const normalizedCity = normalizeCityName(cityParam);
+              router.push(`/packs/${normalizedCity}`);
+              return;
             }
+          }
+          
+          // Try to get most recent pack and redirect
+          const saved = await getAllPacks();
+          if (saved && saved.length > 0) {
+            const normalizedCity = normalizeCityName(saved[0].city);
+            router.push(`/packs/${normalizedCity}`);
+            return;
           }
         }
         
-        // Default: Load most recent pack
+        // Default: Load most recent pack (non-standalone mode)
         const saved = await getAllPacks();
         if (saved && saved.length > 0) {
           // Properly typed - getAllPacks returns TravelPack[]
@@ -66,10 +84,19 @@ export default function Home() {
     return () => {
       window.removeEventListener('vault-sync-complete', handleVaultSync);
     };
-  }, []);
+  }, [isStandalone, router]);
 
   // Show minimal loading state (prevents flash of empty content)
   if (loading) {
+    return (
+      <main className="min-h-screen bg-white p-4 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  // In standalone mode, don't show homepage - should redirect to city pack
+  if (isStandalone) {
     return (
       <main className="min-h-screen bg-white p-4 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />

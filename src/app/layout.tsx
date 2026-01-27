@@ -18,7 +18,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Tactical Vault',
   description: 'Offline-First Tactical Travel Intelligence',
-  manifest: '/manifest.json',
+  // NOTE: No manifest here - manifests are injected only on city pack pages
+  // Homepage should NOT have a manifest to prevent full app installation
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
