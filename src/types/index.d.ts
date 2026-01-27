@@ -1,26 +1,13 @@
 /**
  * TypeScript type definitions for Travel Packs MVP
+ * 
+ * NOTE: The canonical TravelPack type is defined in @/types/travel.ts
+ * This file contains legacy and alternative type definitions.
  */
-
-export interface City {
-  id: string;
-  name: string;
-  country: string;
-  countryCode?: string;
-  latitude?: number;
-  longitude?: number;
-  thumbnailUrl?: string;
-}
-
-export interface SimplePack {
-  city: string;
-  activities: string[];
-  restaurants: string[];
-  tips: string[];
-}
 
 /**
  * High-value offline-first travel pack structure
+ * Used by transformTravelInsights and packPrioritization utilities
  */
 export interface OfflineTravelPack {
   city: string;
@@ -38,25 +25,23 @@ export interface OfflineTravelPack {
   offlineTips: string[];
 }
 
-/**
- * Travel Pack data type for city packs
- * Used for database/API integration with strong typing
- */
-export interface TravelPack {
-  city: string;
-  activities: string[];
-  restaurants?: string[];
-  tips?: string[];
-  maps?: string[];
+// Legacy types - kept for backward compatibility but not actively used
+// The canonical TravelPack type is in @/types/travel.ts
+export interface City {
+  id: string;
+  name: string;
+  country: string;
+  countryCode?: string;
+  latitude?: number;
+  longitude?: number;
+  thumbnailUrl?: string;
 }
 
-/**
- * Pack download tracking type
- * Tracks when a pack was downloaded for offline use
- */
-export interface PackDownload {
-  pack: TravelPack;
-  downloadedAt: string;
+export interface SimplePack {
+  city: string;
+  activities: string[];
+  restaurants: string[];
+  tips: string[];
 }
 
 export interface PackContent {

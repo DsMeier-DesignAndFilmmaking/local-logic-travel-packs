@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TravelPack } from '@/lib/travelPacks';
+import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { usePWAInstall } from '../hooks/usePWAInstall'; 
 

@@ -4,7 +4,7 @@
  * flat, text-heavy structure optimized for PDF, Markdown, or Print.
  */
 
-import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
+import { TravelPack, ProblemCard, MicroSituation } from '@/types/travel';
 
 export interface ExportSection {
   heading: string;    // e.g., "ARRIVAL PROTOCOL"

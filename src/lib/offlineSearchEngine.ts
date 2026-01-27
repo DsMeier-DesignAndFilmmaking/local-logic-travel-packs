@@ -13,7 +13,7 @@
  * No cloud calls, no LLM dependency
  */
 
-import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
+import { TravelPack, ProblemCard, MicroSituation } from '@/types/travel';
 import { getTier1Pack } from './offlineStorage';
 import { checkTravelSignalFromTokens } from './travelSignalGuard';
 import { extractQueryTokens } from './transcriptNormalizer';

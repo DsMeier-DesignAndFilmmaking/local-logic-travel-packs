@@ -5,7 +5,7 @@
  * optimized for voice queries.
  */
 
-import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
+import { TravelPack, ProblemCard, MicroSituation } from '@/types/travel';
 import { OfflineFirstPackEntry, OfflineFirstTravelPack, TimeOfDay, UrgencyLevel } from './offlineFirstSchema';
 
 /**

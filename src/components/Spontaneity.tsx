@@ -1,38 +1,26 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { TravelPack } from '@/lib/travelPacks';
+import React from 'react';
+import { SUPPORTED_CITIES } from '@/lib/cities';
 
 interface SpontaneityProps {
-  pack: TravelPack | null;
+  onCitySelect: (cityName: string) => void;
 }
 
-export default function Spontaneity({ pack }: SpontaneityProps) {
-  const [shouldRender, setShouldRender] = useState(false);
-
-  useEffect(() => {
-    // Only allow this component to show if after 500ms 
-    // there is still no pack loaded. This prevents the "flash".
-    const timer = setTimeout(() => {
-      if (!pack) {
-        setShouldRender(true);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [pack]);
-
-  // 1. HARD GATE: If a pack exists, never show.
-  if (pack && pack.city) return null;
-
-  // 2. DELAYED GATE: Don't show anything until we are sure no pack is coming.
-  if (!shouldRender) return null;
-
+const Spontaneity: React.FC<SpontaneityProps> = ({ onCitySelect }) => {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-10 mb-10 animate-in fade-in duration-700">
-       {/* ... rest of your Spontaneity UI code ... */}
-       <h3 className="text-2xl font-extrabold text-slate-900 mb-2">Spontaneity & Moments</h3>
-       <p>Select a destination above to activate your vault.</p>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
+      {SUPPORTED_CITIES.map((cityName) => (
+        <button
+          key={cityName}
+          onClick={() => onCitySelect(cityName)}
+          className="flex items-center justify-center px-3 sm:px-4 py-3 sm:py-4 min-h-[44px] bg-white hover:bg-gray-50 text-gray-900 text-xs sm:text-sm font-bold rounded-xl sm:rounded-2xl transition-all border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 active:scale-95"
+        >
+          <span className="text-center leading-tight">{cityName}</span>
+        </button>
+      ))}
     </div>
   );
-}
+};
+
+export default Spontaneity;

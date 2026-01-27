@@ -1,6 +1,6 @@
 'use client';
 
-import { MicroSituation } from '@/lib/travelPacks';
+import { MicroSituation } from '@/types/travel';
 
 interface MicroSituationViewProps {
   cardHeadline: string;

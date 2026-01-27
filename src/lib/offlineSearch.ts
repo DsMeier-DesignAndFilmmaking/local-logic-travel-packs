@@ -19,7 +19,7 @@
 
 
 import { getTier1Pack } from './offlineStorage';
-import type { TravelPack } from './travelPacks';
+import type { TravelPack } from '@/types/travel';
 import { quickSearch, SearchOptions as EngineSearchOptions } from './offlineSearchEngine';
 import type { SearchResult as EngineSearchResult } from './offlineSearchEngine';
 import {

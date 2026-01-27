@@ -8,7 +8,7 @@
  * See VOICE_MATCH_FLOW.md for the flow and example mappings.
  */
 
-import type { TravelPack } from './travelPacks';
+import type { TravelPack } from '@/types/travel';
 import { extractQueryTokens } from './transcriptNormalizer';
 import { getQueryConcepts } from './situationalPhrases';
 import type { SituationConcept } from './situationalPhrases';

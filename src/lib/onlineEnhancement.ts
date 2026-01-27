@@ -16,7 +16,7 @@
 import { ConnectivityState } from './connectivity';
 import { SearchResult } from './offlineSearchEngine';
 import { getTier1Pack } from './offlineStorage';
-import { TravelPack } from './travelPacks';
+import { TravelPack } from '@/types/travel';
 
 export interface EnhancedResult extends SearchResult {
   enhanced: boolean;

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { TravelPack } from '@/lib/travelPacks';
+import { useState, useEffect } from 'react';
+import { TravelPack } from '@/types/travel';
+import { savePack, getPack } from '../../scripts/offlineDB';
 
 interface OfflineDownloadProps {
   pack: TravelPack;
@@ -9,6 +10,62 @@ interface OfflineDownloadProps {
 
 export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+
+  // Check if pack is already saved on mount
+  useEffect(() => {
+    async function checkSaved() {
+      if (!pack?.city) return;
+      try {
+        const existing = await getPack(pack.city);
+        if (existing) {
+          setIsSaved(true);
+          setIsVerified(true);
+        }
+      } catch (err) {
+        console.error('DB Check Error:', err);
+      }
+    }
+    checkSaved();
+  }, [pack?.city]);
+
+  // Handle saving full pack to IndexedDB
+  const handleSaveToVault = async () => {
+    if (isSaving || isSaved) return;
+    
+    setIsSaving(true);
+    try {
+      const timestamp = new Date().toISOString();
+      const packToSave: TravelPack = {
+        ...pack,
+        downloadedAt: timestamp,
+        offlineReady: true,
+      };
+
+      // Save ENTIRE tiered pack to IndexedDB
+      await savePack(packToSave);
+
+      // Broadcast sync event for page.tsx hydration
+      window.dispatchEvent(new CustomEvent('vault-sync-complete', {
+        detail: { city: pack.city, timestamp }
+      }));
+
+      setIsSaved(true);
+      setIsVerified(true);
+      
+      // Show verified badge for 3 seconds, then keep it visible
+      setTimeout(() => {
+        // Badge stays visible
+      }, 3000);
+    } catch (err) {
+      console.error('Save error:', err);
+      alert('Failed to save pack. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleExport = () => {
     setIsExporting(true);
@@ -88,25 +145,71 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   };
 
   return (
-    <div className="p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-inner">
-      <div className="mb-4">
-        <h4 className="text-white text-xs font-black uppercase tracking-widest">Emergency Backup</h4>
-        <p className="text-slate-500 text-[10px] font-medium leading-relaxed">
-          Generate a single, portable HTML file that contains your tactical data. Use this as a fallback for devices without browser storage support.
-        </p>
-      </div>
-      <button 
-        onClick={handleExport}
-        disabled={isExporting}
-        className="w-full py-4 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
-      >
-        {isExporting ? (
+    <div className="space-y-4">
+      {/* Main Download Button - Saves Full Pack to IndexedDB */}
+      <div className="p-4 sm:p-6 bg-slate-900 rounded-xl sm:rounded-3xl border border-slate-800 shadow-inner">
+        <div className="mb-4 flex items-center justify-between">
+          <div>
+            <h4 className="text-white text-xs sm:text-sm font-black uppercase tracking-widest">
+              Offline Vault
+            </h4>
+            <p className="text-slate-400 text-[10px] sm:text-xs font-medium leading-relaxed mt-1">
+              Save all {pack.tiers ? Object.keys(pack.tiers).length : 0} tiers for offline access
+            </p>
+          </div>
+          {isVerified && (
+            <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-lg">
+              <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
+                Verified
+              </span>
+            </div>
+          )}
+        </div>
+        <button 
+          onClick={handleSaveToVault}
+          disabled={isSaving || isSaved}
+          className="w-full py-3 sm:py-4 min-h-[44px] bg-white hover:bg-slate-100 disabled:bg-slate-700 disabled:text-slate-400 text-slate-900 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          {isSaving ? (
             <>
-                <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                PREPARING FILE...
+              <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+              SAVING...
             </>
-        ) : 'EXPORT STANDALONE HTML'}
-      </button>
+          ) : isSaved ? (
+            <>
+              <span>✓</span>
+              SAVED TO VAULT
+            </>
+          ) : (
+            'SAVE FOR OFFLINE ACCESS'
+          )}
+        </button>
+      </div>
+
+      {/* HTML Export (Secondary Action) */}
+      <div className="p-4 sm:p-6 bg-slate-50 rounded-xl sm:rounded-3xl border border-slate-200">
+        <div className="mb-4">
+          <h4 className="text-slate-900 text-xs sm:text-sm font-black uppercase tracking-widest">
+            Emergency Backup
+          </h4>
+          <p className="text-slate-600 text-[10px] sm:text-xs font-medium leading-relaxed mt-1">
+            Export as standalone HTML file for devices without browser storage
+          </p>
+        </div>
+        <button 
+          onClick={handleExport}
+          disabled={isExporting}
+          className="w-full py-3 sm:py-4 min-h-[44px] bg-slate-900 hover:bg-slate-800 disabled:bg-slate-400 text-white rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
+        >
+          {isExporting ? (
+            <>
+              <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              PREPARING FILE...
+            </>
+          ) : 'EXPORT HTML FILE'}
+        </button>
+      </div>
     </div>
   );
 }

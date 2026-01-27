@@ -4,7 +4,7 @@
  * Offline-first: Tier 1 content is always cached and available offline
  */
 
-import { TravelPack } from './travelPacks';
+import { TravelPack } from '@/types/travel';
 
 const STORAGE_KEY = 'travel-packs';
 const TIER1_STORAGE_KEY = 'travel-packs-tier1'; // Separate key for Tier 1 offline access

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { TravelPack } from '@/lib/travelPacks';
+import { TravelPack } from '@/types/travel';
 import MicroSituationView from './MicroSituationView';
 
 interface ProblemFirstNavigationProps {

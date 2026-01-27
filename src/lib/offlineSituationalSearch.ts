@@ -34,7 +34,7 @@
  * not time-sensitive. matchType='fallback', relevanceScore=0, matchedActions=[].
  */
 
-import type { MicroSituation, TravelPack } from './travelPacks';
+import type { MicroSituation, TravelPack } from '@/types/travel';
 import { buildOfflineSearchIndex } from './offlineSearchIndex';
 import type { OfflineSearchIndexItem } from './offlineSearchIndex';
 import type { SituationConcept } from './situationalPhrases';

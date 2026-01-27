@@ -20,15 +20,16 @@ export type SupportedCity = typeof SUPPORTED_CITIES[number];
 
 /**
  * HELPER: Normalize city names for consistent DB and File lookup.
- * Example: "New York City" -> "new_york_city"
+ * Example: "New York City" -> "new-york-city"
+ * Note: Uses hyphens to match existing JSON file naming convention
  */
 export const normalizeCityName = (city: string): string => {
   return city
     .toLowerCase()
     .trim()
     .split(',')[0]          // Remove country if present (e.g., "Paris, France")
-    .replace(/\s+/g, '_')   // Replace spaces with underscores
-    .replace(/[^\w]/g, ''); // Remove special characters
+    .replace(/\s+/g, '-')   // Replace spaces with hyphens (matches file naming)
+    .replace(/[^\w-]/g, ''); // Remove special characters but keep hyphens
 };
 
 /**

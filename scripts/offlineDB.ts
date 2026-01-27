@@ -1,14 +1,17 @@
 // src/scripts/offlineDB.ts
 import { openDB, DBSchema } from 'idb';
+import { TravelPack } from '@/types/travel';
+import { normalizeCityName } from '@/lib/cities';
+
+interface StoredTravelPack extends TravelPack {
+  citySlug: string;
+  downloadedAt: string;
+}
 
 interface TravelPackDB extends DBSchema {
   packs: {
-    key: string; // city name (lowercase/slugified)
-    value: {
-      city: string;
-      downloadedAt: string;
-      [key: string]: any; // Allows for the rest of your pack data
-    };
+    key: string; // citySlug (normalized city name)
+    value: StoredTravelPack;
   };
 }
 
@@ -36,53 +39,75 @@ export async function getDB() {
 
 /**
  * Saves a pack with a unique citySlug key.
+ * Stores the ENTIRE tiered pack structure for offline access.
  */
-export async function savePack(pack: any) {
-  if (!pack?.city) return;
+export async function savePack(pack: TravelPack): Promise<void> {
+  if (!pack?.city) {
+    console.warn('Cannot save pack: missing city');
+    return;
+  }
   
   const db = await getDB();
-  const citySlug = pack.city.toLowerCase().trim();
+  const citySlug = normalizeCityName(pack.city);
   
-  const packWithMeta = {
+  const packWithMeta: StoredTravelPack = {
     ...pack,
     citySlug, // This acts as the unique ID for the keyPath
-    downloadedAt: pack.downloadedAt || new Date().toISOString()
+    downloadedAt: pack.downloadedAt || new Date().toISOString(),
+    offlineReady: true,
   };
   
-  return db.put(STORE_NAME, packWithMeta);
+  await db.put(STORE_NAME, packWithMeta);
 }
 
 /**
  * Retrieves a specific pack by city name.
+ * Uses normalized city name to match the citySlug keyPath.
  */
-export async function getPack(city: string) {
+export async function getPack(city: string): Promise<TravelPack | null> {
   if (!city) return null;
   const db = await getDB();
-  return db.get(STORE_NAME, city.toLowerCase().trim());
+  const citySlug = normalizeCityName(city);
+  const stored = await db.get(STORE_NAME, citySlug);
+  if (!stored) return null;
+  
+  // Return as TravelPack (remove citySlug from the returned object)
+  const { citySlug: _, ...pack } = stored;
+  return pack as TravelPack;
 }
 
 /**
  * Retrieves all packs, sorted by most recent.
+ * Returns TravelPack objects (citySlug removed).
  */
-export async function getAllPacks() {
+export async function getAllPacks(): Promise<TravelPack[]> {
   try {
     const db = await getDB();
     const all = await db.getAll(STORE_NAME);
     
     if (!all || all.length === 0) return [];
 
-    return all.sort((a, b) => {
+    const sorted = all.sort((a, b) => {
       const dateA = new Date(a.downloadedAt || 0).getTime();
       const dateB = new Date(b.downloadedAt || 0).getTime();
       return dateB - dateA;
     });
+
+    // Remove citySlug from returned objects
+    return sorted.map(({ citySlug: _, ...pack }) => pack as TravelPack);
   } catch (error) {
     console.error("DB Retrieval Error:", error);
     return [];
   }
 }
 
-export async function deletePack(city: string) {
+/**
+ * Deletes a pack by city name.
+ * Uses normalized city name to match the citySlug keyPath.
+ */
+export async function deletePack(city: string): Promise<void> {
+  if (!city) return;
   const db = await getDB();
-  await db.delete(STORE_NAME, city.toLowerCase().trim());
+  const citySlug = normalizeCityName(city);
+  await db.delete(STORE_NAME, citySlug);
 }

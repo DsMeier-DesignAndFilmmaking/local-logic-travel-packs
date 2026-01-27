@@ -9,7 +9,7 @@ import { ConnectivityState, checkConnectivityNonBlocking } from './connectivity'
 import { quickSearch, SearchResult, SearchOptions } from './offlineSearchEngine';
 import { enhanceSearchResults, EnhancedResult, EnhancementContext, EnhancementOptions } from './onlineEnhancement';
 import { getTier1Pack } from './offlineStorage';
-import { TravelPack } from './travelPacks';
+import { TravelPack } from '@/types/travel';
 
 export interface IntegratedSearchOptions extends SearchOptions {
   enableEnhancement?: boolean;

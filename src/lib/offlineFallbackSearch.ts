@@ -17,7 +17,7 @@
  * 7. Title/content (fuzzy match)
  */
 
-import { TravelPack, ProblemCard, MicroSituation } from './travelPacks';
+import { TravelPack, ProblemCard, MicroSituation } from '@/types/travel';
 import { getTier1Pack } from './offlineStorage';
 import { ConnectivityState } from './connectivity';
 import { checkTravelSignal, TravelSignalGuardResult } from './travelSignalGuard';

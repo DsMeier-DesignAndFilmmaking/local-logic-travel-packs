@@ -5,7 +5,7 @@
  * NOT stored as source of truth — compute from pack when needed (e.g. at load or when building a cache).
  */
 
-import type { TravelPack, TravelPackTier } from './travelPacks';
+import type { TravelPack, TravelPackTier } from '@/types/travel';
 
 /** Tier key in pack.tiers (tier1, tier2, tier3, tier4) */
 export type TierKey = 'tier1' | 'tier2' | 'tier3' | 'tier4';
