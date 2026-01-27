@@ -2,6 +2,10 @@
 
 import { useEffect } from 'react';
 
+/**
+ * Tactical Vault Service Worker Registration
+ * Forces immediate caching of city packs for 100% offline use.
+ */
 export default function SWRegister() {
   useEffect(() => {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
@@ -9,26 +13,36 @@ export default function SWRegister() {
     const registerSW = async () => {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
-        console.log('✅ SW Active:', registration.scope);
+        
+        // FUNCTION: Send the cache command to the worker
+        const sendCacheMessage = () => {
+          if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+              type: 'CACHE_URL',
+              payload: window.location.href
+            });
+            console.log('📡 Tactical Sync: Caching current city pack...');
+          }
+        };
 
-        // PROACTIVE FIX: Tell the SW to cache the current URL immediately
-        // This is what makes the "City Pack" work offline instantly.
+        // 1. If already active and controlling the page, send message immediately
         if (registration.active) {
-          registration.active.postMessage({
-            type: 'CACHE_URL',
-            payload: window.location.href
-          });
+          sendCacheMessage();
         }
 
-        // Handle updates
+        // 2. If a new worker is installing (first visit), wait for it to activate
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              console.log('🔄 New Tactical Update Available.');
+            if (newWorker.state === 'activated') {
+              console.log('✅ SW Activated: Claiming control...');
+              // Force the new service worker to take control immediately
+              sendCacheMessage();
             }
           });
         });
+
+        console.log('✅ SW Registered:', registration.scope);
       } catch (error) {
         console.error('⚠️ SW Error:', error);
       }
