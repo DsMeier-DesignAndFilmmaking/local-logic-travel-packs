@@ -33,6 +33,15 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* When the user "Shares to Home Screen", the browser enters 'standalone' mode.
+   This CSS will hide the button only in the downloaded app version.
+*/
+@media (display-mode: standalone) {
+  .back-to-home-button-selector { 
+    display: none !important;
+  }
+}
+
 /* --- Professional UI Elements --- */
 
 /* Modern Card Hover */

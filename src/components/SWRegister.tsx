@@ -2,29 +2,39 @@
 
 import { useEffect } from 'react';
 
-
-
-/**
- * Global Service Worker Registration (HOMEPAGE ONLY)
- */
 export default function SWRegister() {
   useEffect(() => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-      return;
-    }
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) return;
 
-    const pathname = window.location.pathname;
+    const registerSW = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+        console.log('✅ SW Active:', registration.scope);
 
-    // 🚫 Never register root SW on city pages
-    if (pathname.startsWith('/packs/')) {
-      console.log('⛔ Root SW blocked on city route');
-      return;
-    }
+        // PROACTIVE FIX: Tell the SW to cache the current URL immediately
+        // This is what makes the "City Pack" work offline instantly.
+        if (registration.active) {
+          registration.active.postMessage({
+            type: 'CACHE_URL',
+            payload: window.location.href
+          });
+        }
 
-    // 🚫 Root SW registration removed
-    // Only CitySWRegister.tsx should register service workers for /packs/<city> routes
-    // Homepage does not need a service worker
-    console.log('ℹ️ Root SW registration skipped - using city-specific SWs only');
+        // Handle updates
+        registration.addEventListener('updatefound', () => {
+          const newWorker = registration.installing;
+          newWorker?.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              console.log('🔄 New Tactical Update Available.');
+            }
+          });
+        });
+      } catch (error) {
+        console.error('⚠️ SW Error:', error);
+      }
+    };
+
+    registerSW();
   }, []);
 
   return null;

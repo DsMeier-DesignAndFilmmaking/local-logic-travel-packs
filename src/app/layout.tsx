@@ -1,9 +1,8 @@
-import type { Metadata, Viewport } from "next";
+// 1. REMOVE "use client" from the top line
+import { Metadata } from "next"; 
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-// FIX 1: Import from the dedicated component, NOT page.tsx
-import SWRegister from '@/components/SWRegister'; 
+import SWRegister from "@/components/SWRegister"; // Import the unified component
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -15,42 +14,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// 2. Metadata belongs in Server Components (keep this here!)
 export const metadata: Metadata = {
   title: 'Tactical Vault',
   description: 'Offline-First Tactical Travel Intelligence',
-  // NOTE: No manifest here - manifests are injected only on city pack pages
-  // Homepage should NOT have a manifest to prevent full app installation
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'Tactical Vault',
-    // Startup images can be added here for a better launch experience
-  },
-  formatDetection: {
-    telephone: false, // Prevents Safari from making numbers blue/clickable in tactical data
-  },
 };
 
-export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: "#000000",
-  viewportFit: 'cover', // FIX 2: Essential for iPhone SE notch/home-button handling
-};
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <head>
-        {/* FIX 3: Clean up redundant head tags. Next.js Metadata handles most of this. 
-            We keep the manual apple-touch-icon just to be 100% sure for older iOS versions. */}
-        <link rel="apple-touch-icon" href="/icon-192x192.png" />
-      </head>
-      <body className="antialiased bg-white text-slate-900">
-        {/* SWRegister here ensures the service worker is active across all possible routes */}
-        <SWRegister />
+    <html lang="en">
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        {/* 3. The Client logic lives inside this component only */}
+        <SWRegister /> 
         {children}
       </body>
     </html>

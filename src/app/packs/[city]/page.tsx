@@ -13,8 +13,8 @@ import DownloadPack from '@/components/DownloadPack';
 import InstallApp from '@/components/InstallApp';
 import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 import Footer from '@/components/Footer';
-import CitySWRegister from '@/components/CitySWRegister';
 import BackButton from '@/components/BackButton';
+import SWRegister from '@/components/SWRegister';
 
 /**
  * City-Specific Pack Page
@@ -169,10 +169,7 @@ export default function CityPackPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white p-4 flex flex-col">
-      {/* Register city-specific service worker */}
-      {pack && <CitySWRegister city={pack.city} />}
-      
+    <main className="min-h-screen bg-white p-4 flex flex-col">      
       {/* Download Required Modal */}
       <DownloadRequiredModal
         isOpen={showDownloadModal}
