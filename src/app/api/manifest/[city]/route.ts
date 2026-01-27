@@ -1,27 +1,22 @@
-// src/app/api/manifest/[city]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { normalizeCityName } from '@/lib/cities';
 import { getTravelPackForCity } from '@/lib/travelPacks';
 
 /**
  * Dynamic Manifest Generator for City-Specific PWA Installations
- * 
+ *
  * Generates a unique manifest for each city to enable city-specific
  * "Add to Home Screen" installations on iOS.
- * 
+ *
  * Example: /api/manifest/bangkok
- * Returns manifest with:
- * - start_url: /packs/bangkok?source=a2hs
- * - scope: /packs/bangkok
- * - name: "Bangkok Travel Pack"
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { city: string } }
+  context: { params: { city: string } }
 ) {
   try {
-    const cityParam = params.city;
-    
+    const cityParam = context.params?.city;
+
     if (!cityParam) {
       return NextResponse.json(
         { error: 'City parameter is required' },
@@ -29,13 +24,14 @@ export async function GET(
       );
     }
 
-    // Normalize city name (e.g., "New York City" -> "new-york-city")
+    // Normalize city name (e.g., "New York City" → "new-york-city")
     const normalizedCity = normalizeCityName(cityParam);
-    
+
     // Verify the city has a travel pack
-    // Try both the normalized name and the original param
-    const pack = getTravelPackForCity(cityParam) || getTravelPackForCity(normalizedCity);
-    
+    const pack =
+      getTravelPackForCity(cityParam) ||
+      getTravelPackForCity(normalizedCity);
+
     if (!pack) {
       return NextResponse.json(
         { error: `Travel pack not found for city: ${cityParam}` },
@@ -43,10 +39,10 @@ export async function GET(
       );
     }
 
-    // Use the pack's actual city name for display
+    // Use the pack's display name
     const displayCityName = pack.city;
-    
-    // Generate city-specific manifest
+
+    // City-specific manifest
     const manifest = {
       name: `${displayCityName} Travel Pack`,
       short_name: displayCityName,
@@ -64,39 +60,38 @@ export async function GET(
           src: `/icons/${normalizedCity}-192.png`,
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any'
+          purpose: 'any',
         },
         {
           src: `/icons/${normalizedCity}-192.png`,
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'maskable'
+          purpose: 'maskable',
         },
         {
           src: `/icons/${normalizedCity}-512.png`,
           sizes: '512x512',
-          type: 'image/png'
+          type: 'image/png',
         },
-        // Fallback to default icons if city-specific icons don't exist
+        // Fallback icons
         {
           src: '/travel-pack-icon-192.png',
           sizes: '192x192',
           type: 'image/png',
-          purpose: 'any'
+          purpose: 'any',
         },
         {
           src: '/travel-pack-icon-512.png',
           sizes: '512x512',
-          type: 'image/png'
-        }
-      ]
+          type: 'image/png',
+        },
+      ],
     };
 
-    // Return manifest with proper content type
     return NextResponse.json(manifest, {
       headers: {
         'Content-Type': 'application/manifest+json',
-        'Cache-Control': 'public, max-age=3600, s-maxage=3600', // Cache for 1 hour
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
     });
   } catch (error) {
