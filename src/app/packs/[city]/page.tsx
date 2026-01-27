@@ -227,8 +227,8 @@ export default function CityPackPage() {
 <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">
   <div className="p-8 sm:p-12">
     
-    {/* Minimalist Header */}
-    <header className="max-w-2xl mb-12">
+    {/* Minimalist Header - Removed max-width to allow full-width text expansion */}
+    <header className="w-full mb-12">
       <div className="flex items-center gap-3 mb-4">
         <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
         <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-500">
@@ -236,47 +236,60 @@ export default function CityPackPage() {
         </h3>
       </div>
       <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tighter leading-tight mb-4">
-        Secure Your Intelligence
+        Download For Offline Use
       </h2>
-      <p className="text-slate-400 text-sm sm:text-base leading-relaxed">
-        Select your deployment method to ensure 100% access in zero-connectivity environments.
+      {/* Expanded to full width of parent container */}
+      <p className="text-slate-400 text-sm sm:text-base leading-relaxed w-full">
+        Select your deployment method to ensure 100% access in zero-connectivity environments. Follow the protocol for your current device to sync intelligence to your local hardware.
       </p>
     </header>
 
+    {/* Responsive Grid */}
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
-      {/* BLOCK 1: DESKTOP DOWNLOAD (Save to Device) */}
-      <div className="bg-white rounded-3xl p-8 flex flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
-      <div className="bg-white border-2 border-slate-200 p-8 rounded-3xl flex flex-col justify-between">
-    <div>
-      <h4 className="text-slate-900 font-black uppercase tracking-tighter text-2xl mb-2">Desktop Vault</h4>
-      <p className="text-slate-600 text-sm mb-6">Archive this intelligence to your local hardware. Open via any browser without an internet connection.</p>
-    </div>
-    {/* Triggers your handleExport logic */}
-    <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-bold uppercase tracking-widest text-xs">
-      Save to Local Disk
-    </button>
-  </div>
+      {/* BLOCK 1: DESKTOP VAULT (Hidden on Mobile, Visible on Desktop/Laptop) */}
+      <div className="hidden lg:flex bg-white rounded-3xl p-8 flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest border border-slate-100 px-2 py-1 rounded">
+              Desktop Protocol
+            </span>
+          </div>
+          <h4 className="text-slate-900 font-black uppercase tracking-tighter text-2xl mb-2">
+            Desktop Vault
+          </h4>
+          <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+            Archive this intelligence to your local hardware. Open via any browser without an internet connection.
+          </p>
+        </div>
 
-        {/* Triggers OS Save Dialog via OfflineDownload component */}
         <div className="mt-auto">
           <OfflineDownload pack={pack} />
         </div>
       </div>
 
-      {/* BLOCK 2: MOBILE INSTALL (Add to Home Screen) */}
-      <div className="bg-slate-900 p-8 rounded-3xl flex flex-col justify-between border border-slate-800">
-    <div>
-      <h4 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">Mobile Install</h4>
-      <p className="text-slate-400 text-sm mb-6">Deploy a dedicated app icon to your home screen. Verified for airplane mode and low-signal sectors.</p>
-    </div>
-    {/* Triggers the Mobile Guide/InstallApp logic */}
-    <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-      <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center">
-        Tap "Share" then "Add to Home Screen"
-      </p>
-    </div>
-  </div>
+      {/* BLOCK 2: MOBILE INSTALL (Always visible) */}
+      <div className="bg-slate-800/40 p-8 rounded-3xl flex flex-col justify-between border border-slate-800 transition-all hover:bg-slate-800/60">
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-700 px-2 py-1 rounded">
+              Mobile Protocol
+            </span>
+          </div>
+          <h4 className="text-white font-black uppercase tracking-tighter text-2xl mb-2">
+            Mobile Install
+          </h4>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed">
+            Deploy a dedicated app icon to your home screen. Verified for airplane mode and low-signal sectors.
+          </p>
+        </div>
+        
+        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
+          <p className="text-emerald-500 text-[10px] font-black uppercase tracking-widest text-center">
+            In the browser address bar, Find and Tap "Share" then "Add to Home Screen"
+          </p>
+        </div>
+      </div>
 
     </div>
 
