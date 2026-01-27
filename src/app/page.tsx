@@ -2,56 +2,29 @@
 
 import { useState, useEffect } from 'react';
 import { getAllPacks } from '../../scripts/offlineDB';
-import { TravelPack } from '@/lib/travelPacks';
+import { TravelPack } from '@/types/travel';
 import TravelPackCitySelector from '@/components/TravelPackCitySelector';
-import Spontaneity from '@/components/Spontaneity';
 
 export default function Home() {
-  const [recoveredPack, setRecoveredPack] = useState<TravelPack | null>(null);
-  const [isRecovering, setIsRecovering] = useState(true);
+  const [initialPack, setInitialPack] = useState<TravelPack | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function recoverVault() {
-      try {
-        // 1. Check IndexedDB for any saved assets
-        const savedPacks = await getAllPacks();
-        
-        if (savedPacks && savedPacks.length > 0) {
-          // 2. Tactical Recovery: Load the most recent city
-          console.log("🛡️ Vault: Asset recovered from offline storage");
-          setRecoveredPack(savedPacks[0] as unknown as TravelPack);
-        }
-      } catch (err) {
-        console.error("Vault Recovery Failed", err);
-      } finally {
-        // 3. Stop loading spinner once DB check is done
-        setIsRecovering(false);
+    async function checkVault() {
+      const saved = await getAllPacks();
+      if (saved && saved.length > 0) {
+        setInitialPack(saved[0] as unknown as TravelPack);
       }
+      setLoading(false);
     }
-
-    recoverVault();
+    checkVault();
   }, []);
 
-  if (isRecovering) {
-    return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center gap-4">
-        <div className="w-6 h-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">Booting Vault...</p>
-      </div>
-    );
-  }
+  if (loading) return null; // Or a simple spinner
 
   return (
-    <main className="min-h-screen bg-white pb-20">
-      {/* If a pack was recovered, we pass it as 'initialPack'.
-          If NOT, we show Spontaneity until they search for something.
-      */}
-      <div className="pt-10">
-        <TravelPackCitySelector initialPack={recoveredPack} />
-        
-        {/* Only show Spontaneity if there is no active city loaded */}
-        {!recoveredPack && <Spontaneity pack={recoveredPack as any} />}
-      </div>
+    <main className="min-h-screen bg-white p-4">
+      <TravelPackCitySelector initialPack={initialPack} />
     </main>
   );
 }
