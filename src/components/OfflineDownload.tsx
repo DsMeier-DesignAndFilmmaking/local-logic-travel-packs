@@ -62,25 +62,18 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
     const handleMessage = (event: MessageEvent) => {
       const { type, payload } = event.data || {};
       if (type !== 'SYNC_PROGRESS') return;
-
-      // We prioritize the progress of the current city pack
+  
       if (payload.city === pack.city) {
-        setSyncProgress(payload.progress);
+        // Start the bar at at least 15% once the SW confirms it's working
+        const actualProgress = Math.max(payload.progress, 15);
+        setSyncProgress(actualProgress);
         
         if (payload.progress === 100) {
-          // Short delay to let the disk write finalize before verifying
-          setTimeout(() => {
-            verifyVault();
-          }, 1000);
+          setTimeout(() => verifyVault(), 1000);
         }
-      } 
-      
-      // If the message is for the 'root', we can log it or show a subtle 'System Ready' toast
-      if (payload.city === 'root' && payload.progress === 100) {
-        console.log('🏗️ App Shell (Root) Secured');
       }
     };
-
+  
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', handleMessage);
     }
