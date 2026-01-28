@@ -3,8 +3,9 @@
 import { useEffect } from 'react';
 
 /**
- * Tactical Vault Service Worker Registration
- * Forces immediate caching of city packs for 100% offline use.
+ * Tactical Vault: Pre-emptive Sync Engine
+ * Ensures city packs are cached in the background while the user 
+ * is still viewing the "Add to Home Screen" instructions.
  */
 export default function SWRegister() {
   useEffect(() => {
@@ -14,37 +15,43 @@ export default function SWRegister() {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
         
-        // FUNCTION: Send the cache command to the worker
-        const sendCacheMessage = () => {
+        // FUNCTION: Trigger the Aggressive Sync
+        const triggerVaultSync = () => {
           if (navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
               type: 'CACHE_URL',
               payload: window.location.href
             });
-            console.log('📡 Tactical Sync: Caching current city pack...');
+            console.log('📡 Vault Sync: Background caching initiated.');
           }
         };
 
-        // 1. If already active and controlling the page, send message immediately
-        if (registration.active) {
-          sendCacheMessage();
+        // 1. If the page is already controlled, sync immediately
+        if (navigator.serviceWorker.controller) {
+          triggerVaultSync();
+        } else {
+          // 2. If not controlled (first visit), wait for the worker to take over
+          navigator.serviceWorker.addEventListener('controllerchange', () => {
+            console.log('🎮 SW Controller acquired. Starting sync...');
+            triggerVaultSync();
+          });
         }
 
-        // 2. If a new worker is installing (first visit), wait for it to activate
+        // 3. Force update check to ensure user has the latest "Shortcuts"
+        registration.update();
+
+        // 4. Handle installation of new versions
         registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          newWorker?.addEventListener('statechange', () => {
-            if (newWorker.state === 'activated') {
-              console.log('✅ SW Activated: Claiming control...');
-              // Force the new service worker to take control immediately
-              sendCacheMessage();
+          const installingWorker = registration.installing;
+          installingWorker?.addEventListener('statechange', () => {
+            if (installingWorker.state === 'activated') {
+              triggerVaultSync();
             }
           });
         });
 
-        console.log('✅ SW Registered:', registration.scope);
       } catch (error) {
-        console.error('⚠️ SW Error:', error);
+        console.error('⚠️ Vault Sync Error:', error);
       }
     };
 

@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   },
   // This tells iOS that your site is a standalone "app"
   appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
+    capable: true, // This is the "Auto-Launch" magic for iOS
+    statusBarStyle: 'black-translucent', // Makes it look native
     title: 'Tactical Vault',
   },
 };
