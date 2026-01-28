@@ -1,201 +1,119 @@
 /**
  * Service Worker - Tactical Vault Offline Engine
- * Strategy: Aggressive Pre-emptive Caching + Core Shell Persistence
+ * Strategy: Manifest-Driven Aggressive Caching
  */
 
-const CACHE_VERSION = 'v2.2'; // Incremented for new logic
+const CACHE_VERSION = 'v2.2';
 const CACHE_PREFIX = 'city-pack-';
 const GLOBAL_CACHE = `tactical-vault-core-${CACHE_VERSION}`;
-const DYNAMIC_CACHE = `tactical-vault-dynamic-api-${CACHE_VERSION}`;
 
-/**
- * CORE ASSETS - The "App Shell"
- * These must be present for the app to launch in Airplane Mode.
- * Ensure these paths match your /public folder exactly.
- */
-const CORE_ASSETS = [
-  '/',
-  '/manifest.json',
-  '/travel-pack-icon-192.png',
-  '/travel-pack-icon-512.png',
-  '/apple-touch-icon.png' // FIXED: Removed ?v=2 to match public folder
-  // NOTE: Dynamic API endpoints (e.g. /api/travel-packs) are intentionally
-  // excluded from CORE_ASSETS and will be cached on-demand via the fetch handler.
-];
+// 1. Helper for City-Specific Caching
+const getCityCacheName = (slug) => `${CACHE_PREFIX}${slug}-${CACHE_VERSION}`;
 
-// 1. Identify City Helper
-function getCityFromPath(pathname) {
-  const match = pathname.match(/^\/packs\/([^\/]+)/);
-  return match ? match[1] : null;
-}
-
-function getCityCacheName(city) {
-  return `${CACHE_PREFIX}${city}-${CACHE_VERSION}`;
-}
-
-// 2. Identify if URL should be cached
-function shouldCache(url) {
-  const pathname = new URL(url).pathname;
-  
-  // Always cache the root and core assets
-  if (pathname === '/' || CORE_ASSETS.includes(pathname)) return true;
-
-  return (
-    pathname.startsWith('/_next/static/') || 
-    pathname.endsWith('.js') || 
-    pathname.endsWith('.css') ||
-    pathname.includes('manifest') ||
-    pathname.match(/^\/packs\/[^\/]+$/) ||
-    pathname.startsWith('/icons/')
-  );
-}
-
-// 3. INSTALL: Pre-cache the "Home" and "Manifest" (Prevents Offline Alert)
+// 2. INSTALL: Pre-cache App Shell
 self.addEventListener('install', (event) => {
-  self.skipWaiting(); // Force the waiting service worker to become the active service worker
-  console.log('🏗️ SW Install: Pre-caching Core Engine');
-  event.waitUntil(
-    caches.open(GLOBAL_CACHE)
-      .then((cache) => cache.addAll(CORE_ASSETS))
-      .catch((error) => {
-        console.error('Error caching core assets during install:', error);
-      })
-  );
   self.skipWaiting();
-});
-
-// 4. ACTIVATE: Cleanup old caches and take control
-self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim()); // Become available to all pages immediately
-  console.log('🚀 SW Activate: Taking Control & Cleaning Caches');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          const isOldCityPack = cacheName.startsWith(CACHE_PREFIX) && !cacheName.includes(CACHE_VERSION);
-          const isOldCore = cacheName.startsWith('tactical-vault-core-') && cacheName !== GLOBAL_CACHE;
-          const isOldDynamic = cacheName.startsWith('tactical-vault-dynamic-api-') && cacheName !== DYNAMIC_CACHE;
-
-          if (isOldCityPack || isOldCore || isOldDynamic) {
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches.open(GLOBAL_CACHE).then((cache) => {
+      return cache.addAll([
+        '/',
+        '/manifest.json',
+        '/travel-pack-icon-192.png',
+        '/travel-pack-icon-512.png',
+        '/apple-touch-icon.png'
+      ]);
+    })
   );
 });
 
-// 5. FETCH: Cache-First Strategy
+// 3. ACTIVATE: Cleanup and Claim
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => 
+      Promise.all(keys.map(key => {
+        if (!key.includes(CACHE_VERSION)) return caches.delete(key);
+      }))
+    ).then(() => self.clients.claim())
+  );
+});
 
+// 4. FETCH: Standard Cache-First with API Network-First fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== location.origin) return;
 
-  // Network-first strategy for dynamic API endpoints with cache fallback.
+  // Tactical API Handling (Network First)
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const responseToCache = response.clone();
-            caches.open(DYNAMIC_CACHE).then((cache) => {
-              cache.put(request, responseToCache);
-            });
-          }
-          return response;
+        .then(res => {
+          const clone = res.clone();
+          caches.open(GLOBAL_CACHE).then(cache => cache.put(request, clone));
+          return res;
         })
-        .catch(() => {
-          // Offline or network error: try cached API response.
-          return caches.match(request).then((cached) => {
-            if (cached) {
-              return cached;
-            }
-
-            // As a last resort for navigations, fall back to the shell.
-            if (request.destination === 'document') {
-              return caches.match('/');
-            }
-
-            return new Response('Offline', { status: 503 });
-          });
-        })
+        .catch(() => caches.match(request))
     );
     return;
   }
 
+  // General Assets (Cache First)
   event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      // Return from cache immediately if found (Prevents network-related alerts)
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-
-      return fetch(request).then((networkResponse) => {
-        if (!networkResponse || networkResponse.status !== 200) {
-          return networkResponse;
+    caches.match(request).then(response => {
+      return response || fetch(request).then(networkRes => {
+        // Logically determine if we should cache this on the fly
+        if (networkRes.status === 200) {
+          const clone = networkRes.clone();
+          caches.open(GLOBAL_CACHE).then(cache => cache.put(request, clone));
         }
-
-        if (shouldCache(url.href)) {
-          const responseToCache = networkResponse.clone();
-          const city = getCityFromPath(url.pathname) || url.searchParams.get('city');
-          const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
-          
-          caches.open(cacheName).then((cache) => {
-            cache.put(request, responseToCache);
-          });
-        }
-
-        return networkResponse;
-      }).catch(() => {
-        // FAILSAFE: Return root if offline and nothing else matches
-        if (request.destination === 'document') {
-           return caches.match('/'); 
-        }
+        return networkRes;
       });
     })
   );
 });
 
-/**
- * 6. MESSAGE: AGGRESSIVE PRE-EMPTIVE SYNC
- * Correctly handles both City Packs and the Root App Shell.
- */
+// 5. THE SYNC ENGINE: Listen for START_OFFLINE_SYNC
 self.addEventListener('message', async (event) => {
-  if (event.data && event.data.type === 'CACHE_URL') {
-    const { payload: urlStr } = event.data;
-    const url = new URL(urlStr, location.origin);
-    const city = getCityFromPath(url.pathname);
-    
-    const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
-    // If it's the root, just cache the root. If it's a city, cache the page + API.
-    const assetsToCache = city ? [urlStr, `/api/pack?city=${city}`] : ['/'];
-    
-    const cache = await caches.open(cacheName);
-    let completed = 0;
+  const { type, payload } = event.data || {};
 
-    for (const asset of assetsToCache) {
+  if (type === 'START_OFFLINE_SYNC') {
+    const { citySlug, assets } = payload;
+    const cacheName = getCityCacheName(citySlug);
+    const cache = await caches.open(cacheName);
+    
+    let completed = 0;
+    const total = assets.length;
+
+    // Report initial engagement
+    await broadcastProgress(citySlug, 15);
+
+    // Process assets in parallel-ish chunks for speed
+    await Promise.all(assets.map(async (url) => {
       try {
-        // We use fetch first to handle redirects/errors gracefully
-        const response = await fetch(asset);
+        const response = await fetch(url, { cache: 'reload' }); // Force fresh fetch
         if (response.ok) {
-          await cache.put(asset, response);
+          await cache.put(url, response);
         }
       } catch (err) {
-        console.warn(`Vault skipping asset: ${asset}`, err);
+        console.error(`Tactical Vault: Failed to secure ${url}`, err);
       } finally {
         completed++;
-        const progress = Math.round((completed / assetsToCache.length) * 100);
-        
-        const clients = await self.clients.matchAll();
-        clients.forEach(client => {
-          client.postMessage({
-            type: 'SYNC_PROGRESS',
-            payload: { city: city || 'root', progress }
-          });
-        });
+        // Scale progress from 15% to 100%
+        const progress = Math.round(15 + ((completed / total) * 85));
+        await broadcastProgress(citySlug, progress);
       }
-    }
+    }));
   }
 });
+
+// Helper to update the UI
+async function broadcastProgress(citySlug, progress) {
+  const clients = await self.clients.matchAll();
+  clients.forEach(client => {
+    client.postMessage({
+      type: 'SYNC_PROGRESS',
+      payload: { citySlug, progress }
+    });
+  });
+}
