@@ -55,15 +55,31 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
 
   // 2. Listen for SW Heartbeats
   useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+  
     const handleMessage = (event: MessageEvent) => {
       const { type, payload } = event.data || {};
-      // CRITICAL: payload.citySlug must match what SW sends
-      if (type === 'SYNC_PROGRESS' && payload.citySlug === citySlug) {
-        setSyncProgress(payload.progress);
-        if (payload.progress === 100) setStatus('SAVED');
+  
+      if (type === 'SYNC_PROGRESS') {
+        // Normalize both slugs to ensure a match (e.g., "Paris" vs "paris")
+        const incomingSlug = payload.citySlug?.toLowerCase();
+        const targetSlug = citySlug?.toLowerCase();
+  
+        if (incomingSlug === targetSlug) {
+          console.log(`Update received: ${payload.progress}%`);
+          setSyncProgress(payload.progress);
+          
+          if (payload.progress === 100) {
+            setStatus('SAVED');
+          }
+        }
       }
     };
+  
     navigator.serviceWorker.addEventListener('message', handleMessage);
+    
+    // Trigger a check: if the SW is already finished, it might not send a message
+    // but we can manually check if it's already active.
     return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
   }, [citySlug]);
 

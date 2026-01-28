@@ -1,6 +1,10 @@
 {
   "city": "Paris",
   "country": "France",
+  "transit": "• CDG → Paris: RER B to Gare du Nord/Châtelet (~€11.45), follow blue RER signs and ignore unofficial taxi offers\n• ORY → Paris: Orlyval + RER B combo or OrlyBus to Denfert-Rochereau, buy tickets at official machines only\n• Official taxis: flat airport–city fares; look for marked ranks and roof lights, no haggling\n• Avoid: random drivers inside arrivals hall and anyone refusing to use the meter inside Paris",
+  "protocol": "• Always start with 'Bonjour, Madame/Monsieur' before asking for anything; it resets interactions in your favor\n• Churches/cathedrals: remove hats, keep shoulders reasonably covered, stay quiet near services\n• Metro: stand right/walk left on escalators; let passengers exit before boarding\n• Tipping: service is included but 5–10% extra or rounding up is a strong 'thank you' for good service",
+  "utility": "• ATMs: use machines attached to major banks (BNP, Société Générale) and always decline conversion offers\n• Pharmacies: look for bright green cross signs; pharmacists can triage basic health issues in English\n• Sunday closures: many supermarkets close or run reduced hours—stock water and snacks the day before\n• Public toilets: carry coins/contactless; use café restrooms after buying a cheap coffee if stuck",
+  "dining": "• Cafés: sit-down prices cost more than standing at the bar; check menu for 'sur place' vs 'à emporter'\n• Ordering: 'Bonjour, je voudrais…' + point at the menu; menus with 'Formule' or 'Menu du jour' are best value\n• Payment: tap to pay is widely accepted; split bills by asking 'On peut payer séparément?'\n• Bread & water: usually included; ask for 'carafe d’eau' (free tap water) instead of bottled if you prefer",
   "tiers": {
     "tier1": {
       "title": "Immediate Need",

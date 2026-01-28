@@ -26,6 +26,10 @@ export type TravelPack = {
   createdAt?: string;     // Added for versioning
   downloadedAt?: string;  // Essential for recovery logic
   offlineReady?: boolean; // Essential for PWA status
+  transit?: string;       // Airport-to-city and transit intel
+  protocol?: string;      // Local etiquette and protocol
+  utility?: string;       // Pharmacy, ATM, and essentials
+  dining?: string;        // Ordering and payment guidance
   tiers: {
     tier1: TravelPackTier;
     tier2?: TravelPackTier;

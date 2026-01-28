@@ -1,6 +1,10 @@
 {
   "city": "Bangkok",
   "country": "Thailand",
+  "transit": "• Suvarnabhumi (BKK) → City: Airport Rail Link to Phaya Thai (~45 THB, ignore touts at exits)\n• Don Mueang (DMK) → City: A1/A2 buses to BTS (~30–50 THB, pay on board)\n• Official taxis: follow yellow TAXI/METER signs, ignore anyone saying 'fixed price'\n• Tolls & airport fee: meter + 50 THB airport fee + tolls (cash), ask for meter before doors close",
+  "protocol": "• Temples: shoulders + knees covered; remove shoes, hats, and sunglasses before entering\n• Wai greeting: slight bow with hands together; not required for tourists but always appreciated\n• Royal family: never joke about monarchy (serious offense under Thai law)\n• Tipping: round up small bills; 20–50 THB extra for great service is enough",
+  "utility": "• ATMs: use big-bank machines (Bangkok Bank, SCB, Krungsri); decline DCC to avoid bad FX rates\n• Cash vs card: keep small bills (20/50/100) for street food and taxis; cards fine in malls\n• 7‑Eleven: first stop for SIM top‑ups, snacks, cold drinks, and basic medicine\n• Pharmacies: look for 'Boots' or local pharmacies on main roads; bring photos of medicine labels",
+  "dining": "• Menus: point + smile; say 'mai phet' (not spicy) or 'phet nit noi' (a little spicy)\n• Paying: at street stalls, pay after eating; in restaurants, ask 'check bin, krap/ka' for the bill\n• Allergies: show written Thai card for serious allergies; confirm twice before ordering\n• Street food: choose busy stalls with fast turnover; prices posted = less chance of tourist markup",
   "tiers": {
     "tier1": {
       "title": "Immediate Need",

@@ -31,13 +31,18 @@ function loadTravelPacks(): TravelPack[] {
 
 export function getTravelPackForCity(cityName: string): TravelPack | null {
   const packs = loadTravelPacks();
-  const cityOnly = cityName.split(',')[0].trim().toLowerCase();
+  // Normalize common slug formats like "new-york-city" -> "new york city"
+  const cityOnly = cityName
+    .split(',')[0]
+    .trim()
+    .toLowerCase()
+    .replace(/-/g, ' ');
   
   let pack = packs.find(p => p.city.toLowerCase() === cityOnly);
   
   if (!pack) {
     pack = packs.find(p => {
-      const packCityLower = p.city.toLowerCase();
+      const packCityLower = p.city.toLowerCase().replace(/-/g, ' ');
       const allWordsMatch = cityOnly.split(/\s+/).every(word => packCityLower.includes(word));
       const startsWithMatch = packCityLower.startsWith(cityOnly) || cityOnly.startsWith(packCityLower);
       return allWordsMatch || startsWithMatch;

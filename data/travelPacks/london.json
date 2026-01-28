@@ -1,6 +1,10 @@
 {
   "city": "London",
   "country": "United Kingdom",
+  "transit": "• Heathrow → Zone 1: Piccadilly line is cheapest; Heathrow Express only worth it with heavy bags and time pressure\n• Gatwick → London: Thameslink or Southern trains to London Bridge/Victoria beat most coach times\n• Contactless/Oyster: tap in and out on yellow readers; daily/weekly caps auto‑optimize your fares\n• Black cabs: queue at official ranks only; avoid anyone approaching you inside terminals or stations",
+  "protocol": "• Queues are sacred: join the back, no side‑stepping; a smile and 'sorry' goes a long way\n• Pubs: order and pay at the bar, no table service unless clearly signed; tipping is optional but appreciated for table service\n• On the Tube: let people off first, keep right on escalators, remove backpacks during rush hour\n• Small talk: weather, transport delays, and football are always safe topics; avoid politics unless invited",
+  "utility": "• ATMs: use machines inside banks or major supermarkets; decline 'conversion' pop‑ups to avoid bad FX\n• Pharmacies: Boots and Superdrug cover almost everything; ask the pharmacist before seeing a GP for minor issues\n• Water: tap water is safe; carry a reusable bottle and refill at public fountains and station taps\n• Sundays & late hours: supermarkets open but close earlier; stock snacks before late‑night journeys",
+  "dining": "• Lunch deals: look for 'set menu' or 'lunch special' boards; same dishes as dinner at better prices\n• Pubs: order at the bar with your table number; food is paid up front and brought to you\n• Splitting bills: ask 'Can we pay separately?' before the card machine arrives; tap‑to‑pay is standard everywhere\n• Dietary needs: menus flag allergens by law—ask staff to double‑check if you’re unsure",
   "tiers": {
     "tier1": {
       "title": "Immediate Need",
