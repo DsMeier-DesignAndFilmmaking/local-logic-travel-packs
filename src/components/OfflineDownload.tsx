@@ -57,23 +57,15 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       const { type, payload } = event.data || {};
-      if (type !== 'SYNC_PROGRESS') return;
-
-      // Ensure we only listen to progress for THIS specific city pack
-      if (payload.citySlug === citySlug) {
+      // CRITICAL: payload.citySlug must match what SW sends
+      if (type === 'SYNC_PROGRESS' && payload.citySlug === citySlug) {
         setSyncProgress(payload.progress);
-        if (payload.progress === 100) {
-          if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-          verifyVault();
-        }
+        if (payload.progress === 100) setStatus('SAVED');
       }
     };
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.addEventListener('message', handleMessage);
-    }
+    navigator.serviceWorker.addEventListener('message', handleMessage);
     return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
-  }, [citySlug, verifyVault]);
+  }, [citySlug]);
 
   // Initial check on mount
   useEffect(() => {

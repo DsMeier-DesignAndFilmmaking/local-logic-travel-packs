@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { normalizeCityName } from '@/lib/cities';
@@ -9,104 +9,167 @@ interface DownloadPackProps {
   pack: TravelPack;
 }
 
+/**
+ * Download Pack Component
+ * 
+ * Handles downloading city-specific data:
+ * - Prefetches city data
+ * - Caches assets
+ * - Saves to IndexedDB
+ * 
+ * NOT tied to A2HS - this is just data download
+ */
 export default function DownloadPack({ pack }: DownloadPackProps) {
-  const [status, setStatus] = useState<'IDLE' | 'SYNCING' | 'SUCCESS'>('IDLE');
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  const citySlug = normalizeCityName(pack.city);
-
-  // Sync Progress Listener (Connecting to our new SW logic)
+  // Check if pack is already downloaded
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      const { type, payload } = event.data || {};
-      if (type === 'SYNC_PROGRESS' && payload.citySlug === citySlug) {
-        setProgress(payload.progress);
-        if (payload.progress === 100) setStatus('SUCCESS');
+    async function checkDownloaded() {
+      if (!pack?.city) return;
+      try {
+        const existing = await getPack(pack.city);
+        if (existing) {
+          setIsDownloaded(true);
+        }
+      } catch (err) {
+        console.error('DB Check Error:', err);
       }
-    };
-    navigator.serviceWorker?.addEventListener('message', handleMessage);
-    return () => navigator.serviceWorker?.removeEventListener('message', handleMessage);
-  }, [citySlug]);
+    }
+    checkDownloaded();
+  }, [pack?.city]);
 
   const handleDownloadPack = async () => {
-    if (status !== 'IDLE') return;
-    if (!navigator.onLine) {
-      alert('Connection required for tactical hardening.');
-      return;
-    }
-
-    setStatus('SYNCING');
-    setProgress(10);
+    if (isDownloading || isDownloaded) return;
+    
+    setIsDownloading(true);
+    setProgress(0);
 
     try {
-      // 1. Save Metadata to DB
-      await savePack({ ...pack, offlineReady: true, downloadedAt: new Date().toISOString() });
-
-      // 2. Prepare the Asset Manifest (Crucial for A2HS success)
-      const scripts = Array.from(document.scripts)
-        .filter(s => s.src.includes('_next/static'))
-        .map(s => s.src);
+      const normalizedCity = normalizeCityName(pack.city);
       
-      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-        .map(s => (s as HTMLLinkElement).href);
-
-      const registration = await navigator.serviceWorker.ready;
+      // Step 1: Save pack to IndexedDB (20%)
+      setProgress(20);
+      const timestamp = new Date().toISOString();
+      const packToSave: TravelPack = {
+        ...pack,
+        downloadedAt: timestamp,
+        offlineReady: true,
+      };
+      await savePack(packToSave);
       
-      // 3. Trigger the Centralized SW Sync Engine
-      registration.active?.postMessage({
-        type: 'START_OFFLINE_SYNC',
-        payload: {
-          citySlug,
-          // We cache the A2HS entry point explicitly
-          assets: [
-            window.location.pathname,
-            `${window.location.pathname}?source=a2hs`,
-            `/api/manifest/${citySlug}`,
-            `/api/pack?city=${encodeURIComponent(pack.city)}`,
-            `/icons/${citySlug}-192.png`,
-            `/icons/${citySlug}-512.png`,
-            ...scripts,
-            ...styles
-          ]
+      // Step 2: Prefetch city data from API (40%)
+      setProgress(40);
+      const packApiUrl = `/api/pack?city=${encodeURIComponent(pack.city)}`;
+      await fetch(packApiUrl, { cache: 'force-cache' });
+      
+      // Step 3: Cache city pack page (60%)
+      setProgress(60);
+      const packPageUrl = `/packs/${normalizedCity}`;
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: 'CACHE_URL',
+          payload: packPageUrl
+        });
+      }
+      
+      // Step 4: Prefetch manifest (80%)
+      setProgress(80);
+      const manifestUrl = `/api/manifest/${normalizedCity}`;
+      await fetch(manifestUrl, { cache: 'force-cache' });
+      
+      // Step 5: Cache assets (icons, etc.) (100%)
+      setProgress(100);
+      const iconUrls = [
+        `/icons/${normalizedCity}-192.png`,
+        `/icons/${normalizedCity}-512.png`,
+        '/travel-pack-icon-192.png',
+        '/travel-pack-icon-512.png',
+      ];
+      
+      // Try to cache city-specific icons, fallback to default
+      for (const iconUrl of iconUrls) {
+        try {
+          await fetch(iconUrl, { cache: 'force-cache' });
+        } catch (err) {
+          // Icon might not exist, continue
         }
-      });
+      }
+
+      setIsDownloaded(true);
+      setIsDownloading(false);
+      
+      // Broadcast sync event
+      window.dispatchEvent(new CustomEvent('vault-sync-complete', {
+        detail: { city: pack.city, timestamp }
+      }));
+
+      console.log(`✅ Pack downloaded and cached for ${pack.city}`);
     } catch (err) {
-      console.error('Download Failed:', err);
-      setStatus('IDLE');
+      console.error('Download error:', err);
+      alert('Failed to download pack. Please try again.');
+      setIsDownloading(false);
+      setProgress(0);
     }
   };
 
   return (
-    <div className="p-6 bg-slate-900 rounded-3xl border border-slate-800 shadow-xl">
+    <div className="p-4 sm:p-6 bg-slate-900 rounded-xl sm:rounded-3xl border border-slate-800 shadow-inner">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <h4 className="text-white text-sm font-black uppercase tracking-widest">Tactical Download</h4>
-          <p className="text-slate-500 text-[10px] mt-1">Prepare sandbox for offline flight</p>
+          <h4 className="text-white text-xs sm:text-sm font-black uppercase tracking-widest">
+            Download Pack
+          </h4>
+          <p className="text-slate-400 text-[10px] sm:text-xs font-medium leading-relaxed mt-1">
+            Prefetch data, cache assets, and save to device storage
+          </p>
         </div>
-        {status === 'SUCCESS' && (
-          <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20">
-            SECURED
-          </span>
+        {isDownloaded && (
+          <div className="flex items-center gap-2 px-2 py-1 bg-emerald-500/20 border border-emerald-500/50 rounded-lg">
+            <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
+              Downloaded
+            </span>
+          </div>
         )}
       </div>
-
-      <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-6">
-        <div 
-          className="bg-emerald-500 h-full transition-all duration-500" 
-          style={{ width: `${progress}%` }} 
-        />
-      </div>
-
+      
+      {isDownloading && (
+        <div className="mb-4">
+          <div className="w-full bg-slate-800 rounded-full h-2">
+            <div 
+              className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <p className="text-slate-400 text-[10px] mt-2 text-center">
+            {progress < 40 && 'Saving to device...'}
+            {progress >= 40 && progress < 60 && 'Prefetching data...'}
+            {progress >= 60 && progress < 80 && 'Caching page...'}
+            {progress >= 80 && 'Caching assets...'}
+          </p>
+        </div>
+      )}
+      
       <button 
         onClick={handleDownloadPack}
-        disabled={status !== 'IDLE'}
-        className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all ${
-          status === 'SUCCESS' 
-          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
-          : "bg-white text-slate-900 hover:bg-slate-100"
-        }`}
+        disabled={isDownloading || isDownloaded}
+        className="w-full py-3 sm:py-4 min-h-[44px] bg-white hover:bg-slate-100 disabled:bg-slate-700 disabled:text-slate-400 text-slate-900 rounded-xl sm:rounded-2xl font-black text-xs uppercase tracking-widest transition-all active:scale-95 flex items-center justify-center gap-2"
       >
-        {status === 'SYNCING' ? `HARDENING... ${progress}%` : status === 'SUCCESS' ? '✓ PACK SECURED' : 'SECURE PACK OFFLINE'}
+        {isDownloading ? (
+          <>
+            <div className="w-3 h-3 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
+            DOWNLOADING...
+          </>
+        ) : isDownloaded ? (
+          <>
+            <span>✓</span>
+            PACK DOWNLOADED
+          </>
+        ) : (
+          'DOWNLOAD PACK FOR OFFLINE'
+        )}
       </button>
     </div>
   );
