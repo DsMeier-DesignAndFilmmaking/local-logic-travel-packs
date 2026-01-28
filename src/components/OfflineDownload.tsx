@@ -5,6 +5,7 @@ import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
 import { normalizeCityName } from '@/lib/cities';
 
+
 interface OfflineDownloadProps {
   pack: TravelPack;
 }
@@ -189,6 +190,7 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
         )}
         
       </button>
+      
     </section>
   );
 }

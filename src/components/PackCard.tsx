@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { TravelPack, ProblemCard, MicroSituation, TravelPackTier } from '@/types/travel';
 // Ensure this path matches the location of your OfflineDownload file
 import OfflineDownload from './OfflineDownload'; 
+import VaultDebugger from '@/components/debug/VaultDebugger'; // Adjust path based on your folder structure
 
 interface PackCardProps {
   pack: TravelPack;
@@ -136,6 +137,10 @@ const PackCard: React.FC<PackCardProps> = ({ pack }) => {
       <div className="px-1">
         <OfflineDownload pack={pack} />
       </div>
+      {/* Only show debugger in development or for testing */}
+    {process.env.NODE_ENV === 'development' && (
+      <VaultDebugger city={pack.city} />
+    )}
 
       {/* Tier Sections */}
       <div className="space-y-3 sm:space-y-4">
