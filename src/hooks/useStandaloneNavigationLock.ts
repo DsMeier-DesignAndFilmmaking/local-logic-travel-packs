@@ -16,15 +16,19 @@ import { normalizeCityName } from '@/lib/cities';
 export function useStandaloneNavigationLock(currentCity?: string) {
   const router = useRouter();
   const pathname = usePathname();
-  const { isStandalone } = usePWAInstall();
+  const { isStandalone, platform } = usePWAInstall();
   const [showModal, setShowModal] = useState(false);
   const [targetCity, setTargetCity] = useState<string | undefined>();
+
+  // Lock navigation only for MOBILE standalone installs.
+  // Desktop "installed" PWAs should behave like the full multi-city web app.
+  const lockActive = isStandalone && (platform === 'ios' || platform === 'android');
 
   // Check pathname changes for unauthorized city access
   // Navigation locking ONLY applies to /packs/[city] → /packs/[otherCity]
   useEffect(() => {
-    // Early exit: Not in standalone mode
-    if (!isStandalone) return;
+    // Early exit: Lock only applies for mobile standalone
+    if (!lockActive) return;
     
     // Early exit: No current city defined
     if (!currentCity) return;
@@ -36,7 +40,7 @@ export function useStandaloneNavigationLock(currentCity?: string) {
     if (!pathname?.startsWith('/packs/')) return;
     
     // At this point, we know:
-    // - isStandalone === true
+    // - lockActive === true (mobile standalone)
     // - currentCity is defined
     // - pathname is a /packs/[city] route
     
@@ -57,7 +61,7 @@ export function useStandaloneNavigationLock(currentCity?: string) {
       // Redirect back to current city's pack page
       router.replace(`/packs/${currentNormalizedCity}`);
     }
-  }, [pathname, isStandalone, currentCity, router]);
+  }, [pathname, lockActive, currentCity, router]);
 
   /**
    * Guarded navigation helper
@@ -70,8 +74,8 @@ export function useStandaloneNavigationLock(currentCity?: string) {
    * - Only cross-city pack navigation is guarded
    */
   const guardedPush = useCallback((url: string) => {
-    // Early exit: Not in standalone mode or no current city
-    if (!isStandalone || !currentCity) {
+    // Early exit: Lock only applies for mobile standalone with a known current city
+    if (!lockActive || !currentCity) {
       router.push(url);
       return;
     }
@@ -89,7 +93,7 @@ export function useStandaloneNavigationLock(currentCity?: string) {
     }
 
     // At this point, we know:
-    // - isStandalone === true
+    // - lockActive === true (mobile standalone)
     // - currentCity is defined
     // - url is a /packs/[city] route
     
@@ -110,7 +114,7 @@ export function useStandaloneNavigationLock(currentCity?: string) {
 
     // Allow navigation to same city pack
     router.push(url);
-  }, [isStandalone, currentCity, router]);
+  }, [lockActive, currentCity, router]);
 
   return {
     showModal,

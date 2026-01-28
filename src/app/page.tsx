@@ -9,6 +9,7 @@ import { normalizeCityName } from '@/lib/cities';
 import TravelPackCitySelector from '@/components/TravelPackCitySelector';
 import Footer from '@/components/Footer';
 
+
 export default function Home() {
   const router = useRouter();
   const pathname = usePathname();

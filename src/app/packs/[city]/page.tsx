@@ -17,11 +17,15 @@ import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 export default function CityPackPage() {
   const params = useParams();
   const router = useRouter();
-  const { isStandalone } = usePWAInstall();
+  const { isStandalone, platform } = usePWAInstall();
   const [pack, setPack] = useState<TravelPack | null>(null);
   const [loading, setLoading] = useState(true);
   const [vaultStatus, setVaultStatus] = useState<'idle' | 'syncing' | 'secured'>('idle');
   const cityParam = params?.city as string;
+  
+  // Mobile-only "installed single-city" semantics.
+  // Desktop PWAs should behave like the full multi-city web app.
+  const isMobileStandalone = isStandalone && (platform === 'ios' || platform === 'android');
   
   // State for the Desktop Protocol block reactivity
   const [isVerified, setIsVerified] = useState(false);
@@ -104,7 +108,7 @@ export default function CityPackPage() {
         }
       } catch (error) {
         const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-        if (!isStandalone && !isOffline) {
+        if (!isMobileStandalone && !isOffline) {
           console.error('Failed to load pack:', error);
           router.push('/');
         }
@@ -145,7 +149,7 @@ export default function CityPackPage() {
 
   if (!pack) {
     const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-    if (isStandalone || isOffline) {
+    if (isMobileStandalone || isOffline) {
       return (
         <main className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
           <div className="text-center max-w-md">
@@ -166,13 +170,13 @@ export default function CityPackPage() {
       />
       
       <div className="w-full max-w-4xl mx-auto flex-1 space-y-6">
-        {!isStandalone && (
+        {!isMobileStandalone && (
           <div className="flex items-center justify-between mb-4">
             <BackButton />
           </div>
         )}
         
-        {isStandalone && (
+        {isMobileStandalone && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-xs font-medium text-center">
               📱 Standalone App Mode • Showing only {pack.city} pack

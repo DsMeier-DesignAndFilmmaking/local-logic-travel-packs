@@ -10,8 +10,12 @@ import Spontaneity from '@/components/Spontaneity';
 const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({ initialPack }) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isStandalone } = usePWAInstall();
+  const { isStandalone, platform } = usePWAInstall();
   const [loading, setLoading] = useState(false);
+  
+  // Treat "installed single-city mode" as a MOBILE-only constraint.
+  // On desktop, even if the PWA is installed, keep full browser behavior.
+  const isMobileStandalone = isStandalone && (platform === 'ios' || platform === 'android');
   
   // Guard: Never auto-navigate when on root "/" route
   const isHome = pathname === '/';
@@ -51,8 +55,8 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
     }
   };
 
-  // In standalone mode, disable city selector
-  if (isStandalone) {
+  // In mobile standalone mode, disable city selector (single installed city pack UX)
+  if (isMobileStandalone) {
     return (
       <div className="w-full max-w-4xl mx-auto px-2 sm:px-4">
         <div className="mb-6 sm:mb-8">
