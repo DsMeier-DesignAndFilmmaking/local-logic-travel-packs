@@ -17,7 +17,8 @@ const CORE_ASSETS = [
   '/manifest.json',
   '/travel-pack-icon-192.png',
   '/travel-pack-icon-512.png',
-  '/apple-touch-icon.png?v=2' 
+  '/apple-touch-icon.png', // FIXED: Removed ?v=2 to match public folder
+  '/api/travel-packs'      // ADDED: So the home screen list works offline 
 ];
 
 // 1. Identify City Helper
@@ -132,25 +133,23 @@ self.addEventListener('message', async (event) => {
     const url = new URL(urlStr, location.origin);
     const city = getCityFromPath(url.pathname);
     
-    // Determine which cache to use and what to download
-    const isRoot = url.pathname === '/';
     const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
-    const assetsToCache = city ? [urlStr, `/api/pack?city=${city}`] : [urlStr];
-
-    console.log(`📡 Vault Sync: Target [${city || 'ROOT'}] -> Cache [${cacheName}]`);
-
+    // If it's the root, just cache the root. If it's a city, cache the page + API.
+    const assetsToCache = city ? [urlStr, `/api/pack?city=${city}`] : ['/'];
+    
     const cache = await caches.open(cacheName);
     let completed = 0;
 
     for (const asset of assetsToCache) {
       try {
-        // Use a timeout or simple fetch to prevent hanging on one slow file
-        await cache.add(asset);
+        // We use fetch first to handle redirects/errors gracefully
+        const response = await fetch(asset);
+        if (response.ok) {
+          await cache.put(asset, response);
+        }
       } catch (err) {
-        // Log the error but DON'T stop the progress
-        console.warn(`⚠️ Vault Sync skipped non-critical asset: ${asset}`, err);
+        console.warn(`Vault skipping asset: ${asset}`, err);
       } finally {
-        // ALWAYS increment and report, regardless of success or failure
         completed++;
         const progress = Math.round((completed / assetsToCache.length) * 100);
         
@@ -158,10 +157,7 @@ self.addEventListener('message', async (event) => {
         clients.forEach(client => {
           client.postMessage({
             type: 'SYNC_PROGRESS',
-            payload: { 
-              city: city || 'root', 
-              progress 
-            }
+            payload: { city: city || 'root', progress }
           });
         });
       }

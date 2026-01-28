@@ -89,42 +89,34 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
 
   const handleSaveToVault = async () => {
     if (isSaving || isSaved) return;
-    
     setIsSaving(true);
     setSyncProgress(5); 
   
     try {
-      // 1. Save to IndexedDB (This usually works fine)
       await savePack({ ...pack, offlineReady: true });
   
-      // 2. Wait for Service Worker to be ready
-      if ('serviceWorker' in navigator) {
-        // If no controller, we wait or try to get the registration
-        if (!navigator.serviceWorker.controller) {
-          console.log("SW not controlling. Attempting to activate...");
-          const reg = await navigator.serviceWorker.ready;
-          // Even if ready, we might need a refresh if claim() failed
-          if (!navigator.serviceWorker.controller) {
-            alert("Vault connection warming up. Please refresh the page once.");
-            setIsSaving(false);
-            setSyncProgress(0);
-            return;
-          }
-        }
+      if (!('serviceWorker' in navigator)) {
+        throw new Error("SW not supported");
+      }
   
-        // 3. Send the message
-        navigator.serviceWorker.controller.postMessage({
-          type: 'CACHE_URL',
-          payload: window.location.href
-        });
+      // FIX: If the SW is active but not "controlling", we force it to take over
+      let sw = navigator.serviceWorker.controller;
+      
+      if (!sw) {
+        const reg = await navigator.serviceWorker.ready;
+        sw = reg.active; // Fallback to the active worker if no controller
+      }
   
-        navigator.serviceWorker.controller.postMessage({
-          type: 'CACHE_URL',
-          payload: window.location.origin + '/'
-        });
+      if (sw) {
+        sw.postMessage({ type: 'CACHE_URL', payload: window.location.href });
+        sw.postMessage({ type: 'CACHE_URL', payload: window.location.origin + '/' });
+      } else {
+        alert("Vault offline engine starting. Please refresh and try again.");
+        setSyncProgress(0);
+        setIsSaving(false);
       }
     } catch (err) {
-      console.error('Vault Sync Failed:', err);
+      console.error('Vault Error:', err);
       setSyncProgress(0);
       setIsSaving(false);
     }
