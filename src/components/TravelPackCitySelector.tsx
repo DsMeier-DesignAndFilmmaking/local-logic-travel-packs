@@ -84,8 +84,8 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
       Beta Access
     </div>
     
-    <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-    Expert Solutions for <span className="text-emerald-500"><br></br>On-the-Spot Travel Snags.</span>
+    <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight text-behavior leading-[1.1]">
+    Expert Solutions for <span className="text-emerald-500">On-the-Spot Travel Snags.</span>
     </h1>
     
     <p className="max-w-xl mx-auto text-slate-500 text-sm sm:text-lg font-medium leading-relaxed">
