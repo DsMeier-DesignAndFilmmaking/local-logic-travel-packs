@@ -51,6 +51,7 @@ function shouldCache(url) {
 
 // 3. INSTALL: Pre-cache the "Home" and "Manifest" (Prevents Offline Alert)
 self.addEventListener('install', (event) => {
+  self.skipWaiting(); // Force the waiting service worker to become the active service worker
   console.log('🏗️ SW Install: Pre-caching Core Engine');
   event.waitUntil(
     caches.open(GLOBAL_CACHE).then((cache) => {
@@ -62,6 +63,7 @@ self.addEventListener('install', (event) => {
 
 // 4. ACTIVATE: Cleanup old caches and take control
 self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim()); // Become available to all pages immediately
   console.log('🚀 SW Activate: Taking Control & Cleaning Caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -142,24 +144,26 @@ self.addEventListener('message', async (event) => {
 
     for (const asset of assetsToCache) {
       try {
+        // Use a timeout or simple fetch to prevent hanging on one slow file
         await cache.add(asset);
+      } catch (err) {
+        // Log the error but DON'T stop the progress
+        console.warn(`⚠️ Vault Sync skipped non-critical asset: ${asset}`, err);
+      } finally {
+        // ALWAYS increment and report, regardless of success or failure
         completed++;
         const progress = Math.round((completed / assetsToCache.length) * 100);
         
-        // Report progress back to the UI
         const clients = await self.clients.matchAll();
         clients.forEach(client => {
           client.postMessage({
             type: 'SYNC_PROGRESS',
             payload: { 
-              city: city || 'root', // Identify as root if no city
+              city: city || 'root', 
               progress 
             }
           });
         });
-      } catch (err) {
-        console.error(`❌ Vault Sync Error for ${asset}:`, err);
-        // Still send a fail message or update progress so the UI doesn't hang
       }
     }
   }

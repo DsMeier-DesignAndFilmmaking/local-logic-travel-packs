@@ -92,35 +92,41 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
     
     setIsSaving(true);
     setSyncProgress(5); 
-
+  
     try {
-      await savePack({ 
-        ...pack, 
-        downloadedAt: new Date().toISOString(), 
-        offlineReady: true 
-      });
-
-      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-        // Message 1: The City Assets
+      // 1. Save to IndexedDB (This usually works fine)
+      await savePack({ ...pack, offlineReady: true });
+  
+      // 2. Wait for Service Worker to be ready
+      if ('serviceWorker' in navigator) {
+        // If no controller, we wait or try to get the registration
+        if (!navigator.serviceWorker.controller) {
+          console.log("SW not controlling. Attempting to activate...");
+          const reg = await navigator.serviceWorker.ready;
+          // Even if ready, we might need a refresh if claim() failed
+          if (!navigator.serviceWorker.controller) {
+            alert("Vault connection warming up. Please refresh the page once.");
+            setIsSaving(false);
+            setSyncProgress(0);
+            return;
+          }
+        }
+  
+        // 3. Send the message
         navigator.serviceWorker.controller.postMessage({
           type: 'CACHE_URL',
           payload: window.location.href
         });
-
-        // Message 2: The Root App Shell (The Launchpad)
+  
         navigator.serviceWorker.controller.postMessage({
           type: 'CACHE_URL',
           payload: window.location.origin + '/'
         });
-      } else {
-        setIsSaving(false);
-        setSyncProgress(0);
-        alert("Service Worker not active. Please refresh the page.");
       }
     } catch (err) {
       console.error('Vault Sync Failed:', err);
-      setIsSaving(false);
       setSyncProgress(0);
+      setIsSaving(false);
     }
   };
 

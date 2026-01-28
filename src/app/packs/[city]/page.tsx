@@ -180,7 +180,6 @@ export default function CityPackPage() {
           </div>
         )}
 
-// in page.tsx
 {pack ? (
   <PackCard pack={pack} />
 ) : (
