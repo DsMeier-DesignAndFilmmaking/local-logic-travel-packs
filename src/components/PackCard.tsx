@@ -172,7 +172,7 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
         <div className="inline-block px-4 py-2 bg-slate-50 border border-slate-200 rounded-full">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
             {pack.downloadedAt ? (
-              <>Sync Verified: {new Date(pack.downloadedAt).toLocaleDateString()} • Ready for Deployment</>
+              <>Sync Verified: {new Date(pack.downloadedAt).toLocaleDateString()} • Ready for offline use</>
             ) : (
               <>Cloud Instance • Download for Local Sync</>
             )}

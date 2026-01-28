@@ -81,18 +81,16 @@ const TravelPackCitySelector: React.FC<{ initialPack?: TravelPack | null }> = ({
     </div>
     
     <h1 className="text-4xl sm:text-6xl font-black text-slate-900 tracking-tight leading-[1.1]">
-      Travel <span className="text-emerald-500">Intel</span>
+    Expert Solutions for <span className="text-emerald-500"><br></br>On-the-Spot Travel Snags.</span>
     </h1>
     
     <p className="max-w-xl mx-auto text-slate-500 text-sm sm:text-lg font-medium leading-relaxed">
-      Deployment-ready insights for your next destination. 
-      Select a city to unlock tactical travel intelligence.
+    Stop scrolling through blogs and guessing on the fly. Unlock zero-latency city packs designed to solve real-time travel friction—from transit hacks to local etiquette—all 100% offline.
     </p>
     
     <div className="pt-4 flex justify-center gap-2">
       <div className="h-1 w-12 bg-emerald-500 rounded-full" />
-      <div className="h-1 w-4 bg-slate-200 rounded-full" />
-      <div className="h-1 w-4 bg-slate-200 rounded-full" />
+      
     </div>
   </div>
   

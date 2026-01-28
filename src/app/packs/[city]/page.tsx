@@ -9,25 +9,11 @@ import { getPack, savePack } from '../../../../scripts/offlineDB';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { useStandaloneNavigationLock } from '@/hooks/useStandaloneNavigationLock';
 import PackCard from '@/components/PackCard';
-import DownloadPack from '@/components/DownloadPack';
-import InstallApp from '@/components/InstallApp';
-import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 import Footer from '@/components/Footer';
 import BackButton from '@/components/BackButton';
-import SWRegister from '@/components/SWRegister';
 import OfflineDownload from '@/components/OfflineDownload';
+import DownloadRequiredModal from '@/components/DownloadRequiredModal';
 
-/**
- * City-Specific Pack Page
- * 
- * Route: /packs/[city]
- * Example: /packs/bangkok, /packs/new-york-city
- * 
- * This page:
- * - Loads the city pack (from API or IndexedDB)
- * - Displays the pack content
- * - Has city-specific manifest injected via metadata
- */
 export default function CityPackPage() {
   const params = useParams();
   const router = useRouter();
@@ -36,10 +22,42 @@ export default function CityPackPage() {
   const [loading, setLoading] = useState(true);
   const [vaultStatus, setVaultStatus] = useState<'idle' | 'syncing' | 'secured'>('idle');
   const cityParam = params?.city as string;
+  
+  // State for the Desktop Protocol block reactivity
+  const [isVerified, setIsVerified] = useState(false);
 
-  // Centralized navigation locking - handles all city pack navigation guards
   const { showModal: showDownloadModal, setShowModal: setShowDownloadModal, targetCity } = 
     useStandaloneNavigationLock(pack?.city);
+
+  // 1. Unified Vault Sync Listener
+  useEffect(() => {
+    // Initial check on mount
+    async function checkInitialSync() {
+      if (!cityParam) return;
+      const normalizedCity = normalizeCityName(cityParam);
+      const savedPack = await getPack(normalizedCity) || await getPack(cityParam);
+      if (savedPack) {
+        setIsVerified(true);
+        setVaultStatus('secured');
+      }
+    }
+    checkInitialSync();
+
+    // Event listener to react to changes inside OfflineDownload child component
+    const handleVaultUpdate = (e: any) => {
+      const normalizedCurrent = normalizeCityName(cityParam);
+      const eventCity = normalizeCityName(e.detail.city);
+
+      if (eventCity === normalizedCurrent) {
+        const isNowSynced = e.detail.status === 'synced';
+        setIsVerified(isNowSynced);
+        setVaultStatus(isNowSynced ? 'secured' : 'idle');
+      }
+    };
+
+    window.addEventListener('vault-update', handleVaultUpdate);
+    return () => window.removeEventListener('vault-update', handleVaultUpdate);
+  }, [cityParam]);
 
   useEffect(() => {
     async function loadPack() {
@@ -49,25 +67,21 @@ export default function CityPackPage() {
       }
 
       try {
-        // First, try to load from IndexedDB (offline-first)
         const normalizedCity = normalizeCityName(cityParam);
         const savedPack = await getPack(normalizedCity) || await getPack(cityParam);
         
         if (savedPack) {
           setPack(savedPack);
+          setIsVerified(true);
           setVaultStatus('secured');
           setLoading(false);
           return;
         }
 
-        // If not in IndexedDB, fetch from API
-        // Try both normalized and original city name
         const fetchedPack = await fetchTravelPack(cityParam) || await fetchTravelPack(normalizedCity);
         
         if (fetchedPack) {
           setPack(fetchedPack);
-          
-          // Save to IndexedDB for offline access
           const packWithMeta: TravelPack = {
             ...fetchedPack,
             downloadedAt: new Date().toISOString(),
@@ -75,9 +89,9 @@ export default function CityPackPage() {
           };
           
           await savePack(packWithMeta);
+          setIsVerified(true);
           setVaultStatus('secured');
           
-          // Cache the page in service worker (will use city-specific cache)
           if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
             navigator.serviceWorker.controller.postMessage({
               type: 'CACHE_URL',
@@ -85,35 +99,14 @@ export default function CityPackPage() {
             });
           }
         } else {
-          // Pack not found or fetch failed
-          // In standalone/offline mode, don't show error - data should be in cache
           const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-          
-          if (isStandalone || isOffline) {
-            // In standalone/offline mode, gracefully handle - don't show error state
-            // The pack should already be in IndexedDB or service worker cache
-            // If it's not, that's okay - just show loading completed
-            setLoading(false);
-          } else {
-            // Only redirect if not in standalone mode and online
-            router.push('/');
-          }
+          if (!isStandalone && !isOffline) router.push('/');
         }
       } catch (error) {
-        // Suppress error logging when offline/standalone
         const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-        
         if (!isStandalone && !isOffline) {
-          // Only log errors when online and not in standalone mode
           console.error('Failed to load pack:', error);
-        }
-        
-        // In standalone/offline mode, don't redirect - gracefully handle
-        if (!isStandalone && !isOffline) {
           router.push('/');
-        } else {
-          // In standalone/offline mode, just stop loading - don't show error state
-          setLoading(false);
         }
       } finally {
         setLoading(false);
@@ -123,33 +116,21 @@ export default function CityPackPage() {
     loadPack();
   }, [cityParam, router, isStandalone]);
 
-  // Navigation locking is handled by useStandaloneNavigationLock hook (called above)
-  // This ensures navigation locking lives in one place only to prevent race conditions
-
-  // Update manifest link to city-specific manifest
   useEffect(() => {
     if (pack && typeof window !== 'undefined') {
       const normalizedCity = normalizeCityName(pack.city);
       const manifestUrl = `/api/manifest/${normalizedCity}`;
-      
-      // Remove any existing manifest link
       const existingLink = document.querySelector('link[rel="manifest"]');
-      if (existingLink) {
-        existingLink.remove();
-      }
+      if (existingLink) existingLink.remove();
       
-      // Add city-specific manifest link
       const manifestLink = document.createElement('link');
       manifestLink.rel = 'manifest';
       manifestLink.href = manifestUrl;
       document.head.appendChild(manifestLink);
 
-      // Cleanup: Remove manifest when component unmounts (navigating away)
       return () => {
         const linkToRemove = document.querySelector('link[rel="manifest"]');
-        if (linkToRemove) {
-          linkToRemove.remove();
-        }
+        if (linkToRemove) linkToRemove.remove();
       };
     }
   }, [pack]);
@@ -163,42 +144,21 @@ export default function CityPackPage() {
   }
 
   if (!pack) {
-    // In standalone/offline mode, don't show error state
-    // The pack should be in cache - if not, show a helpful message without error tone
     const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
-    
     if (isStandalone || isOffline) {
       return (
         <main className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
           <div className="text-center max-w-md">
-            <p className="text-sm text-gray-600 mb-4">
-              Loading pack data from cache...
-            </p>
-            <p className="text-xs text-gray-500">
-              If this pack was previously downloaded, it should appear shortly.
-            </p>
+            <p className="text-sm text-gray-600 mb-4 text-center">Loading pack data from cache...</p>
           </div>
         </main>
       );
     }
-    
-    // Only show error state when online and not in standalone mode
-    return (
-      <main className="min-h-screen bg-white p-4 flex flex-col items-center justify-center">
-        <h1 className="text-xl font-bold text-gray-900 mb-4">Pack Not Found</h1>
-        <button
-          onClick={() => router.replace('/')}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-        >
-          Return Home
-        </button>
-      </main>
-    );
+    return null;
   }
 
   return (
     <main className="min-h-screen bg-white p-4 flex flex-col">      
-      {/* Download Required Modal */}
       <DownloadRequiredModal
         isOpen={showDownloadModal}
         onClose={() => setShowDownloadModal(false)}
@@ -206,14 +166,12 @@ export default function CityPackPage() {
       />
       
       <div className="w-full max-w-4xl mx-auto flex-1 space-y-6">
-        {/* Header with back button - Hidden in standalone mode (no navigation to other cities) */}
         {!isStandalone && (
           <div className="flex items-center justify-between mb-4">
             <BackButton />
           </div>
         )}
         
-        {/* Standalone mode notice */}
         {isStandalone && (
           <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-blue-800 text-xs font-medium text-center">
@@ -222,137 +180,167 @@ export default function CityPackPage() {
           </div>
         )}
 
-{/* Pack Content */}
-<PackCard pack={pack} vaultStatus={vaultStatus} />
-<div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">
-  <div className="p-8 sm:p-12">
-    
-    {/* Minimalist Header */}
-    <header className="w-full mb-12">
-      <div className="flex items-center gap-3 mb-4">
-        {/* Decorative element - aria-hidden for screen readers */}
-        <span aria-hidden="true" className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
-        <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-400">
-          Offline Deployment Protocols
-        </h3>
-      </div>
-      <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-tight mb-4">
-        Download For Offline Use
-      </h2>
-      <p className="text-slate-200 text-base leading-relaxed w-full">
-        Don't rely on shaky Wi-Fi. Follow the steps below to keep this travel pack intel stored safely on your device, ready to use whenever you need it.
-      </p>
-    </header>
+        <PackCard pack={pack} vaultStatus={vaultStatus} />
 
-    {/* Responsive Grid */}
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* OFFLINE PROTOCOL DASHBOARD */}
+        <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">
+          <div className="p-8 sm:p-12">
+            
+            <header className="w-full mb-12">
+              <div className="flex items-center gap-3 mb-4">
+                <span aria-hidden="true" className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.7)]" />
+                <h3 className="text-xs font-black uppercase tracking-[0.3em] text-emerald-400">
+                  Offline Protocols
+                </h3>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-black text-white tracking-tighter leading-tight mb-4">
+                Download For Offline Use
+              </h2>
+              <p className="text-slate-200 text-base leading-relaxed w-full">
+                Don't rely on shaky Wi-Fi. Follow the steps below to keep this travel pack intel stored safely on your device, ready to use whenever you need it.
+              </p>
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+             {/* BLOCK 1: DESKTOP VAULT */}
+<div className="hidden lg:flex bg-white rounded-3xl p-8 flex-col justify-between shadow-xl border border-white">
+  <div>
+  <div className="flex items-center justify-between mb-6">
+                    <span className="text-xs font-black text-slate-600 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">
+                      Desktop Browser Protocol
+                    </span>
+                  </div>
+    <div className="flex items-center justify-between mb-8">
+      <h4 className="text-slate-900 font-black tracking-tighter text-2xl">
+        {isVerified ? "Offline Vault Active" : "Syncing to Device..."}
+      </h4>
       
-      {/* BLOCK 1: DESKTOP VAULT */}
-      <div className="hidden lg:flex bg-white rounded-3xl p-8 flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
-        <div>
-          <div className="flex items-center justify-between mb-6">
-            <span className="text-xs font-black text-slate-600 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">
-              Desktop Protocol
-            </span>
-          </div>
-          <h4 className="text-slate-900 font-black tracking-tighter text-2xl mb-3">
-            Save to Local Storage
-          </h4>
-          <p className="text-slate-700 text-base mb-8 leading-relaxed">
-            Archive this intelligence to your local hardware. Open via any browser without an internet connection.
-          </p>
+      {/* THIS IS THE ONLY "VERIFIED" LABEL WE NEED */}
+      {isVerified && (
+        <div className="flex items-center gap-2 px-3 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
+          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+          <span className="text-[10px] font-black uppercase tracking-widest text-emerald-700">Verified</span>
         </div>
-
-        <div className="mt-auto">
-          {/* Ensure the button inside OfflineDownload meets 44x44px touch target */}
-          <OfflineDownload pack={pack} />
-        </div>
-      </div>
-
-      {/* BLOCK 2: MOBILE INSTALL */}
-      <div className="bg-slate-800/60 p-8 rounded-3xl flex flex-col border border-slate-700 transition-all">
-        <div className="flex items-center justify-between mb-6">
-          <span className="text-xs font-black text-slate-300 uppercase tracking-widest border border-slate-600 px-2 py-1 rounded">
-            Mobile Protocol
-          </span>
-        </div>
-        
-        <h4 className="text-white font-black tracking-tighter text-2xl mb-8">
-          Mobile Device Install
-        </h4>
-
-        {/* 1-2-3 Step Container */}
-        <div className="space-y-8 relative" role="list">
-          {/* Vertical Connecting Line */}
-          <div aria-hidden="true" className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-600" />
-
-          {/* Step 1 */}
-          <div className="relative flex items-start gap-5" role="listitem">
-            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 border border-slate-500 text-xs font-black text-emerald-400">
-              01
-            </div>
-            <div>
-              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Browser Bar Menu</p>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Tap the <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">Share</span> button in your mobile browser address bar.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 2 */}
-          <div className="relative flex items-start gap-5" role="listitem">
-            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-950 border border-slate-500 text-xs font-black text-emerald-400">
-              02
-            </div>
-            <div>
-              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Add to Home</p>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Find and select <span className="text-white font-bold underline decoration-emerald-500/50 underline-offset-4">Add to Home Screen</span>.
-              </p>
-            </div>
-          </div>
-
-          {/* Step 3 */}
-          <div className="relative flex items-start gap-5" role="listitem">
-            <div aria-hidden="true" className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-slate-950 shadow-[0_0_15px_rgba(16,185,129,0.4)]">
-              03
-            </div>
-            <div>
-              <p className="text-white text-base font-bold uppercase tracking-wide mb-1">Launch Travel Pack</p>
-              <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
-                Tap the new icon to access your intel <span className="text-emerald-400 font-bold">100% offline</span>.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
+    <div className="space-y-4">
+    <p className="text-slate-600 text-base leading-relaxed">
+      Everything is saved and ready to go. You can open this guide anytime, even if you’re completely off-grid.
+    </p>
 
-    {/* Verification Footer */}
-    <footer className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
-      <div className="flex items-center gap-6">
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Integrity</span>
-          <span className="text-sm font-bold text-slate-200">Verified Offline Asset</span>
-        </div>
-        <div aria-hidden="true" className="h-8 w-px bg-slate-800 hidden sm:block" />
-        <div className="flex flex-col">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sync Status</span>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-bold text-emerald-400">Local Sync Active</span>
-            <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          </div>
-        </div>
-      </div>
-      
-      <p className="text-xs text-slate-400 font-medium italic">
-        Format: Encrypted Standalone Blob • SHA-256 Verified
+    {/* The Cache Warning & Mobile Suggestion */}
+    <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl">
+      <p className="text-amber-800 text-xs leading-relaxed">
+        <strong>Note:</strong> Clearing your browser cache will remove this offline access. For a more permanent version, follow the <strong>Mobile Access</strong> steps to save this guide directly to your home screen.
       </p>
-    </footer>
+    </div>
+  </div>
+
+    <div className="space-y-4 pt-6 border-t border-slate-100">
+      <p className="text-slate-900 font-bold text-xs uppercase tracking-[0.2em]">Quick Access</p>
+      <ul className="space-y-4">
+      <li className="flex items-start gap-4 text-slate-600 text-sm">
+      {/* Added gap-4 for more breathing room */}
+      <span className="flex-none w-5 h-5 rounded-full bg-slate-900 text-[10px] font-bold text-white flex items-center justify-center mt-0.5">
+        1
+      </span>
+      
+      <span className="leading-relaxed">
+        {/* Using &nbsp; between "traveling" and "later" ensures they stay together */}
+        <strong>Bookmark this page</strong> (Ctrl+D) so you can find it easily when&nbsp;traveling.
+      </span>
+    </li>
+    </ul>
+    </div>
+  </div>
+
+</div>
+
+              {/* BLOCK 2: MOBILE INSTRUCTIONS */}
+              <div className="bg-white rounded-3xl p-8 flex-col justify-between shadow-xl border border-white transition-all hover:border-emerald-500/30">
+                <div>
+                <div className="flex items-center justify-between mb-6">
+  <div className="flex items-center gap-3">
+    {/* Minimalist Phone Icon */}
+    <div className="flex items-center justify-center w-8 h-8 bg-slate-100 rounded-lg text-slate-600">
+      <svg 
+        xmlns="http://www.w3.org/2000/svg" 
+        width="18" 
+        height="18" 
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        strokeWidth="2.5" 
+        strokeLinecap="round" 
+        strokeLinejoin="round"
+      >
+        <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+        <path d="M12 18h.01"/>
+      </svg>
+    </div>
+    
+    <span className="text-xs font-black text-slate-600 uppercase tracking-widest border border-slate-200 px-2 py-1 rounded">
+      Offline Access on Mobile
+    </span>
   </div>
 </div>
+                  <h4 className="text-slate-900 font-black tracking-tighter text-2xl mb-6">
+                    Save for Offline Access
+                  </h4>
+                  
+                  <div className="space-y-6 relative" role="list">
+                    <div aria-hidden="true" className="absolute left-[15px] top-2 bottom-2 w-px bg-slate-100" />
+
+                    <div className="relative flex items-start gap-5" role="listitem">
+                      <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-xs font-black text-slate-600">01</div>
+                      <div>
+                        <p className="text-slate-900 text-base font-bold uppercase tracking-wide mb-1">Open Menu</p>
+                        <p className="text-slate-600 text-sm leading-relaxed">Tap the <strong>Share</strong> icon in Safari or Chrome.</p>
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-start gap-5" role="listitem">
+                      <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-50 border border-slate-200 text-xs font-black text-slate-600">02</div>
+                      <div>
+                        <p className="text-slate-900 text-base font-bold uppercase tracking-wide mb-1">Add to Home</p>
+                        <p className="text-slate-600 text-sm leading-relaxed">Scroll down and select <strong>Add to Home Screen</strong>.</p>
+                      </div>
+                    </div>
+
+                    <div className="relative flex items-start gap-5" role="listitem">
+                      <div className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-black text-white">03</div>
+                      <div>
+                        <p className="text-slate-900 text-base font-bold uppercase tracking-wide mb-1">Launch Vault</p>
+                        <p className="text-slate-600 text-sm leading-relaxed">Tap the new icon to access intel <strong>100% offline</strong>.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Verification Footer */}
+            <footer className="mt-12 pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-6">
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data Integrity</span>
+                  <span className="text-sm font-bold text-slate-200">Verified Offline Asset</span>
+                </div>
+                <div aria-hidden="true" className="h-8 w-px bg-slate-800 hidden sm:block" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sync Status</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-emerald-400">Local Sync Active</span>
+                    <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-slate-400 font-medium italic">Format: Encrypted Standalone Blob • SHA-256 Verified</p>
+            </footer>
+          </div>
+        </div>
       </div>
-      
       <Footer />
     </main>
   );
