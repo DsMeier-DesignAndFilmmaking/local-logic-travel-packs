@@ -1,11 +1,24 @@
 /**
  * Service Worker - Tactical Vault Offline Engine
- * Strategy: Aggressive Pre-emptive Caching
+ * Strategy: Aggressive Pre-emptive Caching + Core Shell Persistence
  */
 
-const CACHE_VERSION = 'v2.1'; 
+const CACHE_VERSION = 'v2.2'; // Incremented for new logic
 const CACHE_PREFIX = 'city-pack-';
 const GLOBAL_CACHE = `tactical-vault-core-${CACHE_VERSION}`;
+
+/**
+ * CORE ASSETS - The "App Shell"
+ * These must be present for the app to launch in Airplane Mode.
+ * Ensure these paths match your /public folder exactly.
+ */
+const CORE_ASSETS = [
+  '/',
+  '/manifest.json',
+  '/travel-pack-icon-192.png',
+  '/travel-pack-icon-512.png',
+  '/apple-touch-icon.png?v=2' 
+];
 
 // 1. Identify City Helper
 function getCityFromPath(pathname) {
@@ -20,7 +33,9 @@ function getCityCacheName(city) {
 // 2. Identify if URL should be cached
 function shouldCache(url) {
   const pathname = new URL(url).pathname;
-  if (pathname === '/' || pathname === '') return false;
+  
+  // Always cache the root and core assets
+  if (pathname === '/' || CORE_ASSETS.includes(pathname)) return true;
 
   return (
     pathname.startsWith('/_next/static/') || 
@@ -34,17 +49,28 @@ function shouldCache(url) {
   );
 }
 
+// 3. INSTALL: Pre-cache the "Home" and "Manifest" (Prevents Offline Alert)
 self.addEventListener('install', (event) => {
+  console.log('🏗️ SW Install: Pre-caching Core Engine');
+  event.waitUntil(
+    caches.open(GLOBAL_CACHE).then((cache) => {
+      return cache.addAll(CORE_ASSETS);
+    })
+  );
   self.skipWaiting();
 });
 
+// 4. ACTIVATE: Cleanup old caches and take control
 self.addEventListener('activate', (event) => {
+  console.log('🚀 SW Activate: Taking Control & Cleaning Caches');
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          // Delete old versions
-          if (cacheName.includes('city-pack-') && !cacheName.includes(CACHE_VERSION)) {
+          const isOldCityPack = cacheName.startsWith(CACHE_PREFIX) && !cacheName.includes(CACHE_VERSION);
+          const isOldCore = cacheName.startsWith('tactical-vault-core-') && cacheName !== GLOBAL_CACHE;
+          
+          if (isOldCityPack || isOldCore) {
             return caches.delete(cacheName);
           }
         })
@@ -53,62 +79,75 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// 5. FETCH: Cache-First Strategy
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== location.origin) return;
-  if (!shouldCache(url.href)) return;
-
-  const isGlobalAsset = url.pathname.startsWith('/_next/static/') || url.pathname.endsWith('.css');
-  const city = getCityFromPath(url.pathname) || url.searchParams.get('city');
-  const cacheName = isGlobalAsset ? GLOBAL_CACHE : (city ? getCityCacheName(city) : GLOBAL_CACHE);
 
   event.respondWith(
-    caches.open(cacheName).then((cache) => {
-      return cache.match(request).then((cachedResponse) => {
-        // Cache-First with Network Refresh
-        const fetchPromise = fetch(request).then((networkResponse) => {
-          if (networkResponse.status === 200) cache.put(request, networkResponse.clone());
-          return networkResponse;
-        }).catch(() => null);
+    caches.match(request).then((cachedResponse) => {
+      // Return from cache immediately if found (Prevents network-related alerts)
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
-        return cachedResponse || fetchPromise;
+      return fetch(request).then((networkResponse) => {
+        if (!networkResponse || networkResponse.status !== 200) {
+          return networkResponse;
+        }
+
+        if (shouldCache(url.href)) {
+          const responseToCache = networkResponse.clone();
+          const city = getCityFromPath(url.pathname) || url.searchParams.get('city');
+          const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
+          
+          caches.open(cacheName).then((cache) => {
+            cache.put(request, responseToCache);
+          });
+        }
+
+        return networkResponse;
+      }).catch(() => {
+        // FAILSAFE: Return root if offline and nothing else matches
+        if (request.destination === 'document') {
+           return caches.match('/'); 
+        }
       });
     })
   );
 });
 
 /**
- * AGGRESSIVE PRE-EMPTIVE SYNC
- * This triggers when the frontend sends the "CACHE_URL" message.
- * It doesn't just cache the URL; it fetches the API data too.
+ * 6. MESSAGE: AGGRESSIVE PRE-EMPTIVE SYNC
+ * Triggered by OfflineDownload.tsx or SWRegister.tsx
  */
 self.addEventListener('message', async (event) => {
   if (event.data && event.data.type === 'CACHE_URL') {
     const urlStr = event.data.payload;
-    const url = new URL(urlStr);
+    const url = new URL(urlStr, location.origin);
     const city = getCityFromPath(url.pathname);
     
-    if (!city) return;
+    // We always cache the root '/' whenever a message is sent to ensure launchability
+    const coreCache = await caches.open(GLOBAL_CACHE);
+    coreCache.add('/');
 
-    const cacheName = getCityCacheName(city);
-    const apiEndpoint = `/api/pack?city=${city}`;
-
-    console.log(`📡 Vault Scraper: Locking in offline assets for ${city}...`);
-
-    const cache = await caches.open(cacheName);
-    
-    // Add the HTML page and the API data simultaneously
-    // This ensures that even if they never open the "App", the data is ready.
-    try {
-      await Promise.all([
-        cache.add(urlStr),
-        cache.add(apiEndpoint)
-      ]);
-      console.log(`✅ Vault Verified: ${city} is ready for offline use.`);
-    } catch (err) {
-      console.error('❌ Vault Sync Failed:', err);
+    if (city) {
+      const cacheName = getCityCacheName(city);
+      const apiEndpoint = `/api/pack?city=${city}`;
+      const cache = await caches.open(cacheName);
+      
+      try {
+        await Promise.all([
+          cache.add(urlStr),
+          cache.add(apiEndpoint)
+        ]);
+        console.log(`✅ Vault Verified: ${city} engine + data secured.`);
+      } catch (err) {
+        console.error('❌ Vault Sync Failed:', err);
+      }
     }
   }
 });

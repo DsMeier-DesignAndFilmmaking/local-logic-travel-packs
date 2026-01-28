@@ -3,7 +3,7 @@
   "short_name": "Vault",
   "description": "Offline-first travel logic",
   "id": "/",
-  "start_url": "/?source=pwa",
+  "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FFFFFF",
