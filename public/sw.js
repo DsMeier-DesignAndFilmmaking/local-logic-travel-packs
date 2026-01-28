@@ -6,6 +6,7 @@
 const CACHE_VERSION = 'v2.2'; // Incremented for new logic
 const CACHE_PREFIX = 'city-pack-';
 const GLOBAL_CACHE = `tactical-vault-core-${CACHE_VERSION}`;
+const DYNAMIC_CACHE = `tactical-vault-dynamic-api-${CACHE_VERSION}`;
 
 /**
  * CORE ASSETS - The "App Shell"
@@ -17,8 +18,9 @@ const CORE_ASSETS = [
   '/manifest.json',
   '/travel-pack-icon-192.png',
   '/travel-pack-icon-512.png',
-  '/apple-touch-icon.png', // FIXED: Removed ?v=2 to match public folder
-  '/api/travel-packs'      // ADDED: So the home screen list works offline 
+  '/apple-touch-icon.png' // FIXED: Removed ?v=2 to match public folder
+  // NOTE: Dynamic API endpoints (e.g. /api/travel-packs) are intentionally
+  // excluded from CORE_ASSETS and will be cached on-demand via the fetch handler.
 ];
 
 // 1. Identify City Helper
@@ -44,8 +46,6 @@ function shouldCache(url) {
     pathname.endsWith('.css') ||
     pathname.includes('manifest') ||
     pathname.match(/^\/packs\/[^\/]+$/) ||
-    pathname.startsWith('/api/pack') || 
-    pathname.startsWith('/api/travel-packs') ||
     pathname.startsWith('/icons/')
   );
 }
@@ -55,9 +55,11 @@ self.addEventListener('install', (event) => {
   self.skipWaiting(); // Force the waiting service worker to become the active service worker
   console.log('🏗️ SW Install: Pre-caching Core Engine');
   event.waitUntil(
-    caches.open(GLOBAL_CACHE).then((cache) => {
-      return cache.addAll(CORE_ASSETS);
-    })
+    caches.open(GLOBAL_CACHE)
+      .then((cache) => cache.addAll(CORE_ASSETS))
+      .catch((error) => {
+        console.error('Error caching core assets during install:', error);
+      })
   );
   self.skipWaiting();
 });
@@ -72,8 +74,9 @@ self.addEventListener('activate', (event) => {
         cacheNames.map((cacheName) => {
           const isOldCityPack = cacheName.startsWith(CACHE_PREFIX) && !cacheName.includes(CACHE_VERSION);
           const isOldCore = cacheName.startsWith('tactical-vault-core-') && cacheName !== GLOBAL_CACHE;
-          
-          if (isOldCityPack || isOldCore) {
+          const isOldDynamic = cacheName.startsWith('tactical-vault-dynamic-api-') && cacheName !== DYNAMIC_CACHE;
+
+          if (isOldCityPack || isOldCore || isOldDynamic) {
             return caches.delete(cacheName);
           }
         })
@@ -89,6 +92,38 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
 
   if (request.method !== 'GET' || url.origin !== location.origin) return;
+
+  // Network-first strategy for dynamic API endpoints with cache fallback.
+  if (url.pathname.startsWith('/api/')) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (response && response.ok) {
+            const responseToCache = response.clone();
+            caches.open(DYNAMIC_CACHE).then((cache) => {
+              cache.put(request, responseToCache);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Offline or network error: try cached API response.
+          return caches.match(request).then((cached) => {
+            if (cached) {
+              return cached;
+            }
+
+            // As a last resort for navigations, fall back to the shell.
+            if (request.destination === 'document') {
+              return caches.match('/');
+            }
+
+            return new Response('Offline', { status: 503 });
+          });
+        })
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
