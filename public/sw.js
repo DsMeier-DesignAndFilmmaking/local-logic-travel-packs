@@ -122,31 +122,44 @@ self.addEventListener('fetch', (event) => {
 
 /**
  * 6. MESSAGE: AGGRESSIVE PRE-EMPTIVE SYNC
- * Triggered by OfflineDownload.tsx or SWRegister.tsx
+ * Correctly handles both City Packs and the Root App Shell.
  */
 self.addEventListener('message', async (event) => {
   if (event.data && event.data.type === 'CACHE_URL') {
-    const urlStr = event.data.payload;
+    const { payload: urlStr } = event.data;
     const url = new URL(urlStr, location.origin);
     const city = getCityFromPath(url.pathname);
     
-    // We always cache the root '/' whenever a message is sent to ensure launchability
-    const coreCache = await caches.open(GLOBAL_CACHE);
-    coreCache.add('/');
+    // Determine which cache to use and what to download
+    const isRoot = url.pathname === '/';
+    const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
+    const assetsToCache = city ? [urlStr, `/api/pack?city=${city}`] : [urlStr];
 
-    if (city) {
-      const cacheName = getCityCacheName(city);
-      const apiEndpoint = `/api/pack?city=${city}`;
-      const cache = await caches.open(cacheName);
-      
+    console.log(`📡 Vault Sync: Target [${city || 'ROOT'}] -> Cache [${cacheName}]`);
+
+    const cache = await caches.open(cacheName);
+    let completed = 0;
+
+    for (const asset of assetsToCache) {
       try {
-        await Promise.all([
-          cache.add(urlStr),
-          cache.add(apiEndpoint)
-        ]);
-        console.log(`✅ Vault Verified: ${city} engine + data secured.`);
+        await cache.add(asset);
+        completed++;
+        const progress = Math.round((completed / assetsToCache.length) * 100);
+        
+        // Report progress back to the UI
+        const clients = await self.clients.matchAll();
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_PROGRESS',
+            payload: { 
+              city: city || 'root', // Identify as root if no city
+              progress 
+            }
+          });
+        });
       } catch (err) {
-        console.error('❌ Vault Sync Failed:', err);
+        console.error(`❌ Vault Sync Error for ${asset}:`, err);
+        // Still send a fail message or update progress so the UI doesn't hang
       }
     }
   }
