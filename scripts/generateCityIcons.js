@@ -1,9 +1,6 @@
 /**
- * Script to generate placeholder city icons
- * 
- * This script documents which icons are needed and can be used
- * to generate placeholder icons from the base travel-pack-icon files.
- * 
+ * Script to generate city-specific icons and the root iOS icon.
+ * This version FORCES an overwrite to ensure new designs are applied.
  * Run: node scripts/generateCityIcons.js
  */
 
@@ -27,51 +24,50 @@ const cities = [
   'antalya',
 ];
 
-const iconsDir = path.join(__dirname, '../public/icons');
-const baseIcon192 = path.join(__dirname, '../public/travel-pack-icon-192.png');
-const baseIcon512 = path.join(__dirname, '../public/travel-pack-icon-512.png');
+const publicDir = path.join(__dirname, '../public');
+const iconsDir = path.join(publicDir, 'icons');
+const baseIcon192 = path.join(publicDir, 'travel-pack-icon-192.png');
+const baseIcon512 = path.join(publicDir, 'travel-pack-icon-512.png');
 
-// Ensure icons directory exists
+// The specific file iOS Safari looks for in the root
+const appleTouchTarget = path.join(publicDir, 'apple-touch-icon.png');
+
+// 1. Ensure icons directory exists
 if (!fs.existsSync(iconsDir)) {
   fs.mkdirSync(iconsDir, { recursive: true });
   console.log('✅ Created /public/icons directory');
 }
 
-// Check if base icons exist
+// 2. Check if base source icons exist
 if (!fs.existsSync(baseIcon192) || !fs.existsSync(baseIcon512)) {
-  console.error('❌ Base icons not found. Please ensure travel-pack-icon-192.png and travel-pack-icon-512.png exist in /public');
+  console.error('❌ Base icons not found in /public. Ensure travel-pack-icon-192.png and 512.png exist.');
   process.exit(1);
 }
 
-// Generate city-specific icons
-let created = 0;
-let existing = 0;
+console.log('🚀 Syncing new icon designs...');
 
+// 3. Update the root apple-touch-icon.png (The "Cache Buster" target)
+try {
+  fs.copyFileSync(baseIcon512, appleTouchTarget);
+  console.log('🍏 SUCCESS: Updated public/apple-touch-icon.png (Root iOS Icon)');
+} catch (err) {
+  console.error('❌ Error updating root apple-touch-icon.png:', err.message);
+}
+
+// 4. Update city-specific placeholders
+let updated = 0;
 cities.forEach(city => {
   const icon192Path = path.join(iconsDir, `${city}-192.png`);
   const icon512Path = path.join(iconsDir, `${city}-512.png`);
   
-  // Copy base icons as placeholders (can be replaced with city-specific icons later)
-  if (!fs.existsSync(icon192Path)) {
+  try {
     fs.copyFileSync(baseIcon192, icon192Path);
-    console.log(`✅ Created ${city}-192.png`);
-    created++;
-  } else {
-    console.log(`ℹ️  ${city}-192.png already exists`);
-    existing++;
-  }
-  
-  if (!fs.existsSync(icon512Path)) {
     fs.copyFileSync(baseIcon512, icon512Path);
-    console.log(`✅ Created ${city}-512.png`);
-    created++;
-  } else {
-    console.log(`ℹ️  ${city}-512.png already exists`);
-    existing++;
+    updated += 2;
+  } catch (err) {
+    console.error(`❌ Error updating ${city}:`, err.message);
   }
 });
 
-console.log(`\n📊 Summary:`);
-console.log(`   Created: ${created} icons`);
-console.log(`   Existing: ${existing} icons`);
-console.log(`\n💡 Note: These are placeholder icons. Replace with city-specific icons for better UX.`);
+console.log(`✅ Refreshed ${updated} city-specific icons.`);
+console.log(`\n✨ DONE: All icons are now in sync with your newest designs.`);

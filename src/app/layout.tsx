@@ -18,6 +18,22 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: 'Tactical Vault',
   description: 'Offline-First Tactical Travel Intelligence',
+  // ADD THIS SECTION:
+  icons: {
+    icon: [
+      { url: '/favicon.ico?v=2' },
+      { url: '/icons/icon-192x192.png?v=2', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png?v=2', sizes: '180x180', type: 'image/png' },
+    ],
+  },
+  // This tells iOS that your site is a standalone "app"
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Tactical Vault',
+  },
 };
 
 export default function RootLayout({
