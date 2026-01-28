@@ -37,20 +37,23 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// 4. FETCH: Standard Cache-First with API Network-First fallback
+// 4. FETCH: Standard Cache-First with ignoreSearch for Tactical Vault
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Only handle GET requests to our own origin
   if (request.method !== 'GET' || url.origin !== location.origin) return;
 
-  // Tactical API Handling (Network First)
+  // STRATEGY: Network-First for API calls
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(
       fetch(request)
         .then(res => {
-          const clone = res.clone();
-          caches.open(GLOBAL_CACHE).then(cache => cache.put(request, clone));
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone));
+          }
           return res;
         })
         .catch(() => caches.match(request))
@@ -58,16 +61,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // General Assets (Cache First)
+  // STRATEGY: Cache-First for everything else (HTML, JS, CSS, Images)
   event.respondWith(
-    caches.match(request).then(response => {
-      return response || fetch(request).then(networkRes => {
-        // Logically determine if we should cache this on the fly
-        if (networkRes.status === 200) {
+    // ignoreSearch: true is vital for matching the A2HS '?source=a2hs' suffix
+    caches.match(request, { ignoreSearch: true }).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      // If not in cache, fetch from network
+      return fetch(request).then((networkRes) => {
+        // Cache static assets on the fly as the user browses
+        if (networkRes && networkRes.status === 200) {
           const clone = networkRes.clone();
-          caches.open(GLOBAL_CACHE).then(cache => cache.put(request, clone));
+          const city = getCityFromPath(url.pathname);
+          const cacheName = city ? getCityCacheName(city) : GLOBAL_CACHE;
+          
+          caches.open(cacheName).then((cache) => {
+            cache.put(request, clone);
+          });
         }
         return networkRes;
+      }).catch(() => {
+        // Fallback for document navigation: return the root shell if offline
+        if (request.destination === 'document') {
+          return caches.match('/');
+        }
       });
     })
   );

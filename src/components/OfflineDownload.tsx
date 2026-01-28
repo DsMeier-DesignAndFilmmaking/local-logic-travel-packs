@@ -104,6 +104,24 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
       const registration = await navigator.serviceWorker.ready;
       const sw = registration.active;
 
+      const scripts = Array.from(document.scripts)
+      .filter(s => s.src && s.src.includes('_next/static'))
+      .map(s => s.src);
+
+      const styles = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+      .map(s => (s as HTMLLinkElement).href);
+
+      const nextAssets = [
+        ...Array.from(document.scripts)
+          .filter(s => s.src && s.src.includes('_next/static'))
+          .map(s => s.src),
+        ...Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+          .map(s => (s as HTMLLinkElement).href)
+      ];
+      
+      // 2. Add the dynamic manifest itself to the sync list
+      const dynamicManifest = `/api/manifest/${citySlug}`;
+
       if (!sw) throw new Error("No active vault engine found.");
 
       // Step C: Dispatch the manifest for caching
@@ -114,9 +132,11 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
           citySlug,
           url: window.location.pathname,
           assets: [
-            window.location.pathname,
+            window.location.pathname, // The HTML
+            window.location.pathname + '?source=a2hs', // The exact start_url from manifest
+            dynamicManifest,
             `/api/pack?city=${encodeURIComponent(pack.city)}`,
-            // Add other critical static assets here if needed
+            ...nextAssets, // The JS/CSS "Engine"
           ]
         }
       });
