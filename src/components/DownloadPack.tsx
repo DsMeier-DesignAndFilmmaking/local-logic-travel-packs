@@ -44,7 +44,15 @@ export default function DownloadPack({ pack }: DownloadPackProps) {
 
   const handleDownloadPack = async () => {
     if (isDownloading || isDownloaded) return;
-    
+
+    // Only attempt a full download when online so network/cache steps
+    // don’t silently fail and leave the user in a half-synced state.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      console.warn('Download requested while offline – skipping network-dependent steps.');
+      alert('You need to be online to download this pack for offline use.');
+      return;
+    }
+
     setIsDownloading(true);
     setProgress(0);
 

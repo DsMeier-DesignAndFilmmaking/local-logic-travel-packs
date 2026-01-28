@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TravelPack } from '@/types/travel';
 import { savePack, getPack } from '../../scripts/offlineDB';
+import { normalizeCityName } from '@/lib/cities';
 
 interface OfflineDownloadProps {
   pack: TravelPack;
@@ -16,16 +17,25 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
 
   const verifyVault = useCallback(async () => {
     if (typeof window === 'undefined' || !('caches' in window)) return;
-    
+
     setIsVerifying(true);
-    const CACHE_VERSION = 'v2.2'; 
-    const cacheName = `city-pack-${pack.city}-${CACHE_VERSION}`;
-    
+    const CACHE_VERSION = 'v2.2';
+    const citySlug = normalizeCityName(pack.city);
+    const cityCacheName = `city-pack-${citySlug}-${CACHE_VERSION}`;
+    const dynamicCacheName = `tactical-vault-dynamic-api-${CACHE_VERSION}`;
+
+    const pageUrl = `/packs/${citySlug}`;
+    const apiUrl = `/api/pack?city=${encodeURIComponent(pack.city)}`;
+
     try {
-      const cache = await caches.open(cacheName);
+      const [pageCache, apiCache] = await Promise.all([
+        caches.open(cityCacheName),
+        caches.open(dynamicCacheName),
+      ]);
+
       const [hasPage, hasData] = await Promise.all([
-        cache.match(window.location.href),
-        cache.match(`/api/pack?city=${pack.city}`)
+        pageCache.match(pageUrl),
+        apiCache.match(apiUrl),
       ]);
 
       if (hasPage && hasData) {
@@ -82,6 +92,13 @@ export default function OfflineDownload({ pack }: OfflineDownloadProps) {
 
   const handleSaveToVault = async () => {
     if (isSaving || isSaved) return;
+
+    // Only attempt sync when online to avoid confusing partial states.
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      console.warn('Vault sync requested while offline – skipping network-dependent steps.');
+      alert('You need to be online to sync this pack for offline use.');
+      return;
+    }
     setIsSaving(true);
     setSyncProgress(5); 
   
