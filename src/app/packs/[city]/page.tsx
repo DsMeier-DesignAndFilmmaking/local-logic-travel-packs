@@ -180,7 +180,13 @@ export default function CityPackPage() {
           </div>
         )}
 
-        <PackCard pack={pack} vaultStatus={vaultStatus} />
+// in page.tsx
+{pack ? (
+  <PackCard pack={pack} />
+) : (
+  <div>Loading Tactical Intel...</div>
+)}
+
 
         {/* OFFLINE PROTOCOL DASHBOARD */}
         <div className="bg-slate-900 rounded-[32px] border border-slate-800 shadow-2xl overflow-hidden">

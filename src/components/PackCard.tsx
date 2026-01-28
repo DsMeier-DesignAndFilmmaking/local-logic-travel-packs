@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { TravelPack, ProblemCard, MicroSituation, TravelPackTier } from '@/types/travel';
+// Ensure this path matches the location of your OfflineDownload file
+import OfflineDownload from './OfflineDownload'; 
 
 interface PackCardProps {
   pack: TravelPack;
-  vaultStatus?: 'idle' | 'syncing' | 'secured';
 }
 
 interface TierSectionProps {
@@ -22,14 +23,12 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
 
   return (
     <div className="bg-white border-2 border-slate-100 rounded-[24px] overflow-hidden shadow-sm transition-all duration-300">
-      {/* Tier Header - Mobile Optimized */}
       <button
         onClick={onToggle}
         className="w-full px-4 sm:px-6 py-4 sm:py-5 min-h-[44px] flex items-center justify-between bg-gradient-to-r from-slate-50 to-white hover:from-slate-100 transition-colors"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-3 text-left">
-          {/* Visual Indicator with Tier Number */}
           <div className={`w-8 h-8 rounded-lg ${tierColor} flex items-center justify-center text-white text-[10px] font-black shadow-inner`}>
             0{tierNumber}
           </div>
@@ -47,7 +46,6 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
         </div>
       </button>
 
-      {/* Tier Content */}
       {isOpen && (
         <div className="px-4 sm:px-6 pb-6 pt-2 space-y-4 animate-in slide-in-from-top-2 duration-300">
           {tier.cards.map((card: ProblemCard, cardIdx: number) => (
@@ -73,14 +71,6 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
                         </li>
                       ))}
                     </ul>
-                    {situation.whatToDoInstead && (
-                      <div className="mt-4 p-4 bg-emerald-500/5 rounded-xl border border-emerald-500/20">
-                        <p className="text-[11px] leading-relaxed font-bold text-emerald-900">
-                          <span className="text-emerald-600 uppercase tracking-widest mr-2">Pro-Tip:</span>
-                          {situation.whatToDoInstead}
-                        </p>
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
@@ -92,8 +82,7 @@ const TierSection: React.FC<TierSectionProps> = ({ tier, tierNumber, tierLabel, 
   );
 };
 
-const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
-  // FIX: Change Set([1]) to empty Set() so all tiers are collapsed on load
+const PackCard: React.FC<PackCardProps> = ({ pack }) => {
   const [openTiers, setOpenTiers] = useState<Set<number>>(new Set()); 
 
   if (!pack || !pack.tiers) return null;
@@ -101,11 +90,8 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
   const toggleTier = (tierNumber: number) => {
     setOpenTiers(prev => {
       const next = new Set(prev);
-      if (next.has(tierNumber)) {
-        next.delete(tierNumber);
-      } else {
-        next.add(tierNumber);
-      }
+      if (next.has(tierNumber)) next.delete(tierNumber);
+      else next.add(tierNumber);
       return next;
     });
   };
@@ -131,13 +117,6 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
                 Encrypted Intel Vault
               </span>
             </div>
-            {vaultStatus === 'secured' && (
-              <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full">
-                <span className="text-[9px] font-black uppercase tracking-widest text-emerald-400">
-                  Secured
-                </span>
-              </div>
-            )}
           </div>
           <h2 className="text-4xl sm:text-5xl font-black italic uppercase tracking-tighter mb-1 leading-none">
             {pack.city}
@@ -150,6 +129,12 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
         <div className="absolute right-[-5%] top-[-10%] text-[120px] font-black text-white/[0.04] italic pointer-events-none select-none uppercase">
           {pack.city.substring(0, 3)}
         </div>
+      </div>
+
+      {/* --- OFFLINE SYNC SECTION --- */}
+      {/* This is the missing link. It forces the cache and DB to sync */}
+      <div className="px-1">
+        <OfflineDownload pack={pack} />
       </div>
 
       {/* Tier Sections */}
@@ -168,13 +153,13 @@ const PackCard: React.FC<PackCardProps> = ({ pack, vaultStatus = 'idle' }) => {
       </div>
 
       {/* Vault Metadata Footer */}
-      <div className="text-center">
+      <div className="text-center pt-4">
         <div className="inline-block px-4 py-2 bg-slate-50 border border-slate-200 rounded-full">
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">
-            {pack.downloadedAt ? (
-              <>Sync Verified: {new Date(pack.downloadedAt).toLocaleDateString()} • Ready for offline use</>
+            {pack.offlineReady ? (
+              <span className="text-emerald-600">✓ Local Hardware Instance • Verified For Flight</span>
             ) : (
-              <>Cloud Instance • Download for Local Sync</>
+              <span>Cloud Instance • Use Sync To Enable Offline Access</span>
             )}
           </p>
         </div>
